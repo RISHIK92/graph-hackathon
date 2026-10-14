@@ -1,0 +1,16 @@
+{
+  "key": "FUL-161",
+  "title": "Billing-v2: missing audit fields",
+  "description": "Billing-v2 shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:esme-oyelaran", "at": "2026-08-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-08-02"},
+    {"state": "in_progress", "at": "2026-08-03"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2026-08-02"}
+  ],
+  "comments": []
+}

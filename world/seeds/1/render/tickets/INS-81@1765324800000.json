@@ -1,0 +1,15 @@
+{
+  "key": "INS-81",
+  "title": "Pricing Engine: a retry storm after deploys",
+  "description": "Pricing Engine shows a retry storm after deploys since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-11-23"},
+    {"state": "in_progress", "at": "2025-11-25"},
+    {"state": "done", "at": "2025-12-10"}
+  ],
+  "component_history": [
+    {"about": "system:pricing-engine", "at": "2025-11-23"}
+  ],
+  "comments": []
+}

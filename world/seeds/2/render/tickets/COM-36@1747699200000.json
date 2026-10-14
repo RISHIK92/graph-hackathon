@@ -1,0 +1,19 @@
+{
+  "key": "COM-36",
+  "title": "Wallet Launch: a retry storm after deploys",
+  "description": "Wallet Launch shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:dmitri-rosales", "at": "2025-05-11"},
+    {"who": "person:zofia-zamora", "at": "2025-05-18"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-05-11"},
+    {"state": "in_progress", "at": "2025-05-20"}
+  ],
+  "component_history": [
+    {"about": "project:wallet-launch", "at": "2025-05-11"}
+  ],
+  "comments": [
+    {"author": "person:elif-ishikawa", "at": "2025-05-20", "text": "Blocked until COM-62 lands."}
+  ]
+}

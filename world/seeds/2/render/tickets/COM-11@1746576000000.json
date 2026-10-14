@@ -1,0 +1,18 @@
+{
+  "key": "COM-11",
+  "title": "Email Relay: a flaky integration test",
+  "description": "Email Relay shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:lars-albescu", "at": "2025-05-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-05-07"}
+  ],
+  "component_history": [
+    {"about": "system:email-relay", "at": "2025-05-07"}
+  ],
+  "comments": [
+    {"author": "person:nadia-novak", "at": "2025-05-07", "text": "Moved to the next sprint after triage."},
+    {"author": "person:dmitri-rosales", "at": "2025-05-07", "text": "Moved to the next sprint after triage."}
+  ]
+}

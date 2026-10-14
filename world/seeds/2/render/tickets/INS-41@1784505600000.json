@@ -1,0 +1,19 @@
+{
+  "key": "INS-41",
+  "title": "Partner API: high p99 latency",
+  "description": "Partner API shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "team:insights", "at": "2026-07-05"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-06-23"},
+    {"state": "in_progress", "at": "2026-07-05"},
+    {"state": "done", "at": "2026-07-20"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2026-06-23"}
+  ],
+  "comments": [
+    {"author": "person:anders-dunmore", "at": "2026-07-17", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "key": "FUL-160",
+  "title": "Geo Lookup: a flaky integration test",
+  "description": "Geo Lookup shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:chiara-rasmussen", "at": "2025-09-16"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-09-16"},
+    {"state": "in_progress", "at": "2025-10-04"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-09-16"}
+  ],
+  "comments": [
+    {"author": "person:valeria-whitfield", "at": "2025-09-27", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

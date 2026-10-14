@@ -1,0 +1,16 @@
+{
+  "key": "MSG-138",
+  "title": "Audit Log: a flaky integration test",
+  "description": "Audit Log shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:talia-zamora", "at": "2026-09-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-09-02"},
+    {"state": "in_progress", "at": "2026-09-17"}
+  ],
+  "component_history": [
+    {"about": "system:audit-log", "at": "2026-09-02"}
+  ],
+  "comments": []
+}

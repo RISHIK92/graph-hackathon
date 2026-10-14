@@ -1,0 +1,19 @@
+{
+  "key": "INS-143",
+  "title": "Partner API: timeouts under peak load",
+  "description": "Partner API shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:kai-udeh", "at": "2025-07-17"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-13"},
+    {"state": "in_progress", "at": "2025-07-17"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2025-07-13"}
+  ],
+  "comments": [
+    {"author": "person:zofia-arnesen", "at": "2025-07-13", "text": "This overlaps with INS-59, linking them."},
+    {"author": "person:oskar-petrov", "at": "2025-07-16", "text": "This overlaps with ONB-59, linking them."}
+  ]
+}

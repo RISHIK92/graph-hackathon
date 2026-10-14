@@ -1,0 +1,62 @@
+{"channel": "general", "ts": 1737122464350, "author": "person:ilse-kowal", "text": "Pairing with Nadia Hartley on Feature Flags today."}
+{"channel": "general", "ts": 1737196583953, "author": "person:mads-haddad", "text": "Load test for feature-flags-svc finished, numbers look normal."}
+{"channel": "general", "ts": 1738515532445, "author": "person:leila-chaudhry", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "general", "ts": 1738677042045, "author": "person:quentin-gunnarsson", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "general", "ts": 1740058528259, "author": "person:callum-varga", "text": "Deploying image-resizer-svc to staging after lunch."}
+{"channel": "general", "ts": 1740320449427, "author": "person:rhea-sato", "text": "Pairing with Callum Varga on Auth Gateway today."}
+{"channel": "general", "ts": 1741796288955, "author": "person:farah-rasmussen", "text": "MSG-55 is blocked on a config change."}
+{"channel": "general", "ts": 1741943007515, "author": "person:sam-arnesen", "text": "Pairing with Beatriz Ferreira on feature-flags-svc today.", "thread_ts": 1741796288955}
+{"channel": "general", "ts": 1741955412093, "author": "person:talia-zamora", "text": "Kicking off the Account Recovery design review next week."}
+{"channel": "general", "ts": 1745224458374, "author": "person:greta-achebe", "text": "The Account Recovery retro notes are up."}
+{"channel": "general", "ts": 1745519993749, "author": "person:callum-varga", "text": "Picking up RSK-70 today."}
+{"channel": "general", "ts": 1746791900788, "author": "person:soren-abernathy", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "general", "ts": 1747127453192, "author": "person:talia-zamora", "text": "Who has context on the feature-flags-svc alerts from last night?"}
+{"channel": "general", "ts": 1747563310103, "author": "person:callum-varga", "text": "Who leads Risk?"}
+{"channel": "general", "ts": 1747563670103, "author": "person:rhea-sato", "text": "Who leads Risk?", "thread_ts": 1747563310103}
+{"channel": "general", "ts": 1750322137823, "author": "person:sam-arnesen", "text": "Picking up RSK-162 today."}
+{"channel": "general", "ts": 1750429915778, "author": "person:soren-whitfield", "text": "Who has context on the auth-gateway-svc alerts from last night?", "thread_ts": 1750322137823}
+{"channel": "general", "ts": 1751186252827, "author": "person:nikhil-galloway", "text": "Pairing with Maya on audit-log-svc today."}
+{"channel": "general", "ts": 1751640663961, "author": "person:bianca-brennan", "text": "Soren Abernathy and Soren Whitfield are both out on Friday."}
+{"channel": "general", "ts": 1751901913051, "author": "person:quentin-gunnarsson", "text": "For context, messaging-team owns Event Bus."}
+{"channel": "general", "ts": 1752744745737, "author": "person:bianca-brennan", "text": "Picking up GRO-118 today."}
+{"channel": "general", "ts": 1757181489564, "author": "person:chiara-quint", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "general", "ts": 1761830720856, "author": "person:rhea-sato", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "general", "ts": 1762000174450, "author": "person:callum-varga", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "general", "ts": 1762602869776, "author": "person:chiara-quint", "text": "Callum Varga works on Chargeback Defense."}
+{"channel": "general", "ts": 1763377549776, "author": "person:anders-yilmaz", "text": "I think Audit Log depends on Billing-v2, maybe?"}
+{"channel": "general", "ts": 1763972132763, "author": "person:bianca-brennan", "text": "Can someone review the billing-svc runbook changes?"}
+{"channel": "general", "ts": 1764154883461, "author": "person:anders-yilmaz", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "general", "ts": 1765803991955, "author": "person:mads-haddad", "text": "Deploying auth-gateway-svc to staging after lunch."}
+{"channel": "general", "ts": 1766947436831, "author": "person:cyrus-lindgren", "text": "Mirela Dahl leads Gift Cards."}
+{"channel": "general", "ts": 1767357804678, "author": "person:greta-achebe", "text": "The Messaging demo moved to Thursday."}
+{"channel": "general", "ts": 1768311978002, "author": "person:cyrus-lindgren", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "general", "ts": 1768667298434, "author": "person:callum-varga", "text": "The Smart Routing retro notes are up."}
+{"channel": "general", "ts": 1769874413778, "author": "person:noor-fontaine", "text": "Saanvi leads smart-routing."}
+{"channel": "general", "ts": 1771680845547, "author": "person:talia-zamora", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "general", "ts": 1771749628060, "author": "person:ilse-kowal", "text": "Pairing with Callum on Session Store today."}
+{"channel": "general", "ts": 1771931172165, "author": "person:mads-haddad", "text": "Load test for Email Relay finished, numbers look normal."}
+{"channel": "general", "ts": 1774177406416, "author": "person:elif-dunmore", "text": "Deploying Session Store to staging after lunch."}
+{"channel": "general", "ts": 1774537563085, "author": "person:anders-yilmaz", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "general", "ts": 1775143180022, "author": "person:maya-petrov", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "general", "ts": 1775318100580, "author": "person:oskar-zielinski", "text": "Load test for auth-gateway-svc finished, numbers look normal."}
+{"channel": "general", "ts": 1775582983589, "author": "person:chiara-quint", "text": "Billing-v2 dashboards are back after the metrics outage."}
+{"channel": "general", "ts": 1775828264104, "author": "person:soren-whitfield", "text": "Pairing with Kenji Holloway on Auth Gateway today."}
+{"channel": "general", "ts": 1775994574800, "author": "person:teodor-castellanos", "text": "Kicking off the Gift Cards design review next week."}
+{"channel": "general", "ts": 1776426920757, "author": "person:quentin-gunnarsson", "text": "Linked GRO-159 to GRO-143, same root cause."}
+{"channel": "general", "ts": 1777548556999, "author": "person:soren-abernathy", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "general", "ts": 1778147198113, "author": "person:beatriz-ferreira", "text": "Who has context on the session-store-svc alerts from last night?"}
+{"channel": "general", "ts": 1778489694363, "author": "person:oskar-zielinski", "text": "Load test for Audit Log finished, numbers look normal."}
+{"channel": "general", "ts": 1779113099907, "author": "person:saanvi-quiroga", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "general", "ts": 1780136069582, "author": "person:arjun-moreau", "text": "The Store Locator retro notes are up."}
+{"channel": "general", "ts": 1780767880610, "author": "person:jada-carrow", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "general", "ts": 1781179142247, "author": "person:talia-zamora", "text": "Kicking off the Account Recovery design review next week."}
+{"channel": "general", "ts": 1781432765675, "author": "person:callum-varga", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "general", "ts": 1781512522498, "author": "person:quentin-gunnarsson", "text": "Kicking off the Chargeback Defense design review next week."}
+{"channel": "general", "ts": 1782749364431, "author": "person:nikhil-galloway", "text": "Messaging owns billing-svc."}
+{"channel": "general", "ts": 1784042400000, "author": "person:kwame-asante", "text": "Platform owns Statements now."}
+{"channel": "general", "ts": 1784120872980, "author": "person:soren-abernathy", "text": "The Smart Routing retro notes are up."}
+{"channel": "general", "ts": 1785248191455, "author": "person:ilse-kowal", "text": "The Risk demo moved to Thursday."}
+{"channel": "general", "ts": 1786436465016, "author": "person:kenji-holloway", "text": "Risk owns partner-api now."}
+{"channel": "general", "ts": 1787676881032, "author": "person:nikhil-galloway", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "general", "ts": 1788949382789, "author": "person:ilse-kowal", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "general", "ts": 1790361923285, "author": "person:leila-chaudhry", "text": "Kicking off the Chargeback Defense design review next week."}

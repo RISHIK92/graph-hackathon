@@ -1,0 +1,15 @@
+{
+  "key": "INS-110",
+  "title": "Pricing Engine: stale cache entries",
+  "description": "Pricing Engine shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:cyrus-quint", "at": "2025-10-11"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-11"}
+  ],
+  "component_history": [
+    {"about": "system:pricing-engine", "at": "2025-10-11"}
+  ],
+  "comments": []
+}

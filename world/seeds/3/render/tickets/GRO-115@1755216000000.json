@@ -1,0 +1,19 @@
+{
+  "key": "GRO-115",
+  "title": "Chargeback Defense: slow cold starts",
+  "description": "Chargeback Defense shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:callum-varga", "at": "2025-08-04"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-22"},
+    {"state": "in_progress", "at": "2025-08-04"},
+    {"state": "done", "at": "2025-08-15"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2025-07-22"}
+  ],
+  "comments": [
+    {"author": "person:oskar-zielinski", "at": "2025-07-24", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "key": "FUL-172",
+  "title": "Fraud Scoring: a retry storm after deploys",
+  "description": "Fraud Scoring shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "team:fulfilment", "at": "2026-07-13"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-07-13"},
+    {"state": "in_progress", "at": "2026-07-19"},
+    {"state": "done", "at": "2026-08-15"}
+  ],
+  "component_history": [
+    {"about": "system:fraud-scoring", "at": "2026-07-13"}
+  ],
+  "comments": [
+    {"author": "person:bianca-ishikawa", "at": "2026-07-22", "text": "Moved to the next sprint after triage."},
+    {"author": "person:wren-mbatha", "at": "2026-07-24", "text": "This overlaps with FUL-169, linking them."}
+  ]
+}

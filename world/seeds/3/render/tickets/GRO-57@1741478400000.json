@@ -1,0 +1,15 @@
+{
+  "key": "GRO-57",
+  "title": "Feature Flags: a retry storm after deploys",
+  "description": "feature-flags-svc shows a retry storm after deploys since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-02-27"},
+    {"state": "in_progress", "at": "2025-03-05"},
+    {"state": "done", "at": "2025-03-09"}
+  ],
+  "component_history": [
+    {"about": "system:feature-flags", "at": "2025-02-27"}
+  ],
+  "comments": []
+}

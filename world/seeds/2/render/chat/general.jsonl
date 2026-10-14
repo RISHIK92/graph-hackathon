@@ -1,0 +1,66 @@
+{"channel": "general", "ts": 1736856575245, "author": "person:dmitri-rosales", "text": "Can someone triage ONB-66?"}
+{"channel": "general", "ts": 1736871709539, "author": "person:valeria-moreau", "text": "Who has context on the Geo Lookup alerts from last night?"}
+{"channel": "general", "ts": 1737639074434, "author": "person:anders-dunmore", "text": "Linked ONB-152 to INS-168, same root cause."}
+{"channel": "general", "ts": 1737823517469, "author": "person:kai-udeh", "text": "Who has context on the Search Index alerts from last night?"}
+{"channel": "general", "ts": 1738675731883, "author": "person:maya-quiroga", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "general", "ts": 1738928903644, "author": "person:arjun-vasquez", "text": "Picking up COM-194 today."}
+{"channel": "general", "ts": 1740499799321, "author": "person:oskar-petrov", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "general", "ts": 1740929515665, "author": "person:zofia-arnesen", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "general", "ts": 1741079770558, "author": "person:lars-albescu", "text": "Can someone triage ONB-132?"}
+{"channel": "general", "ts": 1741602011021, "author": "person:bianca-pellegrino", "text": "Pairing with Talia Sato on Feature Flags today."}
+{"channel": "general", "ts": 1741616549952, "author": "person:chiara-esposito", "text": "Onboarding owns Gift Cards now."}
+{"channel": "general", "ts": 1742293453633, "author": "person:isaac-delacroix", "text": "Maya Quiroga works on Data Warehouse."}
+{"channel": "general", "ts": 1742381992748, "author": "person:talia-sato", "text": "Notifications depends on Email Relay."}
+{"channel": "general", "ts": 1742408428760, "author": "person:zofia-zamora", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "general", "ts": 1743668591621, "author": "person:darius-oyelaran", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "general", "ts": 1745657726493, "author": "person:soren-zielinski", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "general", "ts": 1746278097274, "author": "person:ilse-abernathy", "text": "Load test for Email Relay finished, numbers look normal."}
+{"channel": "general", "ts": 1748427075651, "author": "person:paloma-kowal", "text": "Email Relay dashboards are back after the metrics outage."}
+{"channel": "general", "ts": 1749039663275, "author": "person:elif-ishikawa", "text": "Nadia Novak works on Wallet Launch."}
+{"channel": "general", "ts": 1750079206733, "author": "person:rhea-wexler", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "general", "ts": 1750870980793, "author": "person:esme-chaudhry", "text": "Load test for search-index-svc finished, numbers look normal."}
+{"channel": "general", "ts": 1751277499130, "author": "person:hugo-yoon", "text": "The Commerce demo moved to Thursday."}
+{"channel": "general", "ts": 1751714304400, "author": "person:amara-xu", "text": "The Insights demo moved to Thursday."}
+{"channel": "general", "ts": 1752223940674, "author": "person:nadia-novak", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "general", "ts": 1754579734831, "author": "person:darius-oyelaran", "text": "The Wallet Launch retro notes are up."}
+{"channel": "general", "ts": 1755446126075, "author": "person:nadia-novak", "text": "The Instant Payouts retro notes are up."}
+{"channel": "general", "ts": 1755615561941, "author": "person:arjun-vasquez", "text": "Who owns Notifications?"}
+{"channel": "general", "ts": 1755618681941, "author": "person:zofia-arnesen", "text": "Who owns Notifications?", "thread_ts": 1755615561941}
+{"channel": "general", "ts": 1758216994431, "author": "person:soren-zielinski", "text": "commerce-team owns Notifications."}
+{"channel": "general", "ts": 1760001898617, "author": "person:esme-chaudhry", "text": "Billing dashboards are back after the metrics outage."}
+{"channel": "general", "ts": 1760700851742, "author": "person:lorenzo-ueda", "text": "onboarding-team owns Instant Payouts now."}
+{"channel": "general", "ts": 1760796287062, "author": "person:amara-xu", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "general", "ts": 1760807000273, "author": "person:felix-mbatha", "text": "Pairing with Bianca Pellegrino on Geo Lookup today.", "thread_ts": 1760700851742}
+{"channel": "general", "ts": 1762430931754, "author": "person:zofia-zamora", "text": "Can someone triage ONB-52?"}
+{"channel": "general", "ts": 1765187010274, "author": "person:paloma-kowal", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "general", "ts": 1766325574290, "author": "person:darius-oyelaran", "text": "The Insights demo moved to Thursday."}
+{"channel": "general", "ts": 1766330248270, "author": "person:selin-kariuki", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "general", "ts": 1766499011810, "author": "person:amara-xu", "text": "Talia Sato works on Loyalty Rewards."}
+{"channel": "general", "ts": 1766837862618, "author": "person:zofia-arnesen", "text": "Who has context on the geo-lookup-svc alerts from last night?"}
+{"channel": "general", "ts": 1767636198317, "author": "person:soren-zielinski", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "general", "ts": 1768416318091, "author": "person:saanvi-bergstrom", "text": "The Wallet Launch retro notes are up."}
+{"channel": "general", "ts": 1768484913646, "author": "person:kai-udeh", "text": "session-store-svc dashboards are back after the metrics outage."}
+{"channel": "general", "ts": 1768989271120, "author": "person:dmitri-rosales", "text": "ONB-132 is blocked on a config change."}
+{"channel": "general", "ts": 1770399161308, "author": "person:maya-quiroga", "text": "Pairing with Zofia Arnesen on Session Store today."}
+{"channel": "general", "ts": 1771601142956, "author": "person:saanvi-bergstrom", "text": "ONB-132 is blocked on a config change."}
+{"channel": "general", "ts": 1771755842345, "author": "person:anders-dunmore", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "general", "ts": 1771770199357, "author": "person:anders-dunmore", "text": "Who has context on the billing-svc alerts from last night?"}
+{"channel": "general", "ts": 1774715795505, "author": "person:isaac-delacroix", "text": "Lars Albescu works on Wallet Launch."}
+{"channel": "general", "ts": 1775494492284, "author": "person:zofia-arnesen", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "general", "ts": 1775500788095, "author": "person:nadia-novak", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "general", "ts": 1775658783646, "author": "person:zofia-zamora", "text": "COM-11 is blocked on a config change."}
+{"channel": "general", "ts": 1776328038385, "author": "person:lars-albescu", "text": "The Commerce demo moved to Thursday."}
+{"channel": "general", "ts": 1776969439618, "author": "person:ilse-abernathy", "text": "commerce-team owns Data Warehouse now."}
+{"channel": "general", "ts": 1778775187958, "author": "person:soren-zielinski", "text": "ONB-152 is blocked on a config change."}
+{"channel": "general", "ts": 1778849672820, "author": "person:yusuf-haddad", "text": "COM-11 is blocked on a config change."}
+{"channel": "general", "ts": 1779958739418, "author": "person:nadia-novak", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "general", "ts": 1780078066237, "author": "person:oskar-petrov", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "general", "ts": 1780396544237, "author": "person:oskar-petrov", "text": "Geo Lookup is part of instant-payouts."}
+{"channel": "general", "ts": 1781427304243, "author": "person:selin-kariuki", "text": "Kicking off the Chargeback Defense design review next week."}
+{"channel": "general", "ts": 1781540517630, "author": "person:felix-mbatha", "text": "Linked ONB-132 to COM-19, same root cause."}
+{"channel": "general", "ts": 1784042400000, "author": "person:kwame-asante", "text": "Platform owns Statements now."}
+{"channel": "general", "ts": 1786190507557, "author": "person:nadia-novak", "text": "Pairing with Talia on Geo Lookup today."}
+{"channel": "general", "ts": 1786814491824, "author": "person:isaac-delacroix", "text": "Can someone triage INS-133?"}
+{"channel": "general", "ts": 1788250507674, "author": "person:paloma-kowal", "text": "Kicking off the Partner API design review next week."}
+{"channel": "general", "ts": 1789139475891, "author": "person:lorenzo-ueda", "text": "Commerce owns Audit Log."}
+{"channel": "general", "ts": 1790423443862, "author": "person:elif-ishikawa", "text": "The Wallet Launch retro notes are up."}

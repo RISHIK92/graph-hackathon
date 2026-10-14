@@ -1,0 +1,19 @@
+{
+  "key": "INS-56",
+  "title": "Session Store: timeouts under peak load",
+  "description": "Session Store shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:soren-esposito", "at": "2026-03-03"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-17"},
+    {"state": "in_progress", "at": "2026-03-03"},
+    {"state": "done", "at": "2026-03-27"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-02-17"}
+  ],
+  "comments": [
+    {"author": "person:soren-esposito", "at": "2026-03-19", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "key": "ONB-198",
+  "title": "Search Index: timeouts under peak load",
+  "description": "Search Index shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:maya-quiroga", "at": "2025-07-10"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-28"},
+    {"state": "in_progress", "at": "2025-07-10"}
+  ],
+  "component_history": [
+    {"about": "system:search-index", "at": "2025-06-28"}
+  ],
+  "comments": [
+    {"author": "person:hugo-yoon", "at": "2025-06-30", "text": "Moved to the next sprint after triage."},
+    {"author": "person:darius-oyelaran", "at": "2025-06-30", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "key": "ONB-52",
+  "title": "Discovery Revamp: slow cold starts",
+  "description": "discovery-revamp shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:darius-oyelaran", "at": "2025-05-05"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-05-05"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2025-05-05"}
+  ],
+  "comments": []
+}

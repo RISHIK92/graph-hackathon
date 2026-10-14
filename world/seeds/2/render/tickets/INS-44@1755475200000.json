@@ -1,0 +1,19 @@
+{
+  "key": "INS-44",
+  "title": "Session Store: stale cache entries",
+  "description": "Session Store shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "team:insights", "at": "2025-08-06"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-17"},
+    {"state": "in_progress", "at": "2025-08-06"},
+    {"state": "done", "at": "2025-08-18"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-07-17"}
+  ],
+  "comments": [
+    {"author": "person:oskar-petrov", "at": "2025-08-01", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

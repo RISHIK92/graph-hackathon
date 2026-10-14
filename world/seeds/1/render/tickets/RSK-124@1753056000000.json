@@ -1,0 +1,20 @@
+{
+  "key": "RSK-124",
+  "title": "Account Recovery: slow cold starts",
+  "description": "Account Recovery shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:chiara-holloway", "at": "2025-06-21"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-03"},
+    {"state": "in_progress", "at": "2025-06-21"},
+    {"state": "done", "at": "2025-07-21"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2025-06-03"}
+  ],
+  "comments": [
+    {"author": "person:chiara-holloway", "at": "2025-06-06", "text": "Reproduced on staging, logs are attached."},
+    {"author": "person:anders-jaramillo", "at": "2025-07-05", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

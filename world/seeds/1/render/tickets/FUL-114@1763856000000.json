@@ -1,0 +1,17 @@
+{
+  "key": "FUL-114",
+  "title": "Geo Lookup: timeouts under peak load",
+  "description": "Geo Lookup shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:kalinda-castellanos", "at": "2025-11-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-11-23"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-11-23"}
+  ],
+  "comments": [
+    {"author": "person:chiara-rasmussen", "at": "2025-11-23", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

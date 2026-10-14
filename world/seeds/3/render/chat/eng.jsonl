@@ -1,0 +1,76 @@
+{"channel": "eng", "ts": 1736506989931, "author": "person:rhea-sato", "text": "Can someone triage RDS-111?"}
+{"channel": "eng", "ts": 1736599786952, "author": "person:mirela-dahl", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "eng", "ts": 1739104300336, "author": "person:selin-ekwueme", "text": "I think audit-log-svc depends on Feature Flags, maybe?"}
+{"channel": "eng", "ts": 1739439062707, "author": "person:callum-varga", "text": "For context, Messaging owns image-resizer-svc."}
+{"channel": "eng", "ts": 1740132403163, "author": "person:jada-carrow", "text": "Arjun Moreau leads chargeback-defense."}
+{"channel": "eng", "ts": 1740322829665, "author": "person:zofia-esposito", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "eng", "ts": 1740588774545, "author": "person:oskar-zielinski", "text": "Mads works on Discovery Revamp."}
+{"channel": "eng", "ts": 1741891452449, "author": "person:callum-varga", "text": "Pairing with Jada Carrow on event-bus-svc today."}
+{"channel": "eng", "ts": 1743434242474, "author": "person:sam-arnesen", "text": "risk-team owns Auth Gateway."}
+{"channel": "eng", "ts": 1743864436475, "author": "person:ilse-kowal", "text": "Who has context on the session-store-svc alerts from last night?"}
+{"channel": "eng", "ts": 1744051764813, "author": "person:anders-yilmaz", "text": "Cyrus Lindgren works on Smart Routing."}
+{"channel": "eng", "ts": 1744566734505, "author": "person:rhea-sato", "text": "Pairing with Rafael on Billing today."}
+{"channel": "eng", "ts": 1745916216011, "author": "person:callum-varga", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "eng", "ts": 1746957448175, "author": "person:maya-petrov", "text": "Pairing with Kenji Holloway on Audit Log today."}
+{"channel": "eng", "ts": 1747657912916, "author": "person:quentin-gunnarsson", "text": "Can someone review the audit-log-svc runbook changes?"}
+{"channel": "eng", "ts": 1748607949340, "author": "person:selin-ekwueme", "text": "Can someone review the event-bus-svc runbook changes?"}
+{"channel": "eng", "ts": 1749909752161, "author": "person:chiara-quint", "text": "Deploying Auth Gateway to staging after lunch."}
+{"channel": "eng", "ts": 1752420163364, "author": "person:maya-petrov", "text": "Can someone review the Event Bus runbook changes?"}
+{"channel": "eng", "ts": 1752930083114, "author": "person:teodor-castellanos", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "eng", "ts": 1753035138169, "author": "person:soren-abernathy", "text": "Can someone review the Email Relay runbook changes?"}
+{"channel": "eng", "ts": 1753264104847, "author": "person:mirela-dahl", "text": "Can someone review the Audit Log runbook changes?"}
+{"channel": "eng", "ts": 1754733282644, "author": "person:teodor-castellanos", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "eng", "ts": 1754739193273, "author": "person:mads-haddad", "text": "The Risk demo moved to Thursday."}
+{"channel": "eng", "ts": 1755679508731, "author": "person:callum-varga", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "eng", "ts": 1755685923560, "author": "person:talia-zamora", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "eng", "ts": 1755695261359, "author": "person:bianca-brennan", "text": "Deploying session-store-svc to staging after lunch."}
+{"channel": "eng", "ts": 1755792158243, "author": "person:nikhil-galloway", "text": "The Growth demo moved to Thursday."}
+{"channel": "eng", "ts": 1756038172596, "author": "person:greta-achebe", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "eng", "ts": 1756317019067, "author": "person:kenji-holloway", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "eng", "ts": 1756632429800, "author": "person:quentin-gunnarsson", "text": "Linked GRO-118 to GRO-116, same root cause."}
+{"channel": "eng", "ts": 1756817322102, "author": "person:cyrus-lindgren", "text": "Can someone review the Auth Gateway runbook changes?"}
+{"channel": "eng", "ts": 1757257402011, "author": "person:nikhil-galloway", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "eng", "ts": 1758455718349, "author": "person:cyrus-lindgren", "text": "The Messaging demo moved to Thursday."}
+{"channel": "eng", "ts": 1758791760853, "author": "person:arjun-moreau", "text": "Load test for Audit Log finished, numbers look normal."}
+{"channel": "eng", "ts": 1759749048255, "author": "person:sam-arnesen", "text": "GRO-118 is blocked on a config change."}
+{"channel": "eng", "ts": 1761301347004, "author": "person:ilse-kowal", "text": "Closed GRO-57, the fix is live."}
+{"channel": "eng", "ts": 1761731155062, "author": "person:nadia-hartley", "text": "Linked MSG-149 to MSG-180, same root cause."}
+{"channel": "eng", "ts": 1761933688696, "author": "person:kenji-holloway", "text": "Deploying Billing-v2 to staging after lunch."}
+{"channel": "eng", "ts": 1764932290996, "author": "person:chiara-quint", "text": "I think Growth owns Auth Gateway?"}
+{"channel": "eng", "ts": 1765375036316, "author": "person:mads-haddad", "text": "Linked MSG-164 to RDS-90, same root cause."}
+{"channel": "eng", "ts": 1766391743768, "author": "person:chiara-quint", "text": "Arjun Moreau leads chargeback-defense."}
+{"channel": "eng", "ts": 1766857741671, "author": "person:soren-whitfield", "text": "Can someone review the Auth Gateway runbook changes?"}
+{"channel": "eng", "ts": 1767180751764, "author": "person:leila-chaudhry", "text": "The Store Locator retro notes are up."}
+{"channel": "eng", "ts": 1767258438230, "author": "person:jada-carrow", "text": "Picking up MSG-115 today."}
+{"channel": "eng", "ts": 1767703311150, "author": "person:mads-haddad", "text": "Deploying session-store-svc to staging after lunch."}
+{"channel": "eng", "ts": 1768139123501, "author": "person:ilse-kowal", "text": "Who has context on the Image Resizer alerts from last night?"}
+{"channel": "eng", "ts": 1768994124435, "author": "person:sam-arnesen", "text": "Kicking off the Smart Routing design review next week."}
+{"channel": "eng", "ts": 1771502110235, "author": "person:nikhil-galloway", "text": "Messaging owns Feature Flags now."}
+{"channel": "eng", "ts": 1771585017416, "author": "person:beatriz-ferreira", "text": "Can someone review the event-bus-svc runbook changes?"}
+{"channel": "eng", "ts": 1771859446654, "author": "person:jada-carrow", "text": "Can someone review the feature-flags-svc runbook changes?"}
+{"channel": "eng", "ts": 1772014174056, "author": "person:teodor-castellanos", "text": "Who leads Growth?"}
+{"channel": "eng", "ts": 1772015854056, "author": "person:maya-petrov", "text": "Who leads Growth?", "thread_ts": 1772014174056}
+{"channel": "eng", "ts": 1773595313559, "author": "person:rafael-nakamura", "text": "RSK-185 is blocked on a config change."}
+{"channel": "eng", "ts": 1774186717181, "author": "person:noor-fontaine", "text": "Kicking off the Gift Cards design review next week."}
+{"channel": "eng", "ts": 1774701153461, "author": "person:ilse-kowal", "text": "session-store-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1775582730821, "author": "person:selin-ekwueme", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "eng", "ts": 1775729296056, "author": "person:greta-achebe", "text": "Picking up RSK-142 today."}
+{"channel": "eng", "ts": 1776326826660, "author": "person:chiara-quint", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "eng", "ts": 1776865589159, "author": "person:greta-achebe", "text": "Deploying email-relay-svc to staging after lunch."}
+{"channel": "eng", "ts": 1777214795772, "author": "person:beatriz-ferreira", "text": "Feature Flags dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1777561471668, "author": "person:cyrus-lindgren", "text": "Audit Log dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1778596115731, "author": "person:jada-carrow", "text": "Pairing with Rhea Sato on Image Resizer today."}
+{"channel": "eng", "ts": 1779988289686, "author": "person:beatriz-ferreira", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "eng", "ts": 1780320134347, "author": "person:leila-chaudhry", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "eng", "ts": 1780586501994, "author": "person:maya-petrov", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "eng", "ts": 1781439811354, "author": "person:rhea-sato", "text": "Saanvi leads Smart Routing."}
+{"channel": "eng", "ts": 1782120436102, "author": "person:rafael-nakamura", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "eng", "ts": 1782299873211, "author": "person:farah-rasmussen", "text": "Pairing with Kenji Holloway on Billing today."}
+{"channel": "eng", "ts": 1783251113417, "author": "person:greta-achebe", "text": "Leila Chaudhry leads Risk."}
+{"channel": "eng", "ts": 1784486313109, "author": "person:mirela-dahl", "text": "Can someone review the Image Resizer runbook changes?"}
+{"channel": "eng", "ts": 1785328259676, "author": "person:oskar-zielinski", "text": "Pairing with Beatriz Ferreira on Audit Log today."}
+{"channel": "eng", "ts": 1786961347005, "author": "person:farah-rasmussen", "text": "Can someone review the Image Resizer runbook changes?"}
+{"channel": "eng", "ts": 1787831764872, "author": "person:arjun-moreau", "text": "Pairing with Greta Achebe on audit-log-svc today."}
+{"channel": "eng", "ts": 1789661069459, "author": "person:saanvi-quiroga", "text": "session-store-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1790344077887, "author": "person:oskar-zielinski", "text": "Messaging owns Chargeback Defense now."}
+{"channel": "eng", "ts": 1790445179623, "author": "person:cyrus-lindgren", "text": "Deploying Billing to staging after lunch."}

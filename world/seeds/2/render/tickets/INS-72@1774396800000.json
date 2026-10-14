@@ -1,0 +1,18 @@
+{
+  "key": "INS-72",
+  "title": "Partner API: high p99 latency",
+  "description": "Partner API shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-02-25"},
+    {"state": "in_progress", "at": "2026-03-03"},
+    {"state": "done", "at": "2026-03-25"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2026-02-25"}
+  ],
+  "comments": [
+    {"author": "person:paloma-kowal", "at": "2026-03-09", "text": "Blocked until COM-118 lands."},
+    {"author": "person:zofia-arnesen", "at": "2026-03-15", "text": "Moved to the next sprint after triage."}
+  ]
+}

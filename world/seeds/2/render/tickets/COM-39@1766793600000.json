@@ -1,0 +1,19 @@
+{
+  "key": "COM-39",
+  "title": "Notifications: stale cache entries",
+  "description": "Notifications shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:zofia-zamora", "at": "2025-12-25"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-23"},
+    {"state": "in_progress", "at": "2025-12-25"},
+    {"state": "done", "at": "2025-12-27"}
+  ],
+  "component_history": [
+    {"about": "system:notifications", "at": "2025-12-23"}
+  ],
+  "comments": [
+    {"author": "person:elif-ishikawa", "at": "2025-12-25", "text": "This overlaps with ONB-52, linking them."}
+  ]
+}

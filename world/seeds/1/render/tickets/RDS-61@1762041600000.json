@@ -1,0 +1,17 @@
+{
+  "key": "RDS-61",
+  "title": "Billing: slow cold starts",
+  "description": "Billing shows slow cold starts since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-10-04"},
+    {"state": "in_progress", "at": "2025-10-13"},
+    {"state": "done", "at": "2025-11-02"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-10-04"}
+  ],
+  "comments": [
+    {"author": "person:chiara-rasmussen", "at": "2025-10-19", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

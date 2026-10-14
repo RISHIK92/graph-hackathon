@@ -1,0 +1,17 @@
+{
+  "key": "INS-125",
+  "title": "Session Store: timeouts under peak load",
+  "description": "Session Store shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-02-24"},
+    {"state": "in_progress", "at": "2026-02-25"},
+    {"state": "done", "at": "2026-02-28"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-02-24"}
+  ],
+  "comments": [
+    {"author": "person:joaquin-blackwood", "at": "2026-02-24", "text": "This overlaps with FUL-113, linking them."}
+  ]
+}

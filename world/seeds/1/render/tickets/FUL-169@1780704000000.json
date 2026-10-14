@@ -1,0 +1,17 @@
+{
+  "key": "FUL-169",
+  "title": "Billing: missing audit fields",
+  "description": "billing-svc shows missing audit fields since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-05-19"},
+    {"state": "in_progress", "at": "2026-06-06"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2026-05-19"}
+  ],
+  "comments": [
+    {"author": "person:rhea-hartley", "at": "2026-05-20", "text": "Moved to the next sprint after triage."},
+    {"author": "person:wren-mbatha", "at": "2026-05-20", "text": "This overlaps with FUL-114, linking them."}
+  ]
+}

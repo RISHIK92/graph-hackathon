@@ -1,0 +1,19 @@
+{
+  "key": "RSK-95",
+  "title": "Event Bus: missing audit fields",
+  "description": "Event Bus shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:quentin-gunnarsson", "at": "2026-05-17"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-04-30"},
+    {"state": "in_progress", "at": "2026-05-17"}
+  ],
+  "component_history": [
+    {"about": "system:event-bus", "at": "2026-04-30"}
+  ],
+  "comments": [
+    {"author": "person:rhea-sato", "at": "2026-05-07", "text": "Blocked until MSG-190 lands."},
+    {"author": "person:anders-yilmaz", "at": "2026-05-12", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

@@ -1,0 +1,200 @@
+projects:
+  - id: project:chargeback-defense
+    name: "Chargeback Defense"
+    aliases: ["chargeback-defense"]
+    owner: team:commerce
+    owner_from: 2025-05-25
+  - id: project:core-banking
+    name: "Core Banking"
+    aliases: ["core-banking"]
+    owner: team:payments
+    owner_from: 2025-01-01
+  - id: project:data-warehouse
+    name: "Data Warehouse"
+    aliases: ["data-warehouse"]
+    owner: team:onboarding
+    owner_from: 2025-01-01
+  - id: project:discovery-revamp
+    name: "Discovery Revamp"
+    aliases: ["discovery-revamp"]
+    owner: team:onboarding
+    owner_from: 2025-01-01
+  - id: project:gift-cards
+    name: "Gift Cards"
+    aliases: ["gift-cards"]
+    owner: team:insights
+    owner_from: 2025-01-01
+  - id: project:instant-payouts
+    name: "Instant Payouts"
+    aliases: ["instant-payouts"]
+    owner: team:commerce
+    owner_from: 2025-01-01
+  - id: project:loyalty-rewards
+    name: "Loyalty Rewards"
+    aliases: ["loyalty-rewards"]
+    owner: team:commerce
+    owner_from: 2025-01-01
+  - id: project:partner-api
+    name: "Partner API"
+    aliases: ["partner-api"]
+    owner: team:insights
+    owner_from: 2025-01-01
+  - id: project:shared-services
+    name: "Shared Services"
+    aliases: ["shared-services"]
+    owner: team:platform
+    owner_from: 2025-01-01
+  - id: project:wallet-launch
+    name: "Wallet Launch"
+    aliases: ["wallet-launch"]
+    owner: team:commerce
+    owner_from: 2025-01-01
+systems:
+  - id: system:audit-log
+    name: "Audit Log"
+    aliases: ["audit-log-svc"]
+    tier: 2
+    owner: team:insights
+    owner_from: 2025-01-01
+    project: project:discovery-revamp
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:billing-v2, from: 2025-01-01}
+      - {id: system:email-relay, from: 2025-01-01}
+  - id: system:aurora
+    name: "Aurora"
+    aliases: ["aurora-cluster"]
+    tier: 1
+    owner: team:infra
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:billing
+    name: "Billing"
+    aliases: ["billing-svc"]
+    tier: 1
+    owner: team:onboarding
+    owner_from: 2025-01-01
+    project: project:partner-api
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:billing-v2
+    name: "Billing-v2"
+    aliases: ["billing-v2-svc"]
+    tier: 2
+    owner: team:onboarding
+    owner_from: 2025-01-01
+    project: project:discovery-revamp
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:billing, from: 2025-01-01}
+      - {id: system:session-store, from: 2025-01-01}
+  - id: system:checkout
+    name: "Checkout"
+    aliases: ["checkout-api"]
+    tier: 1
+    owner: team:payments
+    owner_from: 2025-01-01
+    project: project:core-banking
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:ledger, from: 2025-01-01}
+  - id: system:email-relay
+    name: "Email Relay"
+    aliases: ["email-relay-svc"]
+    tier: 2
+    owner: team:commerce
+    owner_from: 2025-01-01
+    project: project:discovery-revamp
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:feature-flags
+    name: "Feature Flags"
+    aliases: ["feature-flags-svc"]
+    tier: 2
+    owner: team:insights
+    owner_from: 2025-01-01
+    project: project:discovery-revamp
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:search-index, from: 2025-01-01}
+  - id: system:geo-lookup
+    name: "Geo Lookup"
+    aliases: ["geo-lookup-svc"]
+    tier: 3
+    owner: team:commerce
+    owner_from: 2025-01-01
+    project: project:instant-payouts
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:billing, from: 2025-01-01}
+  - id: system:ledger
+    name: "Ledger"
+    aliases: ["ledger-service"]
+    tier: 1
+    owner: team:platform
+    owner_from: 2025-01-01
+    project: project:core-banking
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:postgres-main, from: 2025-01-01}
+  - id: system:notifications
+    name: "Notifications"
+    aliases: ["notifications-svc"]
+    tier: 3
+    owner: team:commerce
+    owner_from: 2025-01-01
+    project: project:loyalty-rewards
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:email-relay, from: 2025-01-01}
+  - id: system:postgres-main
+    name: "Postgres Main"
+    aliases: ["Postgres", "postgres-main"]
+    tier: 1
+    owner: team:infra
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:reporting
+    name: "Reporting"
+    aliases: ["reporting-service"]
+    tier: 2
+    owner: team:platform
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:ledger, from: 2025-01-01}
+  - id: system:search-index
+    name: "Search Index"
+    aliases: ["search-index-svc"]
+    tier: 2
+    owner: team:onboarding
+    owner_from: 2025-01-01
+    project: project:loyalty-rewards
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:geo-lookup, from: 2025-01-01}
+  - id: system:session-store
+    name: "Session Store"
+    aliases: ["session-store-svc"]
+    tier: 2
+    owner: team:insights
+    owner_from: 2025-01-01
+    project: project:chargeback-defense
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:email-relay, from: 2025-01-01}
+  - id: system:statements
+    name: "Statements"
+    aliases: ["statements-ui"]
+    tier: 2
+    owner: team:infra
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:reporting, from: 2025-01-01}

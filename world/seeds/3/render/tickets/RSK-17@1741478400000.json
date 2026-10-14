@@ -1,0 +1,18 @@
+{
+  "key": "RSK-17",
+  "title": "Account Recovery: slow cold starts",
+  "description": "Account Recovery shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:rhea-sato", "at": "2025-03-09"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-02-19"},
+    {"state": "in_progress", "at": "2025-03-09"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2025-02-19"}
+  ],
+  "comments": [
+    {"author": "person:anders-yilmaz", "at": "2025-03-01", "text": "Blocked until GRO-143 lands."}
+  ]
+}

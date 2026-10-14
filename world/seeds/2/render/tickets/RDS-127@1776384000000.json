@@ -1,0 +1,17 @@
+{
+  "key": "RDS-127",
+  "title": "Discovery Revamp: timeouts under peak load",
+  "description": "Discovery Revamp shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:valeria-moreau", "at": "2026-04-05"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-17"},
+    {"state": "in_progress", "at": "2026-04-05"},
+    {"state": "done", "at": "2026-04-17"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2026-03-17"}
+  ],
+  "comments": []
+}

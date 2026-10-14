@@ -1,0 +1,17 @@
+{
+  "key": "RSK-194",
+  "title": "Account Recovery: noisy alerts at night",
+  "description": "Account Recovery shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:kalinda-castellanos", "at": "2026-07-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-06-21"},
+    {"state": "in_progress", "at": "2026-07-07"},
+    {"state": "done", "at": "2026-08-01"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2026-06-21"}
+  ],
+  "comments": []
+}

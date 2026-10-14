@@ -1,0 +1,20 @@
+{
+  "key": "COM-74",
+  "title": "Wallet Launch: slow cold starts",
+  "description": "Wallet Launch shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "team:commerce", "at": "2025-08-17"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-17"},
+    {"state": "in_progress", "at": "2025-08-25"},
+    {"state": "done", "at": "2025-08-29"}
+  ],
+  "component_history": [
+    {"about": "project:wallet-launch", "at": "2025-08-17"}
+  ],
+  "comments": [
+    {"author": "person:nadia-novak", "at": "2025-08-19", "text": "This overlaps with COM-34, linking them."},
+    {"author": "person:dmitri-rosales", "at": "2025-08-26", "text": "Blocked until ONB-107 lands."}
+  ]
+}

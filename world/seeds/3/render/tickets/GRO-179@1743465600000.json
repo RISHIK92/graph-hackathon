@@ -1,0 +1,15 @@
+{
+  "key": "GRO-179",
+  "title": "Billing-v2: a retry storm after deploys",
+  "description": "billing-v2-svc shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "team:growth", "at": "2025-04-01"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-04-01"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2025-04-01"}
+  ],
+  "comments": []
+}

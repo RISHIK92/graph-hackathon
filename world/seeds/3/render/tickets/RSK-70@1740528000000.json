@@ -1,0 +1,14 @@
+{
+  "key": "RSK-70",
+  "title": "Session Store: a flaky integration test",
+  "description": "Session Store shows a flaky integration test since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-02-07"},
+    {"state": "in_progress", "at": "2025-02-26"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-02-07"}
+  ],
+  "comments": []
+}

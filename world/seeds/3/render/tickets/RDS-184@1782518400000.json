@@ -1,0 +1,15 @@
+{
+  "key": "RDS-184",
+  "title": "Billing-v2: high p99 latency",
+  "description": "billing-v2-svc shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-06-13"},
+    {"state": "in_progress", "at": "2026-06-21"},
+    {"state": "done", "at": "2026-06-27"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2026-06-13"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,18 @@
+{
+  "key": "INS-22",
+  "title": "Audit Log: noisy alerts at night",
+  "description": "Audit Log shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:esme-chaudhry", "at": "2026-04-11"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-30"},
+    {"state": "in_progress", "at": "2026-04-11"}
+  ],
+  "component_history": [
+    {"about": "system:audit-log", "at": "2026-03-30"}
+  ],
+  "comments": [
+    {"author": "person:amara-xu", "at": "2026-04-06", "text": "Blocked until COM-19 lands."}
+  ]
+}

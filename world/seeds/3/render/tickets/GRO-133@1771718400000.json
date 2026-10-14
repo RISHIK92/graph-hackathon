@@ -1,0 +1,15 @@
+{
+  "key": "GRO-133",
+  "title": "Chargeback Defense: stale cache entries",
+  "description": "Chargeback Defense shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:soren-whitfield", "at": "2026-02-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-22"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2026-02-22"}
+  ],
+  "comments": []
+}

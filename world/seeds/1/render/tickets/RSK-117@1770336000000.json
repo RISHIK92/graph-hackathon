@@ -1,0 +1,19 @@
+{
+  "key": "RSK-117",
+  "title": "Billing-v2: a flaky integration test",
+  "description": "Billing-v2 shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:dmitri-kariuki", "at": "2026-01-27"},
+    {"who": "person:emeka-achebe", "at": "2026-02-03"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-01-27"},
+    {"state": "in_progress", "at": "2026-02-06"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2026-01-27"}
+  ],
+  "comments": [
+    {"author": "person:dmitri-kariuki", "at": "2026-01-29", "text": "Blocked until RSK-160 lands."}
+  ]
+}

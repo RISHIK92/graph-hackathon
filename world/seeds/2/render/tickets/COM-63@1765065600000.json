@@ -1,0 +1,17 @@
+{
+  "key": "COM-63",
+  "title": "Notifications: a retry storm after deploys",
+  "description": "Notifications shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:amara-xu", "at": "2025-12-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-07"}
+  ],
+  "component_history": [
+    {"about": "system:notifications", "at": "2025-12-07"}
+  ],
+  "comments": [
+    {"author": "person:nadia-novak", "at": "2025-12-07", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

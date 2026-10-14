@@ -1,0 +1,15 @@
+{
+  "key": "MSG-130",
+  "title": "Auth Gateway: slow cold starts",
+  "description": "Auth Gateway shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "team:messaging", "at": "2025-12-12"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-12"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-12-12"}
+  ],
+  "comments": []
+}

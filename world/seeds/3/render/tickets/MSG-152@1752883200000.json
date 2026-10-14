@@ -1,0 +1,18 @@
+{
+  "key": "MSG-152",
+  "title": "Auth Gateway: slow cold starts",
+  "description": "Auth Gateway shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:elif-dunmore", "at": "2025-07-19"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-11"},
+    {"state": "in_progress", "at": "2025-07-19"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-07-11"}
+  ],
+  "comments": [
+    {"author": "person:cyrus-lindgren", "at": "2025-07-19", "text": "Same symptom as RDS-185, probably one root cause."}
+  ]
+}

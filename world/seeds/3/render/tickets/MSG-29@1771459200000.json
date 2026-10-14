@@ -1,0 +1,15 @@
+{
+  "key": "MSG-29",
+  "title": "Billing-v2: a retry storm after deploys",
+  "description": "Billing-v2 shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:bianca-brennan", "at": "2026-02-19"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-19"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2026-02-19"}
+  ],
+  "comments": []
+}

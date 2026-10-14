@@ -1,0 +1,18 @@
+{
+  "key": "FUL-5",
+  "title": "Billing: noisy alerts at night",
+  "description": "Billing shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:valeria-whitfield", "at": "2025-07-06"},
+    {"who": "person:bianca-ishikawa", "at": "2025-07-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-06"},
+    {"state": "in_progress", "at": "2025-07-19"},
+    {"state": "done", "at": "2025-07-31"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-07-06"}
+  ],
+  "comments": []
+}

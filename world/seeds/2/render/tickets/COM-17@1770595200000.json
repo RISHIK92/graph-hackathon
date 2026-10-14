@@ -1,0 +1,21 @@
+{
+  "key": "COM-17",
+  "title": "Notifications: timeouts under peak load",
+  "description": "Notifications shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:elif-ishikawa", "at": "2026-01-03"},
+    {"who": "person:lars-albescu", "at": "2026-01-26"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-01-03"},
+    {"state": "in_progress", "at": "2026-01-13"},
+    {"state": "done", "at": "2026-02-09"}
+  ],
+  "component_history": [
+    {"about": "system:notifications", "at": "2026-01-03"}
+  ],
+  "comments": [
+    {"author": "person:amara-xu", "at": "2026-01-16", "text": "Same symptom as ONB-198, probably one root cause."},
+    {"author": "person:talia-sato", "at": "2026-01-25", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

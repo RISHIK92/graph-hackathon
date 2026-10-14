@@ -1,0 +1,17 @@
+{
+  "key": "RSK-160",
+  "title": "Account Recovery: slow cold starts",
+  "description": "Account Recovery shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:nikhil-galloway", "at": "2025-06-18"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-18"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2025-06-18"}
+  ],
+  "comments": [
+    {"author": "person:emeka-achebe", "at": "2025-06-18", "text": "Blocked until INS-7 lands."}
+  ]
+}

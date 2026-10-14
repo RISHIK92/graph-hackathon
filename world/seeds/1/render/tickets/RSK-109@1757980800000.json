@@ -1,0 +1,17 @@
+{
+  "key": "RSK-109",
+  "title": "Billing-v2: high p99 latency",
+  "description": "Billing-v2 shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:anders-jaramillo", "at": "2025-09-01"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-12"},
+    {"state": "in_progress", "at": "2025-09-01"},
+    {"state": "done", "at": "2025-09-16"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2025-08-12"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,20 @@
+{
+  "key": "ONB-105",
+  "title": "Billing-v2: slow cold starts",
+  "description": "Billing-v2 shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "team:onboarding", "at": "2025-09-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-09-17"},
+    {"state": "in_progress", "at": "2025-09-22"},
+    {"state": "done", "at": "2025-10-18"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2025-09-17"}
+  ],
+  "comments": [
+    {"author": "person:darius-oyelaran", "at": "2025-10-01", "text": "Reproduced on staging, logs are attached."},
+    {"author": "person:valeria-moreau", "at": "2025-10-17", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

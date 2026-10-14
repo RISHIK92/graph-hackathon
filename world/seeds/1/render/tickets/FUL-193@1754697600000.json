@@ -1,0 +1,17 @@
+{
+  "key": "FUL-193",
+  "title": "Fraud Scoring: stale cache entries",
+  "description": "Fraud Scoring shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:esme-oyelaran", "at": "2025-08-09"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-09"}
+  ],
+  "component_history": [
+    {"about": "system:fraud-scoring", "at": "2025-08-09"}
+  ],
+  "comments": [
+    {"author": "person:valeria-whitfield", "at": "2025-08-09", "text": "Blocked until RSK-24 lands."}
+  ]
+}

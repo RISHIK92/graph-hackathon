@@ -1,0 +1,13 @@
+{
+  "key": "COM-24",
+  "title": "Billing: high p99 latency",
+  "description": "Billing shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-08-30"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2026-08-30"}
+  ],
+  "comments": []
+}

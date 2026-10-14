@@ -1,0 +1,17 @@
+{
+  "key": "GRO-36",
+  "title": "Chargeback Defense: a retry storm after deploys",
+  "description": "Chargeback Defense shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-zielinski", "at": "2026-02-04"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-04"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2026-02-04"}
+  ],
+  "comments": [
+    {"author": "person:farah-rasmussen", "at": "2026-02-04", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

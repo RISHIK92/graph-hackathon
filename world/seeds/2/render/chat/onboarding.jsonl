@@ -1,0 +1,67 @@
+{"channel": "onboarding", "ts": 1736521943147, "author": "person:valeria-moreau", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "onboarding", "ts": 1737972902141, "author": "person:hugo-yoon", "text": "Who has context on the email-relay-svc alerts from last night?"}
+{"channel": "onboarding", "ts": 1739027293683, "author": "person:sam-gunnarsson", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "onboarding", "ts": 1739451639965, "author": "person:darius-oyelaran", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "onboarding", "ts": 1739631917050, "author": "person:hugo-yoon", "text": "Who has context on the Geo Lookup alerts from last night?"}
+{"channel": "onboarding", "ts": 1739965314959, "author": "person:darius-oyelaran", "text": "Closed ONB-132, the fix is live."}
+{"channel": "onboarding", "ts": 1740911276210, "author": "person:maya-quiroga", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "onboarding", "ts": 1741421186578, "author": "person:sam-gunnarsson", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "onboarding", "ts": 1742119530551, "author": "person:maya-quiroga", "text": "Deploying Email Relay to staging after lunch."}
+{"channel": "onboarding", "ts": 1743615936321, "author": "person:sam-gunnarsson", "text": "Who has context on the Notifications alerts from last night?"}
+{"channel": "onboarding", "ts": 1743693317229, "author": "person:darius-oyelaran", "text": "Deploying billing-v2-svc to staging after lunch.", "thread_ts": 1743615936321}
+{"channel": "onboarding", "ts": 1744138152203, "author": "person:darius-oyelaran", "text": "Pairing with Kai Udeh on session-store-svc today."}
+{"channel": "onboarding", "ts": 1744455721844, "author": "person:saanvi-bergstrom", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "onboarding", "ts": 1744617655094, "author": "person:selin-kariuki", "text": "The Gift Cards retro notes are up."}
+{"channel": "onboarding", "ts": 1745224911256, "author": "person:sam-gunnarsson", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "onboarding", "ts": 1745659552196, "author": "person:maya-quiroga", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "onboarding", "ts": 1747679999934, "author": "person:hugo-yoon", "text": "The Commerce demo moved to Thursday."}
+{"channel": "onboarding", "ts": 1748102689085, "author": "person:maya-quiroga", "text": "Closed COM-36, the fix is live."}
+{"channel": "onboarding", "ts": 1749491400637, "author": "person:selin-kariuki", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "onboarding", "ts": 1750943019065, "author": "person:hugo-yoon", "text": "Zofia Zamora and Zofia Arnesen are both out on Friday."}
+{"channel": "onboarding", "ts": 1754308561279, "author": "person:darius-oyelaran", "text": "Closed ONB-72, the fix is live."}
+{"channel": "onboarding", "ts": 1754763408583, "author": "person:selin-kariuki", "text": "Load test for Audit Log finished, numbers look normal."}
+{"channel": "onboarding", "ts": 1754828822862, "author": "person:saanvi-bergstrom", "text": "Load test for Email Relay finished, numbers look normal."}
+{"channel": "onboarding", "ts": 1755455129316, "author": "person:sam-gunnarsson", "text": "audit-log-svc dashboards are back after the metrics outage."}
+{"channel": "onboarding", "ts": 1755685379052, "author": "person:selin-kariuki", "text": "Who has context on the geo-lookup-svc alerts from last night?"}
+{"channel": "onboarding", "ts": 1757007640497, "author": "person:selin-kariuki", "text": "The Instant Payouts retro notes are up."}
+{"channel": "onboarding", "ts": 1757244769323, "author": "person:sam-gunnarsson", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "onboarding", "ts": 1757245461324, "author": "person:saanvi-bergstrom", "text": "Who has context on the Feature Flags alerts from last night?"}
+{"channel": "onboarding", "ts": 1757599064170, "author": "person:darius-oyelaran", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "onboarding", "ts": 1758212703789, "author": "person:valeria-moreau", "text": "Elif leads Loyalty Rewards."}
+{"channel": "onboarding", "ts": 1758815611014, "author": "person:valeria-moreau", "text": "Nikhil Dahl works on Loyalty Rewards."}
+{"channel": "onboarding", "ts": 1759309392070, "author": "person:saanvi-bergstrom", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "onboarding", "ts": 1759423570198, "author": "person:valeria-moreau", "text": "Load test for Notifications finished, numbers look normal."}
+{"channel": "onboarding", "ts": 1759827262824, "author": "person:sam-gunnarsson", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "onboarding", "ts": 1761308314502, "author": "person:valeria-moreau", "text": "I think Onboarding owns Email Relay?"}
+{"channel": "onboarding", "ts": 1761576665454, "author": "person:darius-oyelaran", "text": "The Wallet Launch retro notes are up."}
+{"channel": "onboarding", "ts": 1762778177521, "author": "person:hugo-yoon", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "onboarding", "ts": 1763986347492, "author": "person:valeria-moreau", "text": "The Partner API retro notes are up."}
+{"channel": "onboarding", "ts": 1765282335949, "author": "person:darius-oyelaran", "text": "Who has context on the Notifications alerts from last night?"}
+{"channel": "onboarding", "ts": 1765712285447, "author": "person:darius-oyelaran", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "onboarding", "ts": 1767264756788, "author": "person:selin-kariuki", "text": "ONB-198 is blocked on a config change."}
+{"channel": "onboarding", "ts": 1767539083509, "author": "person:saanvi-bergstrom", "text": "Pairing with Ilse on Email Relay today."}
+{"channel": "onboarding", "ts": 1767885829800, "author": "person:valeria-moreau", "text": "Search Index dashboards are back after the metrics outage."}
+{"channel": "onboarding", "ts": 1768999665051, "author": "person:sam-gunnarsson", "text": "The Partner API retro notes are up."}
+{"channel": "onboarding", "ts": 1769417799105, "author": "person:saanvi-bergstrom", "text": "Pairing with Nikhil Dahl on audit-log-svc today."}
+{"channel": "onboarding", "ts": 1770399570720, "author": "person:hugo-yoon", "text": "Thanks Zofia A., the billing-svc alert is quiet again."}
+{"channel": "onboarding", "ts": 1772529702233, "author": "person:darius-oyelaran", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "onboarding", "ts": 1774105088189, "author": "person:maya-quiroga", "text": "Talia Sato works on Loyalty Rewards."}
+{"channel": "onboarding", "ts": 1776350616432, "author": "person:sam-gunnarsson", "text": "search-index-svc depends on Geo Lookup."}
+{"channel": "onboarding", "ts": 1777109240668, "author": "person:selin-kariuki", "text": "Search Index dashboards are back after the metrics outage."}
+{"channel": "onboarding", "ts": 1777646088498, "author": "person:rhea-wexler", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "onboarding", "ts": 1780654260691, "author": "person:saanvi-bergstrom", "text": "Can someone review the Email Relay runbook changes?"}
+{"channel": "onboarding", "ts": 1781441965913, "author": "person:hugo-yoon", "text": "Pairing with Felix Mbatha on audit-log-svc today."}
+{"channel": "onboarding", "ts": 1781522765224, "author": "person:sam-gunnarsson", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "onboarding", "ts": 1781697907512, "author": "person:rhea-wexler", "text": "Pairing with Zofia Zamora on Session Store today."}
+{"channel": "onboarding", "ts": 1783345445446, "author": "person:sam-gunnarsson", "text": "feature-flags-svc is part of instant-payouts."}
+{"channel": "onboarding", "ts": 1783436524656, "author": "person:saanvi-bergstrom", "text": "Kicking off the Chargeback Defense design review next week.", "thread_ts": 1783345445446}
+{"channel": "onboarding", "ts": 1784131209099, "author": "person:selin-kariuki", "text": "Maya Quiroga works on Discovery Revamp."}
+{"channel": "onboarding", "ts": 1784205831200, "author": "person:selin-kariuki", "text": "Audit Log is part of discovery-revamp."}
+{"channel": "onboarding", "ts": 1784744412289, "author": "person:hugo-yoon", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "onboarding", "ts": 1785604660278, "author": "person:saanvi-bergstrom", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "onboarding", "ts": 1786267603604, "author": "person:selin-kariuki", "text": "Insights owns notifications-svc."}
+{"channel": "onboarding", "ts": 1786442219471, "author": "person:rhea-wexler", "text": "The Insights demo moved to Thursday."}
+{"channel": "onboarding", "ts": 1786794872495, "author": "person:darius-oyelaran", "text": "commerce-team owns Search Index."}
+{"channel": "onboarding", "ts": 1789047707440, "author": "person:sam-gunnarsson", "text": "I think Commerce owns Billing?"}
+{"channel": "onboarding", "ts": 1789057349269, "author": "person:darius-oyelaran", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "onboarding", "ts": 1790787289760, "author": "person:darius-oyelaran", "text": "The Onboarding demo moved to Thursday."}

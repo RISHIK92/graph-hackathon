@@ -1,0 +1,13 @@
+{
+  "key": "INS-121",
+  "title": "Pricing Engine: missing audit fields",
+  "description": "Pricing Engine shows missing audit fields since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-04-05"}
+  ],
+  "component_history": [
+    {"about": "system:pricing-engine", "at": "2026-04-05"}
+  ],
+  "comments": []
+}

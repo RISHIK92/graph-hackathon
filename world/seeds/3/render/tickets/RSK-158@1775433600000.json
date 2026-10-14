@@ -1,0 +1,15 @@
+{
+  "key": "RSK-158",
+  "title": "Session Store: high p99 latency",
+  "description": "session-store-svc shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-04-06"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-04-06"}
+  ],
+  "comments": [
+    {"author": "person:soren-abernathy", "at": "2026-04-06", "text": "Moved to the next sprint after triage."}
+  ]
+}

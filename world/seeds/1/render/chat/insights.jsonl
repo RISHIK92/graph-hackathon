@@ -1,0 +1,61 @@
+{"channel": "insights", "ts": 1739612365417, "author": "person:soren-esposito", "text": "Session Store depends on Rate Limiter."}
+{"channel": "insights", "ts": 1739975351381, "author": "person:amara-kowal", "text": "Pairing with Joaquin on Billing today."}
+{"channel": "insights", "ts": 1742059445706, "author": "person:amara-kowal", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1742745098091, "author": "person:amara-kowal", "text": "The Insights demo moved to Thursday."}
+{"channel": "insights", "ts": 1743419831171, "author": "person:elif-takahashi", "text": "Load test for Billing-v2 finished, numbers look normal."}
+{"channel": "insights", "ts": 1743875084907, "author": "person:teodor-arnesen", "text": "Kicking off the Merchant Portal design review next week."}
+{"channel": "insights", "ts": 1744814853750, "author": "person:amara-kowal", "text": "Can someone triage FUL-128?"}
+{"channel": "insights", "ts": 1744821640165, "author": "person:amara-kowal", "text": "Can someone review the Geo Lookup runbook changes?"}
+{"channel": "insights", "ts": 1745162598194, "author": "person:teodor-arnesen", "text": "Billing dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1745508340569, "author": "person:cyrus-quint", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "insights", "ts": 1746021805159, "author": "person:cyrus-quint", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "insights", "ts": 1746548477860, "author": "person:amara-kowal", "text": "Deploying Geo Lookup to staging after lunch."}
+{"channel": "insights", "ts": 1747211919923, "author": "person:teodor-arnesen", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "insights", "ts": 1747218484678, "author": "person:elif-takahashi", "text": "Who has context on the Fraud Scoring alerts from last night?"}
+{"channel": "insights", "ts": 1747570300669, "author": "person:elif-takahashi", "text": "The Account Recovery retro notes are up."}
+{"channel": "insights", "ts": 1750147719061, "author": "person:darius-ekwueme", "text": "Session Store is part of Wallet Launch."}
+{"channel": "insights", "ts": 1750613473432, "author": "person:elif-takahashi", "text": "Can someone review the Pricing Engine runbook changes?"}
+{"channel": "insights", "ts": 1750936080699, "author": "person:amara-kowal", "text": "Greta Carrow works on Wallet Launch."}
+{"channel": "insights", "ts": 1751014677106, "author": "person:darius-ekwueme", "text": "Load test for Billing-v2 finished, numbers look normal.", "thread_ts": 1750936080699}
+{"channel": "insights", "ts": 1751284766495, "author": "person:joaquin-blackwood", "text": "Nikhil Galloway works on Account Recovery."}
+{"channel": "insights", "ts": 1751707468468, "author": "person:cyrus-quint", "text": "Linked FUL-128 to RSK-124, same root cause."}
+{"channel": "insights", "ts": 1752514030144, "author": "person:joaquin-blackwood", "text": "Pairing with Callum on Billing today."}
+{"channel": "insights", "ts": 1752594634322, "author": "person:cyrus-quint", "text": "Who has context on the geo-lookup-svc alerts from last night?"}
+{"channel": "insights", "ts": 1752836112848, "author": "person:teodor-arnesen", "text": "Picking up FUL-21 today."}
+{"channel": "insights", "ts": 1753701184520, "author": "person:teodor-arnesen", "text": "Billing-v2 dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1754414266948, "author": "person:amara-kowal", "text": "Can someone triage FUL-76?"}
+{"channel": "insights", "ts": 1754826670937, "author": "person:joaquin-blackwood", "text": "Deploying Fraud Scoring to staging after lunch."}
+{"channel": "insights", "ts": 1755183134102, "author": "person:teodor-arnesen", "text": "Load test for Image Resizer finished, numbers look normal."}
+{"channel": "insights", "ts": 1756387091062, "author": "person:teodor-arnesen", "text": "Can someone triage RSK-183?"}
+{"channel": "insights", "ts": 1756547782094, "author": "person:joaquin-blackwood", "text": "Pairing with Soren Esposito on rate-limiter-svc today."}
+{"channel": "insights", "ts": 1757695974535, "author": "person:teodor-arnesen", "text": "Pairing with Nadia Laine on Session Store today."}
+{"channel": "insights", "ts": 1758821576433, "author": "person:teodor-arnesen", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1761051849967, "author": "person:teodor-arnesen", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "insights", "ts": 1763712107940, "author": "person:soren-esposito", "text": "Kicking off the Merchant Portal design review next week."}
+{"channel": "insights", "ts": 1765194272653, "author": "person:darius-ekwueme", "text": "Webhook Dispatcher dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1766145488679, "author": "person:soren-esposito", "text": "Pairing with Bianca on Rate Limiter today."}
+{"channel": "insights", "ts": 1766482408206, "author": "person:soren-esposito", "text": "Closed RSK-124, the fix is live."}
+{"channel": "insights", "ts": 1771948994196, "author": "person:joaquin-blackwood", "text": "Darius Ekwueme leads Discovery Revamp."}
+{"channel": "insights", "ts": 1773845332758, "author": "person:amara-kowal", "text": "The Merchant Portal retro notes are up."}
+{"channel": "insights", "ts": 1776882861462, "author": "person:joaquin-blackwood", "text": "Pairing with Cyrus Quint on billing-v2-svc today."}
+{"channel": "insights", "ts": 1777127820962, "author": "person:cyrus-quint", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "insights", "ts": 1777832955060, "author": "person:joaquin-blackwood", "text": "Maybe Rhea Hartley leads Fulfilment?"}
+{"channel": "insights", "ts": 1778612059731, "author": "person:cyrus-quint", "text": "Pairing with Rhea Hartley on session-store-svc today."}
+{"channel": "insights", "ts": 1778946026453, "author": "person:darius-ekwueme", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "insights", "ts": 1779448420212, "author": "person:cyrus-quint", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "insights", "ts": 1780233675260, "author": "person:amara-kowal", "text": "pricing-engine-svc dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1781024801421, "author": "person:elif-takahashi", "text": "Load test for Billing-v2 finished, numbers look normal."}
+{"channel": "insights", "ts": 1781773282509, "author": "person:soren-esposito", "text": "Session Store dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1782376404173, "author": "person:darius-ekwueme", "text": "Insights owns Rate Limiter."}
+{"channel": "insights", "ts": 1782743958556, "author": "person:cyrus-quint", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "insights", "ts": 1784110452646, "author": "person:darius-ekwueme", "text": "Deploying billing-svc to staging after lunch."}
+{"channel": "insights", "ts": 1784554685538, "author": "person:darius-ekwueme", "text": "I think Pricing Engine depends on Billing-v2, maybe?"}
+{"channel": "insights", "ts": 1784919467238, "author": "person:darius-ekwueme", "text": "The Risk demo moved to Thursday."}
+{"channel": "insights", "ts": 1785434820292, "author": "person:elif-takahashi", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "insights", "ts": 1786035903044, "author": "person:joaquin-blackwood", "text": "Chiara Rasmussen and Chiara Holloway are both out on Friday."}
+{"channel": "insights", "ts": 1786548424745, "author": "person:darius-ekwueme", "text": "For context, Insights owns Image Resizer."}
+{"channel": "insights", "ts": 1787928635939, "author": "person:elif-takahashi", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1788618789124, "author": "person:cyrus-quint", "text": "Billing-v2 depends on Billing."}
+{"channel": "insights", "ts": 1789634314087, "author": "person:elif-takahashi", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "insights", "ts": 1790238262729, "author": "person:darius-ekwueme", "text": "Bianca Ishikawa works on Instant Payouts."}
+{"channel": "insights", "ts": 1790276387431, "author": "person:soren-esposito", "text": "Webhook Dispatcher is part of Merchant Portal."}

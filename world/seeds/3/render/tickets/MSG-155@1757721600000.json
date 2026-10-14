@@ -1,0 +1,17 @@
+{
+  "key": "MSG-155",
+  "title": "Auth Gateway: slow cold starts",
+  "description": "Auth Gateway shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:bianca-brennan", "at": "2025-09-13"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-09-13"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-09-13"}
+  ],
+  "comments": [
+    {"author": "person:zofia-esposito", "at": "2025-09-13", "text": "Moved to the next sprint after triage."}
+  ]
+}

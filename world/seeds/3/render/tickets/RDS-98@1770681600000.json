@@ -1,0 +1,17 @@
+{
+  "key": "RDS-98",
+  "title": "Image Resizer: a flaky integration test",
+  "description": "Image Resizer shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "team:messaging", "at": "2026-02-10"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-10"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2026-02-10"}
+  ],
+  "comments": [
+    {"author": "person:bianca-brennan", "at": "2026-02-10", "text": "This overlaps with GRO-116, linking them."}
+  ]
+}

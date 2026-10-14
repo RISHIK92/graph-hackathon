@@ -1,0 +1,17 @@
+{
+  "key": "FUL-158",
+  "title": "Instant Payouts: stale cache entries",
+  "description": "instant-payouts shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:chiara-rasmussen", "at": "2026-05-01"},
+    {"who": "person:bianca-ishikawa", "at": "2026-05-03"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-05-01"},
+    {"state": "in_progress", "at": "2026-05-04"}
+  ],
+  "component_history": [
+    {"about": "project:instant-payouts", "at": "2026-05-01"}
+  ],
+  "comments": []
+}

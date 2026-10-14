@@ -1,0 +1,17 @@
+{
+  "key": "INS-24",
+  "title": "Session Store: noisy alerts at night",
+  "description": "Session Store shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:soren-esposito", "at": "2026-07-16"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-07-16"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-07-16"}
+  ],
+  "comments": [
+    {"author": "person:joaquin-blackwood", "at": "2026-07-16", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

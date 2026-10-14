@@ -1,0 +1,13 @@
+{
+  "key": "RSK-97",
+  "title": "Image Resizer: noisy alerts at night",
+  "description": "Image Resizer shows noisy alerts at night since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-05-18"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2026-05-18"}
+  ],
+  "comments": []
+}

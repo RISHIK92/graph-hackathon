@@ -1,0 +1,16 @@
+{
+  "key": "INS-46",
+  "title": "Feature Flags: a flaky integration test",
+  "description": "Feature Flags shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:rhea-wexler", "at": "2025-06-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-23"},
+    {"state": "in_progress", "at": "2025-07-07"}
+  ],
+  "component_history": [
+    {"about": "system:feature-flags", "at": "2025-06-23"}
+  ],
+  "comments": []
+}

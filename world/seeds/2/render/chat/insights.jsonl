@@ -1,0 +1,67 @@
+{"channel": "insights", "ts": 1736418517624, "author": "person:oskar-petrov", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "insights", "ts": 1741774001566, "author": "person:oskar-petrov", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "insights", "ts": 1742290258106, "author": "person:bianca-pellegrino", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "insights", "ts": 1743673559424, "author": "person:esme-chaudhry", "text": "Closed COM-118, the fix is live."}
+{"channel": "insights", "ts": 1745689675911, "author": "person:bianca-pellegrino", "text": "Audit Log dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1745950783822, "author": "person:kai-udeh", "text": "Kicking off the Partner API design review next week."}
+{"channel": "insights", "ts": 1747988090789, "author": "person:oskar-petrov", "text": "Insights owns Audit Log."}
+{"channel": "insights", "ts": 1749401047959, "author": "person:kai-udeh", "text": "Pairing with Nadia Novak on Billing today."}
+{"channel": "insights", "ts": 1749821408815, "author": "person:zofia-arnesen", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1750073655674, "author": "person:zofia-arnesen", "text": "The Partner API retro notes are up."}
+{"channel": "insights", "ts": 1751031884833, "author": "person:oskar-petrov", "text": "Session Store dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1751371425937, "author": "person:zofia-arnesen", "text": "Can someone triage RDS-156?"}
+{"channel": "insights", "ts": 1753882366223, "author": "person:esme-chaudhry", "text": "Deploying Notifications to staging after lunch."}
+{"channel": "insights", "ts": 1755878889823, "author": "person:oskar-petrov", "text": "Who has context on the Notifications alerts from last night?"}
+{"channel": "insights", "ts": 1757690523988, "author": "person:rhea-wexler", "text": "The Partner API retro notes are up."}
+{"channel": "insights", "ts": 1758117413310, "author": "person:rhea-wexler", "text": "Lars Albescu works on Loyalty Rewards."}
+{"channel": "insights", "ts": 1759311008014, "author": "person:rhea-wexler", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "insights", "ts": 1759315321113, "author": "person:paloma-kowal", "text": "Who has context on the Search Index alerts from last night?"}
+{"channel": "insights", "ts": 1760035620266, "author": "person:rhea-wexler", "text": "Who has context on the geo-lookup-svc alerts from last night?"}
+{"channel": "insights", "ts": 1760895084436, "author": "person:anders-dunmore", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "insights", "ts": 1762418951790, "author": "person:bianca-pellegrino", "text": "Thanks Zofia Z., merged the billing-v2-svc fix."}
+{"channel": "insights", "ts": 1762961454560, "author": "person:zofia-arnesen", "text": "The Commerce demo moved to Thursday."}
+{"channel": "insights", "ts": 1763640268838, "author": "person:esme-chaudhry", "text": "Pairing with Aiko on Billing today."}
+{"channel": "insights", "ts": 1764058677491, "author": "person:paloma-kowal", "text": "Hugo works on data-warehouse."}
+{"channel": "insights", "ts": 1765290267179, "author": "person:oskar-petrov", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "insights", "ts": 1765369650759, "author": "person:paloma-kowal", "text": "Feature Flags dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1766047910690, "author": "person:rhea-wexler", "text": "The Instant Payouts retro notes are up."}
+{"channel": "insights", "ts": 1766222656261, "author": "person:zofia-arnesen", "text": "Paloma leads Partner API now."}
+{"channel": "insights", "ts": 1766408976213, "author": "person:kai-udeh", "text": "Darius works on Discovery Revamp."}
+{"channel": "insights", "ts": 1766488061423, "author": "person:anders-dunmore", "text": "Kai Udeh works on partner-api."}
+{"channel": "insights", "ts": 1767101960455, "author": "person:kai-udeh", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1767962203764, "author": "person:esme-chaudhry", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "insights", "ts": 1768125150598, "author": "person:rhea-wexler", "text": "Can someone review the Email Relay runbook changes?"}
+{"channel": "insights", "ts": 1768128092322, "author": "person:kai-udeh", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1769707883248, "author": "person:paloma-kowal", "text": "Can someone review the Geo Lookup runbook changes?"}
+{"channel": "insights", "ts": 1769936763685, "author": "person:zofia-arnesen", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "insights", "ts": 1770547369268, "author": "person:zofia-arnesen", "text": "Picking up INS-46 today."}
+{"channel": "insights", "ts": 1770997858502, "author": "person:rhea-wexler", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "insights", "ts": 1771405744908, "author": "person:oskar-petrov", "text": "The Insights demo moved to Thursday."}
+{"channel": "insights", "ts": 1771924073953, "author": "person:zofia-arnesen", "text": "Can someone triage COM-118?"}
+{"channel": "insights", "ts": 1772098816484, "author": "person:oskar-petrov", "text": "Linked INS-140 to ONB-120, same root cause."}
+{"channel": "insights", "ts": 1772214987149, "author": "person:oskar-petrov", "text": "Who has context on the Feature Flags alerts from last night?"}
+{"channel": "insights", "ts": 1773414516561, "author": "person:oskar-petrov", "text": "Search Index dashboards are back after the metrics outage."}
+{"channel": "insights", "ts": 1774600763992, "author": "person:rhea-wexler", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "insights", "ts": 1775297255667, "author": "person:anders-dunmore", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "insights", "ts": 1775326231609, "author": "person:paloma-kowal", "text": "Deploying Notifications to staging after lunch."}
+{"channel": "insights", "ts": 1776519013870, "author": "person:paloma-kowal", "text": "Picking up COM-36 today."}
+{"channel": "insights", "ts": 1777628594827, "author": "person:maya-quiroga", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "insights", "ts": 1777649762959, "author": "person:maya-quiroga", "text": "Who has context on the Search Index alerts from last night?"}
+{"channel": "insights", "ts": 1778408107955, "author": "person:bianca-pellegrino", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "insights", "ts": 1779975899160, "author": "person:paloma-kowal", "text": "Who has context on the Email Relay alerts from last night?"}
+{"channel": "insights", "ts": 1780062050257, "author": "person:kai-udeh", "text": "Maybe Lars Albescu leads Commerce?"}
+{"channel": "insights", "ts": 1780236434612, "author": "person:kai-udeh", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "insights", "ts": 1781365475149, "author": "person:paloma-kowal", "text": "Pairing with Soren Zielinski on Session Store today."}
+{"channel": "insights", "ts": 1781539286986, "author": "person:zofia-arnesen", "text": "Deploying Geo Lookup to staging after lunch."}
+{"channel": "insights", "ts": 1781632651344, "author": "person:maya-quiroga", "text": "Load test for notifications-svc finished, numbers look normal."}
+{"channel": "insights", "ts": 1781776661797, "author": "person:paloma-kowal", "text": "Search Index dashboards are back after the metrics outage.", "thread_ts": 1781632651344}
+{"channel": "insights", "ts": 1782557687371, "author": "person:maya-quiroga", "text": "The Commerce demo moved to Thursday."}
+{"channel": "insights", "ts": 1784624479733, "author": "person:bianca-pellegrino", "text": "The Commerce demo moved to Thursday."}
+{"channel": "insights", "ts": 1784715910715, "author": "person:maya-quiroga", "text": "Picking up COM-14 today."}
+{"channel": "insights", "ts": 1785156707396, "author": "person:oskar-petrov", "text": "Closed ONB-65, the fix is live."}
+{"channel": "insights", "ts": 1785178098789, "author": "person:anders-dunmore", "text": "Deploying billing-svc to staging after lunch.", "thread_ts": 1785156707396}
+{"channel": "insights", "ts": 1787050587138, "author": "person:maya-quiroga", "text": "I think Audit Log depends on Email Relay, maybe?"}
+{"channel": "insights", "ts": 1787587508229, "author": "person:bianca-pellegrino", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "insights", "ts": 1787826516951, "author": "person:paloma-kowal", "text": "Pairing with Zofia Zamora on Billing-v2 today."}
+{"channel": "insights", "ts": 1787928351409, "author": "person:bianca-pellegrino", "text": "Deploying audit-log-svc to staging after lunch."}
+{"channel": "insights", "ts": 1788350780142, "author": "person:paloma-kowal", "text": "The Commerce demo moved to Thursday."}

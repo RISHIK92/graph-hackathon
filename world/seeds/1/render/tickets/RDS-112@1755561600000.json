@@ -1,0 +1,15 @@
+{
+  "key": "RDS-112",
+  "title": "Billing: stale cache entries",
+  "description": "billing-svc shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:chiara-rasmussen", "at": "2025-08-19"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-19"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-08-19"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,17 @@
+{
+  "key": "MSG-149",
+  "title": "Smart Routing: timeouts under peak load",
+  "description": "Smart Routing shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:bianca-brennan", "at": "2025-05-28"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-05-14"},
+    {"state": "in_progress", "at": "2025-05-28"},
+    {"state": "done", "at": "2025-06-11"}
+  ],
+  "component_history": [
+    {"about": "project:smart-routing", "at": "2025-05-14"}
+  ],
+  "comments": []
+}

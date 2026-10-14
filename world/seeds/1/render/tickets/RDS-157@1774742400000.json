@@ -1,0 +1,19 @@
+{
+  "key": "RDS-157",
+  "title": "Billing: noisy alerts at night",
+  "description": "Billing shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:kalinda-castellanos", "at": "2026-03-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-23"},
+    {"state": "in_progress", "at": "2026-03-29"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2026-03-23"}
+  ],
+  "comments": [
+    {"author": "person:kalinda-castellanos", "at": "2026-03-25", "text": "Moved to the next sprint after triage."},
+    {"author": "person:bianca-ishikawa", "at": "2026-03-28", "text": "Blocked until INS-167 lands."}
+  ]
+}

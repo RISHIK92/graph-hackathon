@@ -1,0 +1,17 @@
+{
+  "key": "GRO-93",
+  "title": "Billing: a retry storm after deploys",
+  "description": "billing-svc shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:leila-chaudhry", "at": "2025-12-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-10"},
+    {"state": "in_progress", "at": "2025-12-22"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-12-10"},
+    {"about": "system:image-resizer", "at": "2026-04-05"}
+  ],
+  "comments": []
+}

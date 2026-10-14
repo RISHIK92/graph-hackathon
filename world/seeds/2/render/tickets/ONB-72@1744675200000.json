@@ -1,0 +1,15 @@
+{
+  "key": "ONB-72",
+  "title": "Billing: timeouts under peak load",
+  "description": "Billing shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:saanvi-bergstrom", "at": "2025-04-15"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-04-15"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-04-15"}
+  ],
+  "comments": []
+}

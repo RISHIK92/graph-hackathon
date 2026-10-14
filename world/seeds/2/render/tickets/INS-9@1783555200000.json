@@ -1,0 +1,17 @@
+{
+  "key": "INS-9",
+  "title": "Partner API: stale cache entries",
+  "description": "Partner API shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-petrov", "at": "2026-05-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-05-22"},
+    {"state": "in_progress", "at": "2026-06-10"},
+    {"state": "done", "at": "2026-07-09"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2026-05-22"}
+  ],
+  "comments": []
+}

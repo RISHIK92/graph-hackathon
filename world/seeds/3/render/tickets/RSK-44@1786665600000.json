@@ -1,0 +1,17 @@
+{
+  "key": "RSK-44",
+  "title": "Session Store: a retry storm after deploys",
+  "description": "Session Store shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:mads-haddad", "at": "2026-07-08"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-07-08"},
+    {"state": "in_progress", "at": "2026-07-19"},
+    {"state": "done", "at": "2026-08-14"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-07-08"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,17 @@
+{
+  "key": "ONB-168",
+  "title": "Search Index: a retry storm after deploys",
+  "description": "Search Index shows a retry storm after deploys since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-01-05"},
+    {"state": "in_progress", "at": "2026-01-12"},
+    {"state": "done", "at": "2026-02-03"}
+  ],
+  "component_history": [
+    {"about": "system:search-index", "at": "2026-01-05"}
+  ],
+  "comments": [
+    {"author": "person:valeria-moreau", "at": "2026-01-10", "text": "This overlaps with INS-46, linking them."}
+  ]
+}

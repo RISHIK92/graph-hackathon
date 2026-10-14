@@ -1,0 +1,16 @@
+{
+  "key": "ONB-66",
+  "title": "Billing-v2: slow cold starts",
+  "description": "billing-v2-svc shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:sam-gunnarsson", "at": "2026-09-17"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-09-02"},
+    {"state": "in_progress", "at": "2026-09-17"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2026-09-02"}
+  ],
+  "comments": []
+}

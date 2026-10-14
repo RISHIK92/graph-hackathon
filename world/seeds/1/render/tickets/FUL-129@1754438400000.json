@@ -1,0 +1,17 @@
+{
+  "key": "FUL-129",
+  "title": "Geo Lookup: a flaky integration test",
+  "description": "Geo Lookup shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:esme-oyelaran", "at": "2025-06-28"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-28"},
+    {"state": "in_progress", "at": "2025-07-09"},
+    {"state": "done", "at": "2025-08-06"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-06-28"}
+  ],
+  "comments": []
+}

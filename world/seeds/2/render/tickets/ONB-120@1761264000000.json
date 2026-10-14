@@ -1,0 +1,17 @@
+{
+  "key": "ONB-120",
+  "title": "Search Index: stale cache entries",
+  "description": "Search Index shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:valeria-moreau", "at": "2025-10-24"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-24"}
+  ],
+  "component_history": [
+    {"about": "system:search-index", "at": "2025-10-24"}
+  ],
+  "comments": [
+    {"author": "person:darius-oyelaran", "at": "2025-10-24", "text": "Blocked until INS-154 lands."}
+  ]
+}

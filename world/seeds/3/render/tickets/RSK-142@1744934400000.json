@@ -1,0 +1,18 @@
+{
+  "key": "RSK-142",
+  "title": "Auth Gateway: slow cold starts",
+  "description": "Auth Gateway shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:anders-yilmaz", "at": "2025-04-18"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-04-18"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-04-18"}
+  ],
+  "comments": [
+    {"author": "person:nikhil-galloway", "at": "2025-04-18", "text": "Rolled out the fix behind a feature flag."},
+    {"author": "person:mirela-dahl", "at": "2025-04-18", "text": "Same symptom as RDS-98, probably one root cause."}
+  ]
+}

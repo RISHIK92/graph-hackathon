@@ -1,0 +1,20 @@
+{
+  "key": "MSG-153",
+  "title": "Image Resizer: noisy alerts at night",
+  "description": "Image Resizer shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "team:messaging", "at": "2026-01-19"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-01-07"},
+    {"state": "in_progress", "at": "2026-01-19"},
+    {"state": "done", "at": "2026-02-05"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2026-01-07"}
+  ],
+  "comments": [
+    {"author": "person:bianca-brennan", "at": "2026-01-09", "text": "Same symptom as RSK-70, probably one root cause."},
+    {"author": "person:cyrus-lindgren", "at": "2026-01-25", "text": "Blocked until RDS-186 lands."}
+  ]
+}

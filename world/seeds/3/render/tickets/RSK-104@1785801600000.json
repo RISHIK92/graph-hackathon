@@ -1,0 +1,19 @@
+{
+  "key": "RSK-104",
+  "title": "Account Recovery: stale cache entries",
+  "description": "account-recovery shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:nikhil-galloway", "at": "2025-10-20"},
+    {"who": "person:mads-haddad", "at": "2025-10-28"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-20"},
+    {"state": "in_progress", "at": "2025-11-01"},
+    {"state": "done", "at": "2025-11-06"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2025-10-20"},
+    {"about": "system:billing-v2", "at": "2026-08-04"}
+  ],
+  "comments": []
+}

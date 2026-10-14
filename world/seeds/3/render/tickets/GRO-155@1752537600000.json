@@ -1,0 +1,20 @@
+{
+  "key": "GRO-155",
+  "title": "Chargeback Defense: high p99 latency",
+  "description": "Chargeback Defense shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-zielinski", "at": "2025-07-05"},
+    {"who": "person:kenji-holloway", "at": "2025-07-10"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-05"},
+    {"state": "in_progress", "at": "2025-07-10"},
+    {"state": "done", "at": "2025-07-15"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2025-07-05"}
+  ],
+  "comments": [
+    {"author": "person:oskar-zielinski", "at": "2025-07-15", "text": "Same symptom as RSK-185, probably one root cause."}
+  ]
+}

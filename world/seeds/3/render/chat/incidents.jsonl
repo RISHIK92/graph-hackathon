@@ -1,0 +1,69 @@
+{"channel": "incidents", "ts": 1738671661916, "author": "person:beatriz-ferreira", "text": "The Partner API retro notes are up."}
+{"channel": "incidents", "ts": 1739292317649, "author": "person:kenji-holloway", "text": "Closed RSK-70, the fix is live."}
+{"channel": "incidents", "ts": 1740237010212, "author": "person:beatriz-ferreira", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "incidents", "ts": 1741200985129, "author": "person:bianca-brennan", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "incidents", "ts": 1741456683490, "author": "person:talia-zamora", "text": "Who has context on the Auth Gateway alerts from last night?"}
+{"channel": "incidents", "ts": 1741537287021, "author": "person:callum-varga", "text": "The Store Locator retro notes are up."}
+{"channel": "incidents", "ts": 1741884122769, "author": "person:arjun-moreau", "text": "RSK-17 is blocked on a config change."}
+{"channel": "incidents", "ts": 1742310663127, "author": "person:noor-fontaine", "text": "Image Resizer dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1742570850857, "author": "person:oskar-zielinski", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "incidents", "ts": 1742571034751, "author": "person:bianca-brennan", "text": "Can someone triage RSK-17?"}
+{"channel": "incidents", "ts": 1744100562491, "author": "person:rafael-nakamura", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "incidents", "ts": 1745052306226, "author": "person:mads-haddad", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "incidents", "ts": 1745935096644, "author": "person:nikhil-galloway", "text": "Kicking off the Partner API design review next week."}
+{"channel": "incidents", "ts": 1747038360886, "author": "person:maya-petrov", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "incidents", "ts": 1747215617659, "author": "person:chiara-quint", "text": "Image Resizer dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1748082251691, "author": "person:ilse-kowal", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "incidents", "ts": 1748522837806, "author": "person:rhea-sato", "text": "email-relay-svc is part of Account Recovery."}
+{"channel": "incidents", "ts": 1748683618496, "author": "person:teodor-castellanos", "text": "Deploying Feature Flags to staging after lunch.", "thread_ts": 1748522837806}
+{"channel": "incidents", "ts": 1749111382197, "author": "person:farah-rasmussen", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "incidents", "ts": 1749306090093, "author": "person:noor-fontaine", "text": "Kenji Holloway leads Partner API."}
+{"channel": "incidents", "ts": 1750009174163, "author": "person:maya-petrov", "text": "Email Relay depends on Image Resizer."}
+{"channel": "incidents", "ts": 1750345302796, "author": "person:sam-arnesen", "text": "Pairing with Arjun Moreau on Session Store today."}
+{"channel": "incidents", "ts": 1751025261972, "author": "person:callum-varga", "text": "The Gift Cards retro notes are up."}
+{"channel": "incidents", "ts": 1751278201435, "author": "person:jada-carrow", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "incidents", "ts": 1751720955907, "author": "person:beatriz-ferreira", "text": "Email Relay is part of account-recovery."}
+{"channel": "incidents", "ts": 1752086877074, "author": "person:beatriz-ferreira", "text": "Can someone review the Audit Log runbook changes?"}
+{"channel": "incidents", "ts": 1753798310651, "author": "person:selin-ekwueme", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "incidents", "ts": 1754913076190, "author": "person:noor-fontaine", "text": "Thanks Soren A., merged the billing-v2-svc fix."}
+{"channel": "incidents", "ts": 1755103247893, "author": "person:teodor-castellanos", "text": "Who has context on the Billing-v2 alerts from last night?"}
+{"channel": "incidents", "ts": 1757927660477, "author": "person:saanvi-quiroga", "text": "The Growth demo moved to Thursday."}
+{"channel": "incidents", "ts": 1758467671335, "author": "person:mads-haddad", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "incidents", "ts": 1758532136160, "author": "person:greta-achebe", "text": "The Risk demo moved to Thursday."}
+{"channel": "incidents", "ts": 1758801728155, "author": "person:rafael-nakamura", "text": "Deploying Session Store to staging after lunch."}
+{"channel": "incidents", "ts": 1760695377374, "author": "person:bianca-brennan", "text": "Who has context on the Event Bus alerts from last night?"}
+{"channel": "incidents", "ts": 1762355832012, "author": "person:farah-rasmussen", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "incidents", "ts": 1763041686156, "author": "person:noor-fontaine", "text": "Zofia Esposito works on Gift Cards."}
+{"channel": "incidents", "ts": 1764339252208, "author": "person:noor-fontaine", "text": "Linked GRO-179 to RSK-124, same root cause."}
+{"channel": "incidents", "ts": 1765034583895, "author": "person:nadia-hartley", "text": "Pairing with Arjun on Event Bus today."}
+{"channel": "incidents", "ts": 1767536363984, "author": "person:chiara-quint", "text": "Picking up MSG-149 today."}
+{"channel": "incidents", "ts": 1767545204391, "author": "person:beatriz-ferreira", "text": "Kicking off the Smart Routing design review next week."}
+{"channel": "incidents", "ts": 1768904503304, "author": "person:noor-fontaine", "text": "Kicking off the Chargeback Defense design review next week."}
+{"channel": "incidents", "ts": 1770027654720, "author": "person:soren-abernathy", "text": "Billing dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1771348621976, "author": "person:zofia-esposito", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "incidents", "ts": 1771595359577, "author": "person:nadia-hartley", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "incidents", "ts": 1772215502812, "author": "person:rhea-sato", "text": "Load test for session-store-svc finished, numbers look normal."}
+{"channel": "incidents", "ts": 1774261094722, "author": "person:callum-varga", "text": "Closed MSG-193, the fix is live."}
+{"channel": "incidents", "ts": 1774270567410, "author": "person:oskar-zielinski", "text": "The Gift Cards retro notes are up."}
+{"channel": "incidents", "ts": 1775995187499, "author": "person:rhea-sato", "text": "Pairing with Rhea Sato on Billing today."}
+{"channel": "incidents", "ts": 1776763540919, "author": "person:soren-abernathy", "text": "Can someone triage RDS-144?"}
+{"channel": "incidents", "ts": 1777229475324, "author": "person:leila-chaudhry", "text": "I think Event Bus depends on email-relay-svc, maybe?"}
+{"channel": "incidents", "ts": 1777364360854, "author": "person:farah-rasmussen", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "incidents", "ts": 1779016369899, "author": "person:cyrus-lindgren", "text": "Pairing with Quentin on Audit Log today."}
+{"channel": "incidents", "ts": 1780942999679, "author": "person:chiara-quint", "text": "Can someone review the Event Bus runbook changes?"}
+{"channel": "incidents", "ts": 1781007035730, "author": "person:chiara-quint", "text": "Session Store dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1781012573968, "author": "person:arjun-moreau", "text": "Linked MSG-152 to RDS-154, same root cause."}
+{"channel": "incidents", "ts": 1783084730564, "author": "person:oskar-zielinski", "text": "Event Bus is part of Chargeback Defense."}
+{"channel": "incidents", "ts": 1784560729250, "author": "person:noor-fontaine", "text": "Can someone triage MSG-130?"}
+{"channel": "incidents", "ts": 1784799717885, "author": "person:elif-dunmore", "text": "Can someone review the Image Resizer runbook changes?"}
+{"channel": "incidents", "ts": 1784811512524, "author": "person:teodor-castellanos", "text": "Event Bus dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1785696963263, "author": "person:cyrus-lindgren", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "incidents", "ts": 1786448149715, "author": "person:anders-yilmaz", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "incidents", "ts": 1788280296111, "author": "person:beatriz-ferreira", "text": "Closed MSG-115, the fix is live."}
+{"channel": "incidents", "ts": 1788795705754, "author": "person:anders-yilmaz", "text": "The Messaging demo moved to Thursday."}
+{"channel": "incidents", "ts": 1789307910536, "author": "person:selin-ekwueme", "text": "Can someone review the Image Resizer runbook changes?"}
+{"channel": "incidents", "ts": 1789665614868, "author": "person:arjun-moreau", "text": "Feature Flags dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1789920434638, "author": "person:kenji-holloway", "text": "Billing-v2 dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1790248182404, "author": "person:nikhil-galloway", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "incidents", "ts": 1790506069452, "author": "person:soren-whitfield", "text": "The Store Locator retro notes are up."}
+{"channel": "incidents", "ts": 1790610214165, "author": "person:teodor-castellanos", "text": "Pairing with Callum on Feature Flags today."}

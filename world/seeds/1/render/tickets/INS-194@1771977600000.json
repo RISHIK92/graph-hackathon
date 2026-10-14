@@ -1,0 +1,20 @@
+{
+  "key": "INS-194",
+  "title": "Webhook Dispatcher: a flaky integration test",
+  "description": "Webhook Dispatcher shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:elif-takahashi", "at": "2026-02-20"},
+    {"who": "person:soren-esposito", "at": "2026-02-21"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-20"},
+    {"state": "in_progress", "at": "2026-02-25"}
+  ],
+  "component_history": [
+    {"about": "system:webhook-dispatcher", "at": "2026-02-20"}
+  ],
+  "comments": [
+    {"author": "person:soren-esposito", "at": "2026-02-21", "text": "Reproduced on staging, logs are attached."},
+    {"author": "person:soren-esposito", "at": "2026-02-25", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

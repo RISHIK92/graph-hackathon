@@ -1,0 +1,16 @@
+{
+  "key": "RSK-150",
+  "title": "Image Resizer: high p99 latency",
+  "description": "Image Resizer shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "team:risk", "at": "2025-07-21"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-20"},
+    {"state": "in_progress", "at": "2025-07-21"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2025-07-20"}
+  ],
+  "comments": []
+}

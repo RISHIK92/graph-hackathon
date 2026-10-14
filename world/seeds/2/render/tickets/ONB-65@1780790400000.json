@@ -1,0 +1,17 @@
+{
+  "key": "ONB-65",
+  "title": "Search Index: timeouts under peak load",
+  "description": "Search Index shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "team:onboarding", "at": "2026-06-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-06-07"}
+  ],
+  "component_history": [
+    {"about": "system:search-index", "at": "2026-06-07"}
+  ],
+  "comments": [
+    {"author": "person:hugo-yoon", "at": "2026-06-07", "text": "Blocked until ONB-152 lands."}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "key": "MSG-137",
+  "title": "Auth Gateway: missing audit fields",
+  "description": "Auth Gateway shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:bianca-brennan", "at": "2025-12-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-23"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-12-23"}
+  ],
+  "comments": [
+    {"author": "person:zofia-esposito", "at": "2025-12-23", "text": "Reproduced on staging, logs are attached."},
+    {"author": "person:bianca-brennan", "at": "2025-12-23", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

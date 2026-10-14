@@ -1,0 +1,18 @@
+{
+  "key": "FUL-128",
+  "title": "Fraud Scoring: noisy alerts at night",
+  "description": "fraud-scoring-svc shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:kalinda-castellanos", "at": "2025-03-29"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-03-29"}
+  ],
+  "component_history": [
+    {"about": "system:fraud-scoring", "at": "2025-03-29"},
+    {"about": "system:pricing-engine", "at": "2025-04-12"}
+  ],
+  "comments": [
+    {"author": "person:greta-carrow", "at": "2025-03-29", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "key": "RSK-162",
+  "title": "Account Recovery: noisy alerts at night",
+  "description": "Account Recovery shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:mads-haddad", "at": "2025-04-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-03-17"},
+    {"state": "in_progress", "at": "2025-04-02"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2025-03-17"}
+  ],
+  "comments": [
+    {"author": "person:soren-abernathy", "at": "2025-03-22", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "key": "RDS-154",
+  "title": "Billing: missing audit fields",
+  "description": "Billing shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-zielinski", "at": "2025-11-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-11-07"},
+    {"state": "in_progress", "at": "2025-11-13"},
+    {"state": "done", "at": "2025-11-22"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-11-07"}
+  ],
+  "comments": []
+}

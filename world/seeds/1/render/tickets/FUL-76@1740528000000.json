@@ -1,0 +1,20 @@
+{
+  "key": "FUL-76",
+  "title": "Geo Lookup: missing audit fields",
+  "description": "geo-lookup-svc shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:wren-mbatha", "at": "2025-02-04"},
+    {"who": "person:rhea-hartley", "at": "2025-02-18"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-02-04"},
+    {"state": "in_progress", "at": "2025-02-19"},
+    {"state": "done", "at": "2025-02-26"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-02-04"}
+  ],
+  "comments": [
+    {"author": "person:valeria-whitfield", "at": "2025-02-05", "text": "Blocked until INS-92 lands."}
+  ]
+}

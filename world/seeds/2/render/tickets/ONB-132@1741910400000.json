@@ -1,0 +1,19 @@
+{
+  "key": "ONB-132",
+  "title": "Discovery Revamp: missing audit fields",
+  "description": "Discovery Revamp shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:maya-quiroga", "at": "2025-02-13"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-02-09"},
+    {"state": "in_progress", "at": "2025-02-13"},
+    {"state": "done", "at": "2025-03-14"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2025-02-09"}
+  ],
+  "comments": [
+    {"author": "person:sam-gunnarsson", "at": "2025-03-07", "text": "Blocked until INS-48 lands."}
+  ]
+}

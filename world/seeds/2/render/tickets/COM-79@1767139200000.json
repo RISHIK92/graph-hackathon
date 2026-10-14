@@ -1,0 +1,19 @@
+{
+  "key": "COM-79",
+  "title": "Geo Lookup: high p99 latency",
+  "description": "Geo Lookup shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "team:commerce", "at": "2025-12-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-23"},
+    {"state": "in_progress", "at": "2025-12-28"},
+    {"state": "done", "at": "2025-12-31"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-12-23"}
+  ],
+  "comments": [
+    {"author": "person:nikhil-dahl", "at": "2025-12-30", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

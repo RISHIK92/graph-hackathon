@@ -1,0 +1,20 @@
+{
+  "key": "RSK-188",
+  "title": "Account Recovery: timeouts under peak load",
+  "description": "Account Recovery shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:mirela-yilmaz", "at": "2026-06-06"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-06-06"},
+    {"state": "in_progress", "at": "2026-06-09"},
+    {"state": "done", "at": "2026-06-13"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2026-06-06"}
+  ],
+  "comments": [
+    {"author": "person:valeria-whitfield", "at": "2026-06-06", "text": "Blocked until FUL-114 lands."},
+    {"author": "person:anders-jaramillo", "at": "2026-06-12", "text": "Same symptom as RSK-160, probably one root cause."}
+  ]
+}

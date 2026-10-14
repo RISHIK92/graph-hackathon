@@ -1,0 +1,49 @@
+{"channel": "growth", "ts": 1737655206419, "author": "person:kenji-holloway", "text": "Session Store dashboards are back after the metrics outage."}
+{"channel": "growth", "ts": 1738080852907, "author": "person:kenji-holloway", "text": "Audit Log is part of Smart Routing."}
+{"channel": "growth", "ts": 1738855022004, "author": "person:callum-varga", "text": "Audit Log dashboards are back after the metrics outage."}
+{"channel": "growth", "ts": 1739887353615, "author": "person:oskar-zielinski", "text": "I think Risk owns Image Resizer?"}
+{"channel": "growth", "ts": 1739959051621, "author": "person:kenji-holloway", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "growth", "ts": 1742560393706, "author": "person:jada-carrow", "text": "Risk owns Auth Gateway."}
+{"channel": "growth", "ts": 1743699164203, "author": "person:jada-carrow", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "growth", "ts": 1749026322864, "author": "person:oskar-zielinski", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "growth", "ts": 1749284867948, "author": "person:oskar-zielinski", "text": "Picking up RSK-162 today."}
+{"channel": "growth", "ts": 1749978357959, "author": "person:leila-chaudhry", "text": "Pairing with Maya on Image Resizer today."}
+{"channel": "growth", "ts": 1751299319417, "author": "person:farah-rasmussen", "text": "Kicking off the Gift Cards design review next week."}
+{"channel": "growth", "ts": 1755511518150, "author": "person:jada-carrow", "text": "Who has context on the image-resizer-svc alerts from last night?"}
+{"channel": "growth", "ts": 1756118486600, "author": "person:leila-chaudhry", "text": "The Messaging demo moved to Thursday."}
+{"channel": "growth", "ts": 1757779144274, "author": "person:arjun-moreau", "text": "The Growth demo moved to Thursday."}
+{"channel": "growth", "ts": 1758363903168, "author": "person:jada-carrow", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "growth", "ts": 1758547294629, "author": "person:arjun-moreau", "text": "Can someone review the email-relay-svc runbook changes?"}
+{"channel": "growth", "ts": 1759169176607, "author": "person:oskar-zielinski", "text": "Pairing with Nadia Hartley on Session Store today."}
+{"channel": "growth", "ts": 1761740108548, "author": "person:oskar-zielinski", "text": "Can someone triage RSK-1?"}
+{"channel": "growth", "ts": 1762098652218, "author": "person:farah-rasmussen", "text": "Deploying Email Relay to staging after lunch."}
+{"channel": "growth", "ts": 1762345663041, "author": "person:soren-whitfield", "text": "Jada Carrow works on Store Locator."}
+{"channel": "growth", "ts": 1763836699801, "author": "person:arjun-moreau", "text": "Can someone review the Event Bus runbook changes?"}
+{"channel": "growth", "ts": 1764235007930, "author": "person:kenji-holloway", "text": "Closed MSG-193, the fix is live."}
+{"channel": "growth", "ts": 1765122772874, "author": "person:cyrus-lindgren", "text": "Growth owns gift-cards now."}
+{"channel": "growth", "ts": 1765972976160, "author": "person:oskar-zielinski", "text": "Deploying Auth Gateway to staging after lunch."}
+{"channel": "growth", "ts": 1767542891358, "author": "person:oskar-zielinski", "text": "Callum Varga leads Store Locator."}
+{"channel": "growth", "ts": 1767634271449, "author": "person:oskar-zielinski", "text": "Who has context on the Auth Gateway alerts from last night?"}
+{"channel": "growth", "ts": 1768724376230, "author": "person:leila-chaudhry", "text": "Picking up MSG-130 today."}
+{"channel": "growth", "ts": 1769794273257, "author": "person:jada-carrow", "text": "Deploying feature-flags-svc to staging after lunch."}
+{"channel": "growth", "ts": 1770643825851, "author": "person:oskar-zielinski", "text": "Who has context on the Email Relay alerts from last night?"}
+{"channel": "growth", "ts": 1771085701473, "author": "person:arjun-moreau", "text": "Image Resizer dashboards are back after the metrics outage."}
+{"channel": "growth", "ts": 1772454992791, "author": "person:farah-rasmussen", "text": "Audit Log dashboards are back after the metrics outage."}
+{"channel": "growth", "ts": 1773238867986, "author": "person:jada-carrow", "text": "The Messaging demo moved to Thursday."}
+{"channel": "growth", "ts": 1775413128904, "author": "person:oskar-zielinski", "text": "Pairing with Quentin on Image Resizer today."}
+{"channel": "growth", "ts": 1776276828507, "author": "person:soren-whitfield", "text": "Kicking off the Gift Cards design review next week."}
+{"channel": "growth", "ts": 1776859215136, "author": "person:soren-whitfield", "text": "Who has context on the image-resizer-svc alerts from last night?"}
+{"channel": "growth", "ts": 1778266605054, "author": "person:kenji-holloway", "text": "Pairing with Ilse on Event Bus today."}
+{"channel": "growth", "ts": 1779815803107, "author": "person:arjun-moreau", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "growth", "ts": 1782637982880, "author": "person:oskar-zielinski", "text": "Pairing with Callum Varga on Billing today."}
+{"channel": "growth", "ts": 1782998263414, "author": "person:arjun-moreau", "text": "Pairing with Soren Whitfield on Email Relay today."}
+{"channel": "growth", "ts": 1783689333531, "author": "person:arjun-moreau", "text": "Pairing with Elif Dunmore on Image Resizer today."}
+{"channel": "growth", "ts": 1784652398539, "author": "person:farah-rasmussen", "text": "Pairing with Mirela Dahl on Billing-v2 today."}
+{"channel": "growth", "ts": 1786022580105, "author": "person:kenji-holloway", "text": "Who leads Growth?"}
+{"channel": "growth", "ts": 1786024560105, "author": "person:chiara-quint", "text": "Who leads Growth?", "thread_ts": 1786022580105}
+{"channel": "growth", "ts": 1786363084513, "author": "person:oskar-zielinski", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "growth", "ts": 1787489877520, "author": "person:kenji-holloway", "text": "Linked RDS-111 to MSG-137, same root cause."}
+{"channel": "growth", "ts": 1788881271230, "author": "person:mirela-dahl", "text": "Messaging owns Billing-v2."}
+{"channel": "growth", "ts": 1789389728888, "author": "person:soren-whitfield", "text": "feature-flags-svc dashboards are back after the metrics outage."}
+{"channel": "growth", "ts": 1789552445813, "author": "person:soren-whitfield", "text": "Picking up RSK-17 today."}
+{"channel": "growth", "ts": 1790412083090, "author": "person:soren-whitfield", "text": "The Risk demo moved to Thursday."}

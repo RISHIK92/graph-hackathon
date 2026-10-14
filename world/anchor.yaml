@@ -1,0 +1,272 @@
+# Demo anchor (05 §3.4, guarantees G1-G12). Merged into every seed's world before the
+# generator checks run. Hand-written; the generator never assigns random distractors to
+# these entities. Times: ISO dates (midnight UTC) or "YYYY-MM-DDTHH:MM" (UTC).
+#
+# Sections
+#   timeline   systems-of-record intervals (roster + catalogue) and prose-only truths
+#              (WORKS_ON, project LEADS). `to` omitted = open. Truth == record here.
+#   decisions  ADRs; one rendered revision per status_timeline entry.
+#   tickets    rendered as one JSON revision with full histories.
+#   docs       prose documents (wiki, meeting, chat). A sentence is a plain string or
+#              {text, claims}; a claim is {p, q?, s, o?, v?, neg?, date?}; `date` must
+#              appear in the text as YYYY-MM-DD (stated date).
+#   changes    declarations the anchor owns (others are derived from the timeline).
+
+D_transfer: "2026-04-01"
+D_reorg: "2026-04-01"
+demo_identity: person:jonah-feld
+
+ids:
+  ledger: system:ledger
+  payments: team:payments
+  platform: team:platform
+  infra: team:infra
+  payments_lead: person:priya-raman
+  infra_lead: person:bob-lindqvist
+  platform_lead_before: person:marta-kowalczyk
+  platform_lead_after: person:tomas-reyes
+  rds42: ticket:rds-42
+  closed_ledger_ticket: ticket:rds-31
+  adr_old: decision:adr-003
+  adr_new: decision:adr-007
+  postgres: system:postgres-main
+  aurora: system:aurora
+  ledger_dependents: [system:checkout, system:reporting]
+  two_hop_dependent: system:statements
+  wrong_challenger_system: system:statements
+  ledger_transfer_change: anchor_ledger_transfer
+  wrong_challenger_change: anchor_wrong_challenger
+  stale_wiki: wiki:confluence:ledger-overview
+
+people:
+  - {id: person:priya-raman, name: Priya Raman, aliases: [Priya, P. Raman], title: Engineering Manager}
+  - {id: person:kwame-asante, name: Kwame Asante, aliases: [Kwame], title: Software Engineer}
+  - {id: person:ana-costa, name: Ana Costa, aliases: [Ana], title: Senior Software Engineer}
+  - {id: person:marta-kowalczyk, name: Marta Kowalczyk, aliases: [Marta], title: Principal Engineer}
+  - {id: person:tomas-reyes, name: Tomas Reyes, aliases: [Tomas], title: Engineering Manager}
+  - {id: person:jonah-feld, name: Jonah Feld, aliases: [Jonah], title: Software Engineer}
+  - {id: person:bob-lindqvist, name: Bob Lindqvist, aliases: [Bob], title: Engineering Manager}
+  - {id: person:ines-duarte, name: Ines Duarte, aliases: [Ines], title: Site Reliability Engineer}
+
+teams:
+  - {id: team:payments, name: Payments, aliases: [Payments Engineering]}
+  - {id: team:platform, name: Platform, aliases: [Platform Engineering]}
+  - {id: team:infra, name: Infra, aliases: [Infrastructure]}
+
+projects:
+  - {id: project:core-banking, name: Core Banking, aliases: [core-banking]}
+  - {id: project:shared-services, name: Shared Services, aliases: [shared-services]}
+
+systems:
+  - {id: system:ledger, name: Ledger, aliases: [ledger-service], tier: 1}
+  - {id: system:postgres-main, name: Postgres Main, aliases: [Postgres, postgres-main], tier: 1}
+  - {id: system:aurora, name: Aurora, aliases: [aurora-cluster], tier: 1}
+  - {id: system:checkout, name: Checkout, aliases: [checkout-api], tier: 1}
+  - {id: system:reporting, name: Reporting, aliases: [reporting-service], tier: 2}
+  - {id: system:statements, name: Statements, aliases: [statements-ui], tier: 2}
+
+timeline:
+  # roster: primary memberships and team leads (G5, G10, G12)
+  - {p: MEMBER_OF, q: primary, s: person:priya-raman, o: team:payments, from: "2025-01-01"}
+  - {p: LEADS, s: person:priya-raman, o: team:payments, from: "2025-01-01"}
+  - {p: MEMBER_OF, q: primary, s: person:kwame-asante, o: team:payments, from: "2025-01-01"}
+  - {p: MEMBER_OF, q: primary, s: person:ana-costa, o: team:platform, from: "2025-01-01", to: "2026-04-01"}
+  - {p: MEMBER_OF, q: primary, s: person:ana-costa, o: team:payments, from: "2026-04-01"}
+  - {p: MEMBER_OF, q: primary, s: person:marta-kowalczyk, o: team:platform, from: "2025-01-01"}
+  - {p: LEADS, s: person:marta-kowalczyk, o: team:platform, from: "2025-01-01", to: "2026-04-01"}
+  - {p: MEMBER_OF, q: primary, s: person:tomas-reyes, o: team:infra, from: "2025-01-01", to: "2026-04-01"}
+  - {p: MEMBER_OF, q: primary, s: person:tomas-reyes, o: team:platform, from: "2026-04-01"}
+  - {p: LEADS, s: person:tomas-reyes, o: team:platform, from: "2026-04-01"}
+  - {p: MEMBER_OF, q: primary, s: person:jonah-feld, o: team:platform, from: "2025-01-01"}
+  - {p: MEMBER_OF, q: primary, s: person:bob-lindqvist, o: team:infra, from: "2025-01-01"}
+  - {p: LEADS, s: person:bob-lindqvist, o: team:infra, from: "2025-01-01"}
+  - {p: MEMBER_OF, q: primary, s: person:ines-duarte, o: team:infra, from: "2025-01-01"}
+  # catalogue: ownership (G2), parts, dependencies (G8)
+  - {p: OWNS, s: team:payments, o: project:core-banking, from: "2025-01-01"}
+  - {p: OWNS, s: team:platform, o: project:shared-services, from: "2025-01-01"}
+  - {p: OWNS, s: team:platform, o: system:ledger, from: "2025-01-01", to: "2026-04-01"}
+  - {p: OWNS, s: team:payments, o: system:ledger, from: "2026-04-01"}
+  - {p: OWNS, s: team:infra, o: system:postgres-main, from: "2025-01-01"}
+  - {p: OWNS, s: team:infra, o: system:aurora, from: "2025-01-01"}
+  - {p: OWNS, s: team:payments, o: system:checkout, from: "2025-01-01"}
+  - {p: OWNS, s: team:platform, o: system:reporting, from: "2025-01-01"}
+  - {p: OWNS, s: team:infra, o: system:statements, from: "2025-01-01"}
+  - {p: PART_OF, s: system:ledger, o: project:core-banking, from: "2025-01-01"}
+  - {p: PART_OF, s: system:checkout, o: project:core-banking, from: "2025-01-01"}
+  - {p: PART_OF, s: system:postgres-main, o: project:shared-services, from: "2025-01-01"}
+  - {p: PART_OF, s: system:aurora, o: project:shared-services, from: "2025-01-01"}
+  - {p: PART_OF, s: system:reporting, o: project:shared-services, from: "2025-01-01"}
+  - {p: PART_OF, s: system:statements, o: project:shared-services, from: "2025-01-01"}
+  - {p: DEPENDS_ON, s: system:ledger, o: system:postgres-main, from: "2025-01-01", to: "2026-03-02"}
+  - {p: DEPENDS_ON, s: system:ledger, o: system:aurora, from: "2026-03-02"}
+  - {p: DEPENDS_ON, s: system:checkout, o: system:ledger, from: "2025-01-01"}
+  - {p: DEPENDS_ON, s: system:reporting, o: system:ledger, from: "2025-01-01"}
+  - {p: DEPENDS_ON, s: system:statements, o: system:reporting, from: "2025-01-01"}
+  # prose-only truths
+  - {p: WORKS_ON, s: person:ana-costa, o: project:core-banking, from: "2025-01-01"}
+  - {p: WORKS_ON, s: person:kwame-asante, o: project:core-banking, from: "2025-01-01"}
+  - {p: WORKS_ON, s: person:jonah-feld, o: project:shared-services, from: "2025-01-01"}
+
+decisions:
+  - id: decision:adr-003
+    number: ADR-003
+    title: Run Ledger on Postgres Main
+    status_timeline:
+      - {status: accepted, at: "2025-01-06"}
+      - {status: superseded, at: "2026-02-10"}
+    deciders: [person:marta-kowalczyk, team:platform]
+    affects: [system:ledger]
+    replaces: []
+    rationale_points:
+      - Postgres Main is the shared relational store that Infra already operates with tested backups.
+      - Ledger needs strict transactional guarantees for every double-entry posting.
+    decision_text: Ledger keeps postings and balances in one dedicated schema with strict transactional guarantees.
+    consequences: Infra runs backups and failover drills for the Ledger schema.
+  - id: decision:adr-007
+    number: ADR-007
+    title: Move Ledger to Aurora
+    status_timeline:
+      - {status: proposed, at: "2026-01-20"}
+      - {status: accepted, at: "2026-02-10"}
+    deciders: [person:priya-raman, person:bob-lindqvist, team:payments]
+    affects: [system:ledger]
+    replaces: [decision:adr-003]
+    rationale_points:
+      - Postgres Main could not sustain Ledger write volume during month-end close.
+      - Aurora gives Ledger storage autoscaling and replica failover in under a minute.
+      - Moving Ledger off Postgres Main frees the shared cluster for Reporting workloads.
+    decision_text: We will move Ledger from Postgres Main to Aurora once the cutover runbook has been rehearsed.
+    consequences: Payments and Infra share the cutover runbook, and Reporting reads from the Aurora reader endpoint.
+
+tickets:
+  - key: RDS-31
+    title: Migrate Ledger to Aurora
+    description: Cut ledger-service over from Postgres Main to Aurora as agreed in ADR-007.
+    created_by: person:ana-costa
+    about_timeline: [{about: system:ledger, at: "2026-02-12"}]
+    assignee_timeline: [{who: person:ana-costa, at: "2026-02-12"}]
+    state_timeline:
+      - {state: open, at: "2026-02-12"}
+      - {state: in_progress, at: "2026-02-16"}
+      - {state: done, at: "2026-03-02"}
+    comments:
+      - author: person:ana-costa
+        at: "2026-02-16"
+        sentences: ["Cutover rehearsal for ledger-service is booked for Thursday."]
+      - author: person:priya-raman
+        at: "2026-03-02"
+        sentences:
+          - text: ADR-007 was accepted because Postgres Main could not sustain Ledger write volume during month-end close.
+            claims: [{p: HAS_STATUS, s: decision:adr-007, v: accepted}]
+          - The Aurora cutover finished this morning.
+  - key: RDS-42
+    title: Ledger balance reads time out for Reporting
+    description: Nightly Reporting jobs that read balances from ledger-service time out after the Aurora failover test.
+    created_by: person:jonah-feld
+    about_timeline: [{about: system:ledger, at: "2026-09-20"}]
+    assignee_timeline: []
+    state_timeline: [{state: open, at: "2026-09-20"}]
+    comments: []
+    distractors: [hyphen_id]
+
+docs:
+  - kind: wiki
+    slug: ledger-overview
+    title: Ledger overview
+    author: person:marta-kowalczyk
+    distractors: [stale_doc]
+    revisions:
+      - updated_at: "2025-06-10"
+        paragraphs:
+          - - text: Ledger is part of Core Banking.
+              claims: [{p: PART_OF, s: system:ledger, o: project:core-banking}]
+            - text: Platform owns Ledger.
+              claims: [{p: OWNS, s: team:platform, o: system:ledger}]
+          - - The ledger-service repository holds the double-entry posting engine and its nightly balance snapshots.
+  - kind: meeting
+    slug: ledger-aurora-review
+    title: Ledger Aurora review
+    date: "2026-02-12"
+    author: person:priya-raman
+    attendees: [person:priya-raman, person:ana-costa, person:marta-kowalczyk, person:bob-lindqvist]
+    paragraphs:
+      - - We reviewed the plan to move Ledger from Postgres Main to Aurora.
+        - text: ADR-007 was accepted because Postgres Main could not sustain Ledger write volume during month-end close.
+          claims: [{p: HAS_STATUS, s: decision:adr-007, v: accepted}]
+      - - text: Ana Costa works on Core Banking.
+          claims: [{p: WORKS_ON, s: person:ana-costa, o: project:core-banking}]
+        - Bob Lindqvist will keep Postgres Main snapshots for 90 days after the cutover.
+  - kind: meeting
+    slug: ledger-cutover-retro
+    title: Ledger cutover retro
+    date: "2026-03-05"
+    author: person:ana-costa
+    attendees: [person:ana-costa, person:priya-raman, person:bob-lindqvist, person:ines-duarte]
+    distractors: [negation]
+    paragraphs:
+      - - text: On 2026-03-02, we dropped the dependency on Postgres Main from Ledger.
+          claims: [{p: DEPENDS_ON, s: system:ledger, o: system:postgres-main, neg: true, date: "2026-03-02"}]
+        - text: Ledger depends on Aurora.
+          claims: [{p: DEPENDS_ON, s: system:ledger, o: system:aurora}]
+      - - Ines Duarte confirmed that replica lag stayed under one second during the cutover.
+  - kind: chat
+    channel: ledger
+    ts: "2026-02-18T10:05"
+    author: person:ana-costa
+    sentences: ["Cutover rehearsal for ledger-service went fine, replication caught up in four minutes."]
+  - kind: chat
+    channel: ledger
+    ts: "2026-09-21T09:14"
+    author: person:jonah-feld
+    thread: rds42
+    sentences: ["Reporting nightly jobs are timing out on ledger-service reads again, I filed RDS-42."]
+  - kind: chat
+    channel: ledger
+    ts: "2026-09-21T09:31"
+    author: person:ana-costa
+    thread: rds42
+    sentences: ["The Aurora failover test ran on Friday, so check the reader endpoint in the Reporting config first."]
+  - kind: chat
+    channel: ledger
+    ts: "2026-09-21T09:47"
+    author: person:priya-raman
+    thread: rds42
+    sentences: ["I will look at the Ledger dashboards this afternoon."]
+  - kind: chat
+    channel: ledger
+    ts: "2026-09-21T10:02"
+    author: person:jonah-feld
+    thread: rds42
+    sentences: ["Thanks, I added the Reporting query timings to RDS-42."]
+  - kind: chat
+    channel: general
+    ts: "2026-07-14T15:20"
+    author: person:kwame-asante
+    distractors: [chat_contradiction]
+    sentences:
+      - text: Platform owns Statements now.
+        claims: [{p: OWNS, s: team:platform, o: system:statements}]
+
+changes:
+  - change_id: anchor_ledger_transfer
+    predicate: OWNS
+    key: system:ledger
+    from: team:platform
+    to: team:payments
+    at: "2026-04-01"
+    "true": true
+    expected_outcome: resolved
+    challenger_correct: null
+    stale_docs: [wiki:confluence:ledger-overview]
+    tags: [anchor, reorg, stale_resolved]
+  - change_id: anchor_wrong_challenger
+    predicate: OWNS
+    key: system:statements
+    from: team:infra
+    to: team:platform
+    at: "2026-07-14T15:20"
+    "true": false
+    expected_outcome: disputed
+    challenger_correct: false
+    stale_docs: []
+    tags: [anchor, chat_contradiction]

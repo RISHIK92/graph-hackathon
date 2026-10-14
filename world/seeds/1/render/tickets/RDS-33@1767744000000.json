@@ -1,0 +1,17 @@
+{
+  "key": "RDS-33",
+  "title": "Session Store: high p99 latency",
+  "description": "Session Store shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:cyrus-quint", "at": "2026-01-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-01-07"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-01-07"}
+  ],
+  "comments": [
+    {"author": "person:joaquin-blackwood", "at": "2026-01-07", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

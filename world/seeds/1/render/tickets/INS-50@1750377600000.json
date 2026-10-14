@@ -1,0 +1,17 @@
+{
+  "key": "INS-50",
+  "title": "Discovery Revamp: timeouts under peak load",
+  "description": "Discovery Revamp shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:teodor-arnesen", "at": "2025-06-20"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-20"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2025-06-20"}
+  ],
+  "comments": [
+    {"author": "person:soren-esposito", "at": "2025-06-20", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

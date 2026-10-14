@@ -1,0 +1,15 @@
+{
+  "key": "GRO-174",
+  "title": "Chargeback Defense: high p99 latency",
+  "description": "Chargeback Defense shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-09-20"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2026-09-20"}
+  ],
+  "comments": [
+    {"author": "person:callum-varga", "at": "2026-09-20", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

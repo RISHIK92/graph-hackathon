@@ -1,0 +1,68 @@
+{"channel": "messaging", "ts": 1736699510200, "author": "person:talia-zamora", "text": "GRO-133 is blocked on a config change."}
+{"channel": "messaging", "ts": 1739468288331, "author": "person:elif-dunmore", "text": "Pairing with Farah Rasmussen on Billing-v2 today."}
+{"channel": "messaging", "ts": 1739724977905, "author": "person:rafael-nakamura", "text": "Messaging owns image-resizer-svc."}
+{"channel": "messaging", "ts": 1740134064732, "author": "person:bianca-brennan", "text": "Who has context on the event-bus-svc alerts from last night?"}
+{"channel": "messaging", "ts": 1742637810387, "author": "person:elif-dunmore", "text": "Can someone triage RDS-144?"}
+{"channel": "messaging", "ts": 1744129780200, "author": "person:rafael-nakamura", "text": "Can someone triage RSK-17?"}
+{"channel": "messaging", "ts": 1744981693749, "author": "person:saanvi-quiroga", "text": "Who has context on the Image Resizer alerts from last night?"}
+{"channel": "messaging", "ts": 1745482500234, "author": "person:bianca-brennan", "text": "Can someone review the Email Relay runbook changes?"}
+{"channel": "messaging", "ts": 1745827472545, "author": "person:cyrus-lindgren", "text": "Jada works on partner-api."}
+{"channel": "messaging", "ts": 1746209613409, "author": "person:bianca-brennan", "text": "Who has context on the Auth Gateway alerts from last night?"}
+{"channel": "messaging", "ts": 1747153942207, "author": "person:rafael-nakamura", "text": "Kicking off the Gift Cards design review next week."}
+{"channel": "messaging", "ts": 1750768579519, "author": "person:bianca-brennan", "text": "The Account Recovery retro notes are up."}
+{"channel": "messaging", "ts": 1750952069495, "author": "person:zofia-esposito", "text": "Load test for Auth Gateway finished, numbers look normal."}
+{"channel": "messaging", "ts": 1751276592937, "author": "person:bianca-brennan", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "messaging", "ts": 1751296069852, "author": "person:elif-dunmore", "text": "Linked RDS-111 to RDS-144, same root cause."}
+{"channel": "messaging", "ts": 1752590281103, "author": "person:zofia-esposito", "text": "Can someone review the session-store-svc runbook changes?"}
+{"channel": "messaging", "ts": 1752656080229, "author": "person:cyrus-lindgren", "text": "For context, Messaging owns Billing-v2."}
+{"channel": "messaging", "ts": 1753433931597, "author": "person:talia-zamora", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "messaging", "ts": 1753534125253, "author": "person:saanvi-quiroga", "text": "Load test for event-bus-svc finished, numbers look normal."}
+{"channel": "messaging", "ts": 1754420198174, "author": "person:rafael-nakamura", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "messaging", "ts": 1755100616301, "author": "person:bianca-brennan", "text": "Can someone review the Event Bus runbook changes?"}
+{"channel": "messaging", "ts": 1755594756518, "author": "person:rafael-nakamura", "text": "Kicking off the Account Recovery design review next week."}
+{"channel": "messaging", "ts": 1757435582319, "author": "person:cyrus-lindgren", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "messaging", "ts": 1757668505530, "author": "person:bianca-brennan", "text": "Deploying billing-v2-svc to staging after lunch."}
+{"channel": "messaging", "ts": 1757948238507, "author": "person:elif-dunmore", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "messaging", "ts": 1759938783082, "author": "person:talia-zamora", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "messaging", "ts": 1761056283140, "author": "person:talia-zamora", "text": "Billing dashboards are back after the metrics outage."}
+{"channel": "messaging", "ts": 1761402885262, "author": "person:elif-dunmore", "text": "The Smart Routing retro notes are up."}
+{"channel": "messaging", "ts": 1761583448961, "author": "person:cyrus-lindgren", "text": "MSG-164 is blocked on a config change."}
+{"channel": "messaging", "ts": 1761750515801, "author": "person:zofia-esposito", "text": "For context, Messaging owns Billing-v2."}
+{"channel": "messaging", "ts": 1762085763419, "author": "person:saanvi-quiroga", "text": "Feature Flags dashboards are back after the metrics outage."}
+{"channel": "messaging", "ts": 1763727269672, "author": "person:saanvi-quiroga", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "messaging", "ts": 1763824697260, "author": "person:rafael-nakamura", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "messaging", "ts": 1763914275363, "author": "person:cyrus-lindgren", "text": "Load test for Event Bus finished, numbers look normal."}
+{"channel": "messaging", "ts": 1764356181873, "author": "person:zofia-esposito", "text": "Picking up RDS-154 today."}
+{"channel": "messaging", "ts": 1765628731401, "author": "person:zofia-esposito", "text": "Feature Flags dashboards are back after the metrics outage."}
+{"channel": "messaging", "ts": 1767259858161, "author": "person:rafael-nakamura", "text": "Can someone triage GRO-162?"}
+{"channel": "messaging", "ts": 1767795817075, "author": "person:talia-zamora", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "messaging", "ts": 1768984025588, "author": "person:elif-dunmore", "text": "Pairing with Mirela Dahl on Billing today."}
+{"channel": "messaging", "ts": 1769000656350, "author": "person:talia-zamora", "text": "MSG-152 is blocked on a config change."}
+{"channel": "messaging", "ts": 1769799404022, "author": "person:saanvi-quiroga", "text": "Can someone review the Audit Log runbook changes?"}
+{"channel": "messaging", "ts": 1770629178032, "author": "person:elif-dunmore", "text": "The Gift Cards retro notes are up."}
+{"channel": "messaging", "ts": 1770805149541, "author": "person:saanvi-quiroga", "text": "The Risk demo moved to Thursday."}
+{"channel": "messaging", "ts": 1771344825199, "author": "person:talia-zamora", "text": "Closed RDS-144, the fix is live."}
+{"channel": "messaging", "ts": 1772118322850, "author": "person:saanvi-quiroga", "text": "Picking up MSG-155 today."}
+{"channel": "messaging", "ts": 1772214717716, "author": "person:bianca-brennan", "text": "Who has context on the image-resizer-svc alerts from last night?", "thread_ts": 1772118322850}
+{"channel": "messaging", "ts": 1774204221103, "author": "person:bianca-brennan", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "messaging", "ts": 1774705877232, "author": "person:cyrus-lindgren", "text": "Load test for image-resizer-svc finished, numbers look normal."}
+{"channel": "messaging", "ts": 1775133210383, "author": "person:talia-zamora", "text": "Can someone triage MSG-153?"}
+{"channel": "messaging", "ts": 1775658629167, "author": "person:saanvi-quiroga", "text": "Linked MSG-164 to RSK-142, same root cause."}
+{"channel": "messaging", "ts": 1776274251068, "author": "person:cyrus-lindgren", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "messaging", "ts": 1777206876492, "author": "person:zofia-esposito", "text": "Risk owns Event Bus."}
+{"channel": "messaging", "ts": 1778228399361, "author": "person:talia-zamora", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "messaging", "ts": 1779126895021, "author": "person:bianca-brennan", "text": "Reminder that Billing and Billing-v2 have separate on-call rotas."}
+{"channel": "messaging", "ts": 1779782502161, "author": "person:saanvi-quiroga", "text": "Billing-v2 depends on Email Relay."}
+{"channel": "messaging", "ts": 1782557848850, "author": "person:zofia-esposito", "text": "Pairing with Jada Carrow on Audit Log today."}
+{"channel": "messaging", "ts": 1782672113328, "author": "person:zofia-esposito", "text": "The Gift Cards retro notes are up."}
+{"channel": "messaging", "ts": 1783438234462, "author": "person:saanvi-quiroga", "text": "Can someone triage MSG-152?"}
+{"channel": "messaging", "ts": 1784708746988, "author": "person:rafael-nakamura", "text": "Can someone review the Email Relay runbook changes?"}
+{"channel": "messaging", "ts": 1784980302927, "author": "person:elif-dunmore", "text": "GRO-101 is blocked on a config change."}
+{"channel": "messaging", "ts": 1785004953892, "author": "person:zofia-esposito", "text": "Load test for event-bus-svc finished, numbers look normal."}
+{"channel": "messaging", "ts": 1785169572381, "author": "person:saanvi-quiroga", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "messaging", "ts": 1786634500043, "author": "person:elif-dunmore", "text": "The Smart Routing retro notes are up."}
+{"channel": "messaging", "ts": 1787758921875, "author": "person:talia-zamora", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "messaging", "ts": 1787906306582, "author": "person:bianca-brennan", "text": "Event Bus depends on Image Resizer."}
+{"channel": "messaging", "ts": 1789052054771, "author": "person:talia-zamora", "text": "Billing-v2 depends on Billing."}
+{"channel": "messaging", "ts": 1790082357017, "author": "person:cyrus-lindgren", "text": "Load test for Billing-v2 finished, numbers look normal."}
+{"channel": "messaging", "ts": 1790772433157, "author": "person:bianca-brennan", "text": "Reminder that Growth planning starts at ten."}

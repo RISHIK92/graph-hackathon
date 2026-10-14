@@ -1,0 +1,79 @@
+{"channel": "risk", "ts": 1736786587939, "author": "person:nadia-laine", "text": "Who has context on the billing-svc alerts from last night?"}
+{"channel": "risk", "ts": 1736934054748, "author": "person:anders-jaramillo", "text": "Maybe Soren Esposito leads Insights?"}
+{"channel": "risk", "ts": 1737370853672, "author": "person:nikhil-galloway", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "risk", "ts": 1737904926154, "author": "person:nikhil-galloway", "text": "RSK-97 is blocked on a config change."}
+{"channel": "risk", "ts": 1737905303621, "author": "person:nikhil-galloway", "text": "Reminder that Risk planning starts at ten.", "thread_ts": 1737904926154}
+{"channel": "risk", "ts": 1738083281083, "author": "person:anders-jaramillo", "text": "Picking up FUL-128 today."}
+{"channel": "risk", "ts": 1738262799413, "author": "person:nadia-laine", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "risk", "ts": 1738691452334, "author": "person:chiara-holloway", "text": "Image Resizer dashboards are back after the metrics outage."}
+{"channel": "risk", "ts": 1740228984871, "author": "person:nikhil-galloway", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "risk", "ts": 1740331254260, "author": "person:emeka-achebe", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "risk", "ts": 1740589703302, "author": "person:mirela-yilmaz", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "risk", "ts": 1740817804554, "author": "person:nadia-laine", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "risk", "ts": 1740847941043, "author": "person:nikhil-galloway", "text": "Pairing with Jada on Billing today."}
+{"channel": "risk", "ts": 1741518451574, "author": "person:saanvi-thorne", "text": "Kicking off the Chargeback Defense design review next week."}
+{"channel": "risk", "ts": 1741772617657, "author": "person:dmitri-kariuki", "text": "Who has context on the billing-svc alerts from last night?"}
+{"channel": "risk", "ts": 1742399450298, "author": "person:saanvi-thorne", "text": "Deploying Rate Limiter to staging after lunch."}
+{"channel": "risk", "ts": 1742901170325, "author": "person:dmitri-kariuki", "text": "Webhook Dispatcher dashboards are back after the metrics outage."}
+{"channel": "risk", "ts": 1742927484547, "author": "person:dmitri-kariuki", "text": "Pairing with Teodor Arnesen on Rate Limiter today."}
+{"channel": "risk", "ts": 1743777006276, "author": "person:dmitri-kariuki", "text": "For context, Risk owns Billing-v2."}
+{"channel": "risk", "ts": 1746365530543, "author": "person:chiara-holloway", "text": "Can someone review the Rate Limiter runbook changes?"}
+{"channel": "risk", "ts": 1747994920958, "author": "person:nikhil-galloway", "text": "Pairing with Chiara Rasmussen on Pricing Engine today."}
+{"channel": "risk", "ts": 1748440249451, "author": "person:dmitri-kariuki", "text": "Bianca Ishikawa works on instant-payouts."}
+{"channel": "risk", "ts": 1748523419120, "author": "person:nikhil-galloway", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "risk", "ts": 1750932174872, "author": "person:anders-jaramillo", "text": "Pairing with Rafael on Pricing Engine today."}
+{"channel": "risk", "ts": 1751026788652, "author": "person:saanvi-thorne", "text": "Can someone review the rate-limiter-svc runbook changes?"}
+{"channel": "risk", "ts": 1751187885150, "author": "person:dmitri-kariuki", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "risk", "ts": 1751709836221, "author": "person:mirela-yilmaz", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "risk", "ts": 1753348121104, "author": "person:anders-jaramillo", "text": "Load test for Billing finished, numbers look normal."}
+{"channel": "risk", "ts": 1753713882649, "author": "person:nadia-laine", "text": "Pairing with Elif on pricing-engine-svc today."}
+{"channel": "risk", "ts": 1753969080573, "author": "person:nikhil-galloway", "text": "Closed FUL-76, the fix is live."}
+{"channel": "risk", "ts": 1754569765032, "author": "person:nadia-laine", "text": "Pairing with Nadia on Geo Lookup today."}
+{"channel": "risk", "ts": 1754911400502, "author": "person:chiara-holloway", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "risk", "ts": 1755087477717, "author": "person:mirela-yilmaz", "text": "Can someone triage INS-7?"}
+{"channel": "risk", "ts": 1755605205592, "author": "person:chiara-holloway", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "risk", "ts": 1758304970640, "author": "person:saanvi-thorne", "text": "Kicking off the Chargeback Defense design review next week."}
+{"channel": "risk", "ts": 1758892268115, "author": "person:chiara-holloway", "text": "The Account Recovery retro notes are up."}
+{"channel": "risk", "ts": 1761034711059, "author": "person:dmitri-kariuki", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "risk", "ts": 1763371557914, "author": "person:mirela-yilmaz", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "risk", "ts": 1763476367429, "author": "person:chiara-holloway", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "risk", "ts": 1763837529059, "author": "person:emeka-achebe", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "risk", "ts": 1764231262268, "author": "person:mirela-yilmaz", "text": "Deploying Billing-v2 to staging after lunch."}
+{"channel": "risk", "ts": 1764260816587, "author": "person:emeka-achebe", "text": "Mirela Yilmaz leads Account Recovery now."}
+{"channel": "risk", "ts": 1766156348144, "author": "person:mirela-yilmaz", "text": "Picking up INS-7 today."}
+{"channel": "risk", "ts": 1767270320488, "author": "person:mirela-yilmaz", "text": "Who has context on the pricing-engine-svc alerts from last night?"}
+{"channel": "risk", "ts": 1767545222327, "author": "person:saanvi-thorne", "text": "Deploying Session Store to staging after lunch."}
+{"channel": "risk", "ts": 1767894461151, "author": "person:chiara-holloway", "text": "Nadia Laine works on Account Recovery."}
+{"channel": "risk", "ts": 1768055450314, "author": "person:dmitri-kariuki", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "risk", "ts": 1768226147966, "author": "person:chiara-holloway", "text": "The Account Recovery retro notes are up."}
+{"channel": "risk", "ts": 1769523405387, "author": "person:nadia-laine", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "risk", "ts": 1770029698440, "author": "person:chiara-holloway", "text": "Who leads Insights?"}
+{"channel": "risk", "ts": 1770031198440, "author": "person:chiara-rasmussen", "text": "Who leads Insights?", "thread_ts": 1770029698440}
+{"channel": "risk", "ts": 1771176802569, "author": "person:emeka-achebe", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "risk", "ts": 1771686070597, "author": "person:nadia-laine", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "risk", "ts": 1772452027155, "author": "person:nikhil-galloway", "text": "Reminder that Billing and Billing-v2 have separate on-call rotas."}
+{"channel": "risk", "ts": 1773750800597, "author": "person:anders-jaramillo", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "risk", "ts": 1774431254015, "author": "person:anders-jaramillo", "text": "The Wallet Launch retro notes are up."}
+{"channel": "risk", "ts": 1774518736761, "author": "person:chiara-holloway", "text": "Who has context on the Pricing Engine alerts from last night?"}
+{"channel": "risk", "ts": 1775313995802, "author": "person:mirela-yilmaz", "text": "Fraud Scoring dashboards are back after the metrics outage."}
+{"channel": "risk", "ts": 1775389769549, "author": "person:teodor-arnesen", "text": "Load test for Geo Lookup finished, numbers look normal."}
+{"channel": "risk", "ts": 1776773602734, "author": "person:mirela-yilmaz", "text": "Deploying image-resizer-svc to staging after lunch."}
+{"channel": "risk", "ts": 1777742230573, "author": "person:anders-jaramillo", "text": "FUL-5 is blocked on a config change."}
+{"channel": "risk", "ts": 1779475109386, "author": "person:chiara-holloway", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "risk", "ts": 1780676782240, "author": "person:nadia-laine", "text": "Linked RSK-150 to INS-32, same root cause."}
+{"channel": "risk", "ts": 1782917030715, "author": "person:dmitri-kariuki", "text": "Can someone triage INS-194?"}
+{"channel": "risk", "ts": 1783000831456, "author": "person:kalinda-castellanos", "text": "Can someone triage RSK-194?"}
+{"channel": "risk", "ts": 1783162983092, "author": "person:nadia-laine", "text": "I think Session Store depends on Billing, maybe?"}
+{"channel": "risk", "ts": 1783275505067, "author": "person:chiara-holloway", "text": "Linked RDS-99 to RDS-112, same root cause."}
+{"channel": "risk", "ts": 1783794472215, "author": "person:mirela-yilmaz", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "risk", "ts": 1784189924741, "author": "person:saanvi-thorne", "text": "Deploying fraud-scoring-svc to staging after lunch."}
+{"channel": "risk", "ts": 1784226100218, "author": "person:chiara-holloway", "text": "Pairing with Saanvi on session-store-svc today."}
+{"channel": "risk", "ts": 1784741862373, "author": "person:teodor-arnesen", "text": "Closed FUL-115, the fix is live."}
+{"channel": "risk", "ts": 1784818149217, "author": "person:teodor-arnesen", "text": "Can someone review the Rate Limiter runbook changes?"}
+{"channel": "risk", "ts": 1785165658790, "author": "person:kalinda-castellanos", "text": "Picking up INS-50 today."}
+{"channel": "risk", "ts": 1786387421315, "author": "person:kalinda-castellanos", "text": "Picking up FUL-76 today."}
+{"channel": "risk", "ts": 1786699171866, "author": "person:nikhil-galloway", "text": "Insights owns image-resizer-svc."}
+{"channel": "risk", "ts": 1788687516256, "author": "person:nadia-laine", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "risk", "ts": 1789384679730, "author": "person:nikhil-galloway", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "risk", "ts": 1789486589338, "author": "person:kalinda-castellanos", "text": "I think Image Resizer depends on Rate Limiter, maybe?"}
+{"channel": "risk", "ts": 1790074190243, "author": "person:emeka-achebe", "text": "Pairing with Cyrus Quint on pricing-engine-svc today."}

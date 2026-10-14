@@ -1,0 +1,20 @@
+{
+  "key": "INS-48",
+  "title": "Feature Flags: slow cold starts",
+  "description": "Feature Flags shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:maya-quiroga", "at": "2026-07-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-07-07"},
+    {"state": "in_progress", "at": "2026-07-26"},
+    {"state": "done", "at": "2026-08-12"}
+  ],
+  "component_history": [
+    {"about": "system:feature-flags", "at": "2026-07-07"},
+    {"about": "system:geo-lookup", "at": "2026-08-23"}
+  ],
+  "comments": [
+    {"author": "person:kai-udeh", "at": "2026-07-26", "text": "Moved to the next sprint after triage."}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "key": "INS-154",
+  "title": "Partner API: a flaky integration test",
+  "description": "Partner API shows a flaky integration test since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-03-01"},
+    {"state": "in_progress", "at": "2025-03-06"},
+    {"state": "done", "at": "2025-04-04"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2025-03-01"}
+  ],
+  "comments": []
+}

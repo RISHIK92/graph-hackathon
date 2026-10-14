@@ -1,0 +1,18 @@
+{
+  "key": "MSG-193",
+  "title": "Image Resizer: a retry storm after deploys",
+  "description": "image-resizer-svc shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "team:messaging", "at": "2025-10-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-22"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2025-10-22"}
+  ],
+  "comments": [
+    {"author": "person:cyrus-lindgren", "at": "2025-10-22", "text": "Rolled out the fix behind a feature flag."},
+    {"author": "person:zofia-esposito", "at": "2025-10-22", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

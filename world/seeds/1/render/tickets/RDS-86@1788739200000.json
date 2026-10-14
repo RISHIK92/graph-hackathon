@@ -1,0 +1,13 @@
+{
+  "key": "RDS-86",
+  "title": "Image Resizer: missing audit fields",
+  "description": "Image Resizer shows missing audit fields since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-09-07"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2026-09-07"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,15 @@
+{
+  "key": "MSG-164",
+  "title": "Smart Routing: stale cache entries",
+  "description": "Smart Routing shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:zofia-esposito", "at": "2025-06-30"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-30"}
+  ],
+  "component_history": [
+    {"about": "project:smart-routing", "at": "2025-06-30"}
+  ],
+  "comments": []
+}

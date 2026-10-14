@@ -1,0 +1,62 @@
+{"channel": "eng", "ts": 1737638512654, "author": "person:sam-gunnarsson", "text": "Deploying audit-log-svc to staging after lunch."}
+{"channel": "eng", "ts": 1737979883175, "author": "person:soren-zielinski", "text": "The Wallet Launch retro notes are up."}
+{"channel": "eng", "ts": 1738173958439, "author": "person:sam-gunnarsson", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "eng", "ts": 1738489505506, "author": "person:kai-udeh", "text": "Linked INS-59 to COM-11, same root cause."}
+{"channel": "eng", "ts": 1738937393437, "author": "person:darius-oyelaran", "text": "For context, Insights owns Partner API."}
+{"channel": "eng", "ts": 1738943482264, "author": "person:rhea-wexler", "text": "Can someone triage COM-118?"}
+{"channel": "eng", "ts": 1739123509770, "author": "person:valeria-moreau", "text": "Darius leads chargeback-defense."}
+{"channel": "eng", "ts": 1739368983555, "author": "person:soren-zielinski", "text": "ONB-132 is blocked on a config change."}
+{"channel": "eng", "ts": 1739538957539, "author": "person:elif-ishikawa", "text": "Zofia A. works on Gift Cards."}
+{"channel": "eng", "ts": 1740676227953, "author": "person:soren-zielinski", "text": "Can someone triage COM-118?"}
+{"channel": "eng", "ts": 1740755738364, "author": "person:bianca-pellegrino", "text": "Can someone review the Notifications runbook changes?", "thread_ts": 1740676227953}
+{"channel": "eng", "ts": 1741077639904, "author": "person:paloma-kowal", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "eng", "ts": 1742926705609, "author": "person:aiko-carrow", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "eng", "ts": 1743067686515, "author": "person:amara-xu", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "eng", "ts": 1745431637721, "author": "person:maya-quiroga", "text": "Can someone review the Notifications runbook changes?"}
+{"channel": "eng", "ts": 1746711058869, "author": "person:esme-chaudhry", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "eng", "ts": 1748336666843, "author": "person:maya-quiroga", "text": "Deploying Search Index to staging after lunch."}
+{"channel": "eng", "ts": 1749382922459, "author": "person:paloma-kowal", "text": "Notifications depends on email-relay-svc."}
+{"channel": "eng", "ts": 1749632334093, "author": "person:saanvi-bergstrom", "text": "I think Notifications depends on Search Index, maybe?"}
+{"channel": "eng", "ts": 1749634663747, "author": "person:ilse-abernathy", "text": "Pairing with Saanvi Bergstrom on Geo Lookup today."}
+{"channel": "eng", "ts": 1752255310298, "author": "person:elif-ishikawa", "text": "Pairing with Saanvi Bergstrom on Session Store today."}
+{"channel": "eng", "ts": 1755680341509, "author": "person:sam-gunnarsson", "text": "Geo Lookup dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1758126433285, "author": "person:lars-albescu", "text": "Load test for audit-log-svc finished, numbers look normal."}
+{"channel": "eng", "ts": 1758201131169, "author": "person:zofia-arnesen", "text": "Can someone triage COM-140?"}
+{"channel": "eng", "ts": 1758964366338, "author": "person:felix-mbatha", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "eng", "ts": 1759417727135, "author": "person:chiara-esposito", "text": "billing-v2-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1760283679825, "author": "person:yusuf-haddad", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "eng", "ts": 1760352159808, "author": "person:yusuf-haddad", "text": "Which project is Billing-v2 part of?"}
+{"channel": "eng", "ts": 1760355039808, "author": "person:hugo-yoon", "text": "Which project is Billing-v2 part of?", "thread_ts": 1760352159808}
+{"channel": "eng", "ts": 1760542636121, "author": "person:arjun-vasquez", "text": "The Wallet Launch retro notes are up."}
+{"channel": "eng", "ts": 1761045968336, "author": "person:esme-chaudhry", "text": "Who has context on the Notifications alerts from last night?"}
+{"channel": "eng", "ts": 1761123947877, "author": "person:selin-kariuki", "text": "Bianca Pellegrino works on Partner API."}
+{"channel": "eng", "ts": 1761495078907, "author": "person:isaac-delacroix", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "eng", "ts": 1761504506806, "author": "person:oskar-petrov", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "eng", "ts": 1761587753329, "author": "person:zofia-zamora", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "eng", "ts": 1761648944241, "author": "person:lars-albescu", "text": "Kai Udeh works on partner-api."}
+{"channel": "eng", "ts": 1762622320293, "author": "person:chiara-esposito", "text": "I think Onboarding owns Billing?"}
+{"channel": "eng", "ts": 1764231632455, "author": "person:zofia-zamora", "text": "Saanvi Bergstrom leads Data Warehouse."}
+{"channel": "eng", "ts": 1765701340393, "author": "person:kai-udeh", "text": "Feature Flags dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1766055982623, "author": "person:felix-mbatha", "text": "ONB-52 is blocked on a config change."}
+{"channel": "eng", "ts": 1766937420684, "author": "person:soren-zielinski", "text": "Picking up ONB-152 today."}
+{"channel": "eng", "ts": 1768067361119, "author": "person:sam-gunnarsson", "text": "Linked COM-39 to ONB-198, same root cause."}
+{"channel": "eng", "ts": 1770649126461, "author": "person:ilse-abernathy", "text": "Saanvi Bergstrom works on Chargeback Defense."}
+{"channel": "eng", "ts": 1770893044476, "author": "person:soren-zielinski", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "eng", "ts": 1772104519639, "author": "person:selin-kariuki", "text": "Can someone triage COM-118?"}
+{"channel": "eng", "ts": 1774704881058, "author": "person:chiara-esposito", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "eng", "ts": 1777026184155, "author": "person:elif-ishikawa", "text": "Selin Kariuki leads Discovery Revamp."}
+{"channel": "eng", "ts": 1777543043846, "author": "person:zofia-arnesen", "text": "Picking up ONB-132 today."}
+{"channel": "eng", "ts": 1777631930621, "author": "person:valeria-moreau", "text": "The Insights demo moved to Thursday."}
+{"channel": "eng", "ts": 1779275332533, "author": "person:nadia-novak", "text": "The Insights demo moved to Thursday."}
+{"channel": "eng", "ts": 1780508622261, "author": "person:dmitri-rosales", "text": "Audit Log dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1783098079226, "author": "person:arjun-vasquez", "text": "Can someone triage INS-44?"}
+{"channel": "eng", "ts": 1783439153485, "author": "person:zofia-arnesen", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "eng", "ts": 1783793424883, "author": "person:dmitri-rosales", "text": "The Insights demo moved to Thursday."}
+{"channel": "eng", "ts": 1784117667115, "author": "person:elif-ishikawa", "text": "Deploying notifications-svc to staging after lunch."}
+{"channel": "eng", "ts": 1784278603116, "author": "person:chiara-esposito", "text": "Pairing with Hugo Yoon on billing-v2-svc today."}
+{"channel": "eng", "ts": 1786443430273, "author": "person:sam-gunnarsson", "text": "Geo Lookup dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1788174947726, "author": "person:anders-dunmore", "text": "Billing-v2 is taking the new merchants, Billing stays on the old flow for now."}
+{"channel": "eng", "ts": 1789140843467, "author": "person:nikhil-dahl", "text": "Billing-v2 dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1789477868881, "author": "person:nikhil-dahl", "text": "Is the Billing-v2 cutover blocking the Billing reconciliation job?"}
+{"channel": "eng", "ts": 1789649762570, "author": "person:saanvi-bergstrom", "text": "Deploying Geo Lookup to staging after lunch."}
+{"channel": "eng", "ts": 1790151033663, "author": "person:elif-ishikawa", "text": "Can someone triage COM-63?"}

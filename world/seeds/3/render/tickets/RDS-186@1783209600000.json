@@ -1,0 +1,15 @@
+{
+  "key": "RDS-186",
+  "title": "Image Resizer: timeouts under peak load",
+  "description": "Image Resizer shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-07-05"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2026-07-05"}
+  ],
+  "comments": [
+    {"author": "person:quentin-gunnarsson", "at": "2026-07-05", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

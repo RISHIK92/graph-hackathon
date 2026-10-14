@@ -1,0 +1,18 @@
+{
+  "key": "INS-92",
+  "title": "Pricing Engine: stale cache entries",
+  "description": "Pricing Engine shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:soren-esposito", "at": "2026-02-14"},
+    {"who": "person:joaquin-blackwood", "at": "2026-03-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-14"},
+    {"state": "in_progress", "at": "2026-02-24"},
+    {"state": "done", "at": "2026-03-23"}
+  ],
+  "component_history": [
+    {"about": "system:pricing-engine", "at": "2026-02-14"}
+  ],
+  "comments": []
+}

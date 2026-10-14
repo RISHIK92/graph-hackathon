@@ -1,0 +1,18 @@
+{
+  "key": "COM-154",
+  "title": "Notifications: missing audit fields",
+  "description": "Notifications shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:elif-ishikawa", "at": "2026-04-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-04-02"}
+  ],
+  "component_history": [
+    {"about": "system:notifications", "at": "2026-04-02"}
+  ],
+  "comments": [
+    {"author": "person:esme-chaudhry", "at": "2026-04-02", "text": "Blocked until ONB-66 lands."},
+    {"author": "person:dmitri-rosales", "at": "2026-04-02", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

@@ -1,0 +1,63 @@
+{"channel": "incidents", "ts": 1736352791869, "author": "person:elif-takahashi", "text": "Joaquin Blackwood works on Discovery Revamp."}
+{"channel": "incidents", "ts": 1736615965889, "author": "person:darius-ekwueme", "text": "Teodor Arnesen leads Loyalty Rewards."}
+{"channel": "incidents", "ts": 1736616319982, "author": "person:esme-oyelaran", "text": "Risk owns Image Resizer."}
+{"channel": "incidents", "ts": 1738250467480, "author": "person:joaquin-blackwood", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "incidents", "ts": 1739027425396, "author": "person:elif-takahashi", "text": "Pairing with Nadia Laine on Rate Limiter today."}
+{"channel": "incidents", "ts": 1739546399308, "author": "person:chiara-holloway", "text": "Can someone triage FUL-76?"}
+{"channel": "incidents", "ts": 1739806290717, "author": "person:cyrus-quint", "text": "Picking up INS-167 today."}
+{"channel": "incidents", "ts": 1740503867824, "author": "person:joaquin-blackwood", "text": "Deploying Billing-v2 to staging after lunch."}
+{"channel": "incidents", "ts": 1741458130836, "author": "person:mirela-yilmaz", "text": "Load test for Image Resizer finished, numbers look normal."}
+{"channel": "incidents", "ts": 1742057848589, "author": "person:emeka-achebe", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "incidents", "ts": 1744274004911, "author": "person:jules-grimaldi", "text": "Darius Ekwueme works on discovery-revamp."}
+{"channel": "incidents", "ts": 1745946798518, "author": "person:teodor-arnesen", "text": "Linked FUL-21 to RSK-194, same root cause."}
+{"channel": "incidents", "ts": 1746201208251, "author": "person:anders-jaramillo", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "incidents", "ts": 1747332375830, "author": "person:saanvi-thorne", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "incidents", "ts": 1747586666828, "author": "person:kalinda-castellanos", "text": "Picking up FUL-21 today."}
+{"channel": "incidents", "ts": 1748455922331, "author": "person:joaquin-blackwood", "text": "image-resizer-svc dashboards are back after the metrics outage."}
+{"channel": "incidents", "ts": 1749803325817, "author": "person:rhea-hartley", "text": "Pairing with Rohan Ferreira on webhook-dispatcher-svc today."}
+{"channel": "incidents", "ts": 1753099418253, "author": "person:soren-esposito", "text": "Can someone triage INS-97?"}
+{"channel": "incidents", "ts": 1753181823123, "author": "person:amara-kowal", "text": "Load test for Billing finished, numbers look normal."}
+{"channel": "incidents", "ts": 1753607784670, "author": "person:kai-udeh", "text": "Deploying fraud-scoring-svc to staging after lunch."}
+{"channel": "incidents", "ts": 1753781688117, "author": "person:aiko-fontaine", "text": "FUL-21 is blocked on a config change."}
+{"channel": "incidents", "ts": 1754143541334, "author": "person:jada-sato", "text": "Load test for Pricing Engine finished, numbers look normal."}
+{"channel": "incidents", "ts": 1756399701158, "author": "person:jada-sato", "text": "For context, Insights owns Webhook Dispatcher."}
+{"channel": "incidents", "ts": 1756732327740, "author": "person:soren-esposito", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1762172059929, "author": "person:emeka-achebe", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "incidents", "ts": 1763121700576, "author": "person:teodor-arnesen", "text": "Linked FUL-160 to RSK-109, same root cause."}
+{"channel": "incidents", "ts": 1764088819029, "author": "person:anders-jaramillo", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "incidents", "ts": 1764759491768, "author": "person:rohan-ferreira", "text": "Picking up FUL-193 today."}
+{"channel": "incidents", "ts": 1765294102639, "author": "person:anders-jaramillo", "text": "Can someone triage FUL-128?"}
+{"channel": "incidents", "ts": 1766245968508, "author": "person:amara-kowal", "text": "Load test for Webhook Dispatcher finished, numbers look normal."}
+{"channel": "incidents", "ts": 1766496744069, "author": "person:cyrus-quint", "text": "The Wallet Launch retro notes are up."}
+{"channel": "incidents", "ts": 1767262874996, "author": "person:rafael-zamora", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "incidents", "ts": 1767434619539, "author": "person:esme-oyelaran", "text": "The Instant Payouts retro notes are up."}
+{"channel": "incidents", "ts": 1767551910785, "author": "person:rhea-hartley", "text": "Can someone triage INS-162?"}
+{"channel": "incidents", "ts": 1767867131400, "author": "person:aiko-fontaine", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "incidents", "ts": 1769434393501, "author": "person:greta-carrow", "text": "Who has context on the Image Resizer alerts from last night?"}
+{"channel": "incidents", "ts": 1770109634543, "author": "person:bianca-ishikawa", "text": "Can someone review the Geo Lookup runbook changes?"}
+{"channel": "incidents", "ts": 1771499238308, "author": "person:joaquin-blackwood", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "incidents", "ts": 1771863132566, "author": "person:nikhil-galloway", "text": "Deploying billing-svc to staging after lunch."}
+{"channel": "incidents", "ts": 1772635810694, "author": "person:nadia-laine", "text": "Billing-v2 is taking the new merchants, Billing stays on the old flow for now."}
+{"channel": "incidents", "ts": 1773043404598, "author": "person:anders-jaramillo", "text": "The Wallet Launch retro notes are up."}
+{"channel": "incidents", "ts": 1774687990292, "author": "person:esme-oyelaran", "text": "Who has context on the rate-limiter-svc alerts from last night?"}
+{"channel": "incidents", "ts": 1774697633697, "author": "person:nikhil-galloway", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "incidents", "ts": 1774896590033, "author": "person:darius-ekwueme", "text": "Image Resizer is part of store-locator."}
+{"channel": "incidents", "ts": 1775291440267, "author": "person:mirela-yilmaz", "text": "Deploying billing-svc to staging after lunch."}
+{"channel": "incidents", "ts": 1775323441655, "author": "person:chiara-holloway", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1776190718814, "author": "person:rohan-ferreira", "text": "Billing is part of Loyalty Rewards."}
+{"channel": "incidents", "ts": 1776191556510, "author": "person:amara-kowal", "text": "Closed RSK-1, the fix is live."}
+{"channel": "incidents", "ts": 1777385454715, "author": "person:elif-takahashi", "text": "Deploying Fraud Scoring to staging after lunch."}
+{"channel": "incidents", "ts": 1777654873268, "author": "person:rafael-zamora", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "incidents", "ts": 1779437204199, "author": "person:wren-mbatha", "text": "Deploying Billing to staging after lunch."}
+{"channel": "incidents", "ts": 1779955719563, "author": "person:elif-takahashi", "text": "Teodor Arnesen leads Risk."}
+{"channel": "incidents", "ts": 1780321478544, "author": "person:anders-jaramillo", "text": "Who owns Billing-v2?"}
+{"channel": "incidents", "ts": 1780324598544, "author": "person:nadia-laine", "text": "Who owns Billing-v2?", "thread_ts": 1780321478544}
+{"channel": "incidents", "ts": 1781514858409, "author": "person:elif-takahashi", "text": "Can someone review the fraud-scoring-svc runbook changes?"}
+{"channel": "incidents", "ts": 1781887681563, "author": "person:mirela-yilmaz", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "incidents", "ts": 1782893742683, "author": "person:nadia-laine", "text": "Closed INS-7, the fix is live."}
+{"channel": "incidents", "ts": 1784881830615, "author": "person:anders-jaramillo", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "incidents", "ts": 1785845498880, "author": "person:rhea-hartley", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "incidents", "ts": 1786811239251, "author": "person:soren-esposito", "text": "Nikhil Galloway works on account-recovery."}
+{"channel": "incidents", "ts": 1787758819431, "author": "person:aiko-fontaine", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "incidents", "ts": 1788435204124, "author": "person:femi-wexler", "text": "insights-team owns Store Locator."}
+{"channel": "incidents", "ts": 1789662704733, "author": "person:femi-wexler", "text": "Deploying geo-lookup-svc to staging after lunch."}

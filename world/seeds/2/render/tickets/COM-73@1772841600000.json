@@ -1,0 +1,19 @@
+{
+  "key": "COM-73",
+  "title": "Email Relay: a retry storm after deploys",
+  "description": "Email Relay shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "team:commerce", "at": "2026-02-18"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-18"},
+    {"state": "in_progress", "at": "2026-02-21"},
+    {"state": "done", "at": "2026-03-07"}
+  ],
+  "component_history": [
+    {"about": "system:email-relay", "at": "2026-02-18"}
+  ],
+  "comments": [
+    {"author": "person:dmitri-rosales", "at": "2026-02-23", "text": "This overlaps with INS-59, linking them."}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "key": "COM-62",
+  "title": "Notifications: slow cold starts",
+  "description": "Notifications shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:amara-xu", "at": "2025-09-17"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-09-07"},
+    {"state": "in_progress", "at": "2025-09-17"},
+    {"state": "done", "at": "2025-09-21"}
+  ],
+  "component_history": [
+    {"about": "system:notifications", "at": "2025-09-07"},
+    {"about": "system:billing", "at": "2026-04-24"}
+  ],
+  "comments": [
+    {"author": "person:lars-albescu", "at": "2026-03-12", "text": "Blocked until ONB-72 lands."}
+  ]
+}

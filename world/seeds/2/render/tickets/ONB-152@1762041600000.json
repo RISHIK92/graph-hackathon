@@ -1,0 +1,18 @@
+{
+  "key": "ONB-152",
+  "title": "Search Index: a retry storm after deploys",
+  "description": "search-index-svc shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:valeria-moreau", "at": "2025-11-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-29"},
+    {"state": "in_progress", "at": "2025-11-02"}
+  ],
+  "component_history": [
+    {"about": "system:search-index", "at": "2025-10-29"}
+  ],
+  "comments": [
+    {"author": "person:saanvi-bergstrom", "at": "2025-10-30", "text": "Same symptom as COM-14, probably one root cause."}
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "key": "COM-196",
+  "title": "Notifications: slow cold starts",
+  "description": "Notifications shows slow cold starts since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-04-13"},
+    {"state": "in_progress", "at": "2026-04-20"}
+  ],
+  "component_history": [
+    {"about": "system:notifications", "at": "2026-04-13"}
+  ],
+  "comments": [
+    {"author": "person:amara-xu", "at": "2026-04-18", "text": "Blocked until RDS-127 lands."},
+    {"author": "person:lars-albescu", "at": "2026-04-18", "text": "This overlaps with COM-79, linking them."}
+  ]
+}

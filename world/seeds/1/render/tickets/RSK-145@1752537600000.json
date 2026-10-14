@@ -1,0 +1,14 @@
+{
+  "key": "RSK-145",
+  "title": "Image Resizer: stale cache entries",
+  "description": "Image Resizer shows stale cache entries since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-07-01"},
+    {"state": "in_progress", "at": "2025-07-15"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2025-07-01"}
+  ],
+  "comments": []
+}

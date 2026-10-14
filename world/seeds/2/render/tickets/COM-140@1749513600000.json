@@ -1,0 +1,15 @@
+{
+  "key": "COM-140",
+  "title": "Email Relay: high p99 latency",
+  "description": "email-relay-svc shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-06-10"}
+  ],
+  "component_history": [
+    {"about": "system:email-relay", "at": "2025-06-10"}
+  ],
+  "comments": [
+    {"author": "person:lars-albescu", "at": "2025-06-10", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

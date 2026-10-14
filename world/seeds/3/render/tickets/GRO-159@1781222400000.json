@@ -1,0 +1,19 @@
+{
+  "key": "GRO-159",
+  "title": "Chargeback Defense: stale cache entries",
+  "description": "chargeback-defense shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:soren-whitfield", "at": "2026-01-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-01-23"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2026-01-23"},
+    {"about": "system:auth-gateway", "at": "2026-06-12"}
+  ],
+  "comments": [
+    {"author": "person:soren-whitfield", "at": "2026-03-05", "text": "Moved to the next sprint after triage."},
+    {"author": "person:soren-whitfield", "at": "2026-05-18", "text": "Moved to the next sprint after triage."}
+  ]
+}

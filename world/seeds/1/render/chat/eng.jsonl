@@ -1,0 +1,69 @@
+{"channel": "eng", "ts": 1736524974715, "author": "person:soren-esposito", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "eng", "ts": 1736529018236, "author": "person:joaquin-blackwood", "text": "Billing-v2 depends on billing-svc."}
+{"channel": "eng", "ts": 1736670296563, "author": "person:femi-wexler", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "eng", "ts": 1737481377959, "author": "person:amara-kowal", "text": "Load test for Geo Lookup finished, numbers look normal."}
+{"channel": "eng", "ts": 1738086836667, "author": "person:teodor-arnesen", "text": "image-resizer-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1739790407459, "author": "person:bianca-ishikawa", "text": "Who has context on the Fraud Scoring alerts from last night?"}
+{"channel": "eng", "ts": 1740741569570, "author": "person:callum-haddad", "text": "Deploying Billing-v2 to staging after lunch."}
+{"channel": "eng", "ts": 1741267451661, "author": "person:darius-ekwueme", "text": "Webhook Dispatcher dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1743093887872, "author": "person:chiara-rasmussen", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "eng", "ts": 1744105701732, "author": "person:teodor-arnesen", "text": "Linked INS-97 to RSK-194, same root cause."}
+{"channel": "eng", "ts": 1745053487082, "author": "person:kai-udeh", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "eng", "ts": 1747222265597, "author": "person:wren-mbatha", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "eng", "ts": 1747307406768, "author": "person:femi-wexler", "text": "Load test for geo-lookup-svc finished, numbers look normal."}
+{"channel": "eng", "ts": 1747846984428, "author": "person:cyrus-quint", "text": "Rate Limiter dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1748257756662, "author": "person:soren-esposito", "text": "The Insights demo moved to Thursday."}
+{"channel": "eng", "ts": 1748419801412, "author": "person:bianca-ishikawa", "text": "Who has context on the Geo Lookup alerts from last night?", "thread_ts": 1748257756662}
+{"channel": "eng", "ts": 1750178169937, "author": "person:wren-mbatha", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "eng", "ts": 1750788569560, "author": "person:nadia-laine", "text": "session-store-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1751101194141, "author": "person:kalinda-castellanos", "text": "The Store Locator retro notes are up."}
+{"channel": "eng", "ts": 1751282959374, "author": "person:chiara-rasmussen", "text": "Deploying Rate Limiter to staging after lunch."}
+{"channel": "eng", "ts": 1754389481005, "author": "person:valeria-whitfield", "text": "The Risk demo moved to Thursday."}
+{"channel": "eng", "ts": 1755281974084, "author": "person:saanvi-thorne", "text": "Darius Ekwueme leads Discovery Revamp."}
+{"channel": "eng", "ts": 1756311030990, "author": "person:wren-mbatha", "text": "Load test for Pricing Engine finished, numbers look normal."}
+{"channel": "eng", "ts": 1756998972330, "author": "person:joaquin-blackwood", "text": "Linked RSK-145 to RDS-60, same root cause."}
+{"channel": "eng", "ts": 1758474858032, "author": "person:jules-grimaldi", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "eng", "ts": 1759070696559, "author": "person:rohan-ferreira", "text": "Pairing with Jada Sato on billing-svc today."}
+{"channel": "eng", "ts": 1760441788034, "author": "person:anders-jaramillo", "text": "Linked FUL-163 to FUL-18, same root cause."}
+{"channel": "eng", "ts": 1760460613846, "author": "person:valeria-whitfield", "text": "Image Resizer is part of Store Locator."}
+{"channel": "eng", "ts": 1760529071898, "author": "person:kalinda-castellanos", "text": "Pairing with Dmitri Kariuki on Billing-v2 today."}
+{"channel": "eng", "ts": 1761504072424, "author": "person:emeka-achebe", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "eng", "ts": 1761760725147, "author": "person:soren-esposito", "text": "I think Fulfilment owns Fraud Scoring?"}
+{"channel": "eng", "ts": 1763145882254, "author": "person:valeria-whitfield", "text": "The Risk demo moved to Thursday."}
+{"channel": "eng", "ts": 1764340775179, "author": "person:rafael-zamora", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "eng", "ts": 1764842319973, "author": "person:rhea-hartley", "text": "Webhook Dispatcher dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1764954034923, "author": "person:yara-xu", "text": "Reminder that Fulfilment planning starts at ten.", "thread_ts": 1764842319973}
+{"channel": "eng", "ts": 1765618135328, "author": "person:anders-jaramillo", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "eng", "ts": 1765889439919, "author": "person:rafael-zamora", "text": "pricing-engine-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1766679677972, "author": "person:jules-grimaldi", "text": "Who has context on the Pricing Engine alerts from last night?"}
+{"channel": "eng", "ts": 1767086402145, "author": "person:callum-haddad", "text": "Who has context on the Geo Lookup alerts from last night?"}
+{"channel": "eng", "ts": 1768586899613, "author": "person:teodor-arnesen", "text": "Pairing with Rhea on Rate Limiter today."}
+{"channel": "eng", "ts": 1770134120906, "author": "person:rhea-hartley", "text": "Who has context on the Webhook Dispatcher alerts from last night?"}
+{"channel": "eng", "ts": 1772032720384, "author": "person:anders-jaramillo", "text": "Who has context on the Image Resizer alerts from last night?"}
+{"channel": "eng", "ts": 1772118971954, "author": "person:anders-jaramillo", "text": "Pricing Engine depends on Geo Lookup."}
+{"channel": "eng", "ts": 1772208581284, "author": "person:chiara-rasmussen", "text": "Who has context on the session-store-svc alerts from last night?"}
+{"channel": "eng", "ts": 1772817040766, "author": "person:jada-sato", "text": "The Merchant Portal retro notes are up."}
+{"channel": "eng", "ts": 1773046782909, "author": "person:elif-takahashi", "text": "Pairing with Darius Ekwueme on Geo Lookup today."}
+{"channel": "eng", "ts": 1773134993857, "author": "person:amara-kowal", "text": "Deploying Geo Lookup to staging after lunch."}
+{"channel": "eng", "ts": 1773915745192, "author": "person:saanvi-thorne", "text": "Nadia Laine leads Risk."}
+{"channel": "eng", "ts": 1775041318839, "author": "person:saanvi-thorne", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "eng", "ts": 1775395707691, "author": "person:callum-haddad", "text": "Image Resizer dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1775657132638, "author": "person:kai-udeh", "text": "Can someone triage INS-76?"}
+{"channel": "eng", "ts": 1776689886370, "author": "person:saanvi-thorne", "text": "risk-team owns Instant Payouts now."}
+{"channel": "eng", "ts": 1777052855495, "author": "person:cyrus-quint", "text": "Who has context on the Geo Lookup alerts from last night?"}
+{"channel": "eng", "ts": 1778157798148, "author": "person:nikhil-galloway", "text": "Can someone review the Pricing Engine runbook changes?"}
+{"channel": "eng", "ts": 1779714459964, "author": "person:amara-kowal", "text": "Deploying Fraud Scoring to staging after lunch."}
+{"channel": "eng", "ts": 1779906149610, "author": "person:kai-udeh", "text": "Elif Takahashi leads Loyalty Rewards."}
+{"channel": "eng", "ts": 1780678726256, "author": "person:dmitri-kariuki", "text": "Pricing Engine dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1781514191534, "author": "person:darius-ekwueme", "text": "Can someone review the Pricing Engine runbook changes?"}
+{"channel": "eng", "ts": 1783952102991, "author": "person:rhea-hartley", "text": "Pairing with Rafael Zamora on Billing-v2 today."}
+{"channel": "eng", "ts": 1784117747015, "author": "person:anders-jaramillo", "text": "RSK-150 is blocked on a config change."}
+{"channel": "eng", "ts": 1785774876505, "author": "person:amara-kowal", "text": "geo-lookup-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1786092591743, "author": "person:rafael-zamora", "text": "Deploying image-resizer-svc to staging after lunch."}
+{"channel": "eng", "ts": 1786870882470, "author": "person:kalinda-castellanos", "text": "Load test for Fraud Scoring finished, numbers look normal."}
+{"channel": "eng", "ts": 1786988435141, "author": "person:rohan-ferreira", "text": "The Account Recovery retro notes are up."}
+{"channel": "eng", "ts": 1787502528025, "author": "person:jada-sato", "text": "billing-v2-svc dashboards are back after the metrics outage."}
+{"channel": "eng", "ts": 1787675566349, "author": "person:chiara-rasmussen", "text": "pricing-engine-svc depends on Geo Lookup."}
+{"channel": "eng", "ts": 1790082957354, "author": "person:bianca-ishikawa", "text": "Can someone review the Image Resizer runbook changes?"}
+{"channel": "eng", "ts": 1790248754808, "author": "person:elif-takahashi", "text": "Risk owns Geo Lookup."}
+{"channel": "eng", "ts": 1790327739794, "author": "person:emeka-achebe", "text": "Can someone review the Billing-v2 runbook changes?"}

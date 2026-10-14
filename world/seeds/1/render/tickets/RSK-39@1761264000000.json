@@ -1,0 +1,15 @@
+{
+  "key": "RSK-39",
+  "title": "Account Recovery: stale cache entries",
+  "description": "account-recovery shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:saanvi-thorne", "at": "2025-10-24"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-24"}
+  ],
+  "component_history": [
+    {"about": "project:account-recovery", "at": "2025-10-24"}
+  ],
+  "comments": []
+}

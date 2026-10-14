@@ -1,0 +1,19 @@
+{
+  "key": "COM-194",
+  "title": "Email Relay: high p99 latency",
+  "description": "email-relay-svc shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:dmitri-rosales", "at": "2026-02-23"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-23"},
+    {"state": "in_progress", "at": "2026-03-14"},
+    {"state": "done", "at": "2026-03-16"}
+  ],
+  "component_history": [
+    {"about": "system:email-relay", "at": "2026-02-23"}
+  ],
+  "comments": [
+    {"author": "person:zofia-zamora", "at": "2026-03-08", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

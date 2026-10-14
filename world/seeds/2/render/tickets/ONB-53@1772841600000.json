@@ -1,0 +1,19 @@
+{
+  "key": "ONB-53",
+  "title": "Search Index: a retry storm after deploys",
+  "description": "search-index-svc shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:darius-oyelaran", "at": "2026-03-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-02"},
+    {"state": "in_progress", "at": "2026-03-07"}
+  ],
+  "component_history": [
+    {"about": "system:search-index", "at": "2026-03-02"}
+  ],
+  "comments": [
+    {"author": "person:darius-oyelaran", "at": "2026-03-02", "text": "Rolled out the fix behind a feature flag."},
+    {"author": "person:selin-kariuki", "at": "2026-03-05", "text": "Moved to the next sprint after triage."}
+  ]
+}

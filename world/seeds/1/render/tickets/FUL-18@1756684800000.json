@@ -1,0 +1,16 @@
+{
+  "key": "FUL-18",
+  "title": "Geo Lookup: missing audit fields",
+  "description": "geo-lookup-svc shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:esme-oyelaran", "at": "2025-08-25"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-25"},
+    {"state": "in_progress", "at": "2025-09-01"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-08-25"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,17 @@
+{
+  "key": "RSK-1",
+  "title": "Session Store: a flaky integration test",
+  "description": "Session Store shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:quentin-gunnarsson", "at": "2025-03-01"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-03-01"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-03-01"}
+  ],
+  "comments": [
+    {"author": "person:mads-haddad", "at": "2025-03-01", "text": "Moved to the next sprint after triage."}
+  ]
+}

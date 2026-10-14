@@ -1,0 +1,18 @@
+{
+  "key": "ONB-107",
+  "title": "Discovery Revamp: a flaky integration test",
+  "description": "Discovery Revamp shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:sam-gunnarsson", "at": "2026-07-07"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-06-20"},
+    {"state": "in_progress", "at": "2026-07-07"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2026-06-20"}
+  ],
+  "comments": [
+    {"author": "person:rhea-wexler", "at": "2026-06-30", "text": "This overlaps with COM-7, linking them."}
+  ]
+}

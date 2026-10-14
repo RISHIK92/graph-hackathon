@@ -1,0 +1,15 @@
+{
+  "key": "MSG-30",
+  "title": "Billing-v2: missing audit fields",
+  "description": "Billing-v2 shows missing audit fields since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-06-23"},
+    {"state": "in_progress", "at": "2026-06-26"},
+    {"state": "done", "at": "2026-07-18"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2026-06-23"}
+  ],
+  "comments": []
+}

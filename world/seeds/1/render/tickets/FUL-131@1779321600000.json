@@ -1,0 +1,16 @@
+{
+  "key": "FUL-131",
+  "title": "Geo Lookup: noisy alerts at night",
+  "description": "Geo Lookup shows noisy alerts at night since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-05-21"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2026-05-21"}
+  ],
+  "comments": [
+    {"author": "person:greta-carrow", "at": "2026-05-21", "text": "Blocked until RSK-188 lands."},
+    {"author": "person:greta-carrow", "at": "2026-05-21", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

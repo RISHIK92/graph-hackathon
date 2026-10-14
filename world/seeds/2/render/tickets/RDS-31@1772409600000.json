@@ -1,0 +1,20 @@
+{
+  "key": "RDS-31",
+  "title": "Migrate Ledger to Aurora",
+  "description": "Cut ledger-service over from Postgres Main to Aurora as agreed in ADR-007.",
+  "assignee_history": [
+    {"who": "person:ana-costa", "at": "2026-02-12"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-12"},
+    {"state": "in_progress", "at": "2026-02-16"},
+    {"state": "done", "at": "2026-03-02"}
+  ],
+  "component_history": [
+    {"about": "system:ledger", "at": "2026-02-12"}
+  ],
+  "comments": [
+    {"author": "person:ana-costa", "at": "2026-02-16", "text": "Cutover rehearsal for ledger-service is booked for Thursday."},
+    {"author": "person:priya-raman", "at": "2026-03-02", "text": "ADR-007 was accepted because Postgres Main could not sustain Ledger write volume during month-end close. The Aurora cutover finished this morning."}
+  ]
+}

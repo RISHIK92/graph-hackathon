@@ -1,0 +1,17 @@
+{
+  "key": "RSK-24",
+  "title": "Rate Limiter: stale cache entries",
+  "description": "Rate Limiter shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:nikhil-galloway", "at": "2026-04-20"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-04-15"},
+    {"state": "in_progress", "at": "2026-04-20"},
+    {"state": "done", "at": "2026-05-01"}
+  ],
+  "component_history": [
+    {"about": "system:rate-limiter", "at": "2026-04-15"}
+  ],
+  "comments": []
+}

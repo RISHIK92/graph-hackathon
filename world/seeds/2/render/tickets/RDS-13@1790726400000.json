@@ -1,0 +1,18 @@
+{
+  "key": "RDS-13",
+  "title": "Email Relay: high p99 latency",
+  "description": "Email Relay shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:rhea-wexler", "at": "2026-09-05"},
+    {"who": "person:hugo-yoon", "at": "2026-09-28"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-09-05"},
+    {"state": "in_progress", "at": "2026-09-19"},
+    {"state": "done", "at": "2026-09-30"}
+  ],
+  "component_history": [
+    {"about": "system:email-relay", "at": "2026-09-05"}
+  ],
+  "comments": []
+}

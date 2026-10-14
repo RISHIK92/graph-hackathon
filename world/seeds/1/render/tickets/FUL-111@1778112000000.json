@@ -1,0 +1,15 @@
+{
+  "key": "FUL-111",
+  "title": "Webhook Dispatcher: timeouts under peak load",
+  "description": "webhook-dispatcher-svc shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-05-07"}
+  ],
+  "component_history": [
+    {"about": "system:webhook-dispatcher", "at": "2026-05-07"}
+  ],
+  "comments": [
+    {"author": "person:esme-oyelaran", "at": "2026-05-07", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

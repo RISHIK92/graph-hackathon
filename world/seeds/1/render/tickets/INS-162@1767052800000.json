@@ -1,0 +1,16 @@
+{
+  "key": "INS-162",
+  "title": "Webhook Dispatcher: stale cache entries",
+  "description": "Webhook Dispatcher shows stale cache entries since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-12-15"},
+    {"state": "in_progress", "at": "2025-12-30"}
+  ],
+  "component_history": [
+    {"about": "system:webhook-dispatcher", "at": "2025-12-15"}
+  ],
+  "comments": [
+    {"author": "person:soren-esposito", "at": "2025-12-28", "text": "Blocked until INS-33 lands."}
+  ]
+}

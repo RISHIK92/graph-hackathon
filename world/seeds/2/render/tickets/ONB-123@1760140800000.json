@@ -1,0 +1,15 @@
+{
+  "key": "ONB-123",
+  "title": "Discovery Revamp: noisy alerts at night",
+  "description": "Discovery Revamp shows noisy alerts at night since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-10-11"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2025-10-11"}
+  ],
+  "comments": [
+    {"author": "person:saanvi-bergstrom", "at": "2025-10-11", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

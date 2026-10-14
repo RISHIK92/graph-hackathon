@@ -1,0 +1,70 @@
+{"channel": "commerce", "ts": 1737476447005, "author": "person:lars-albescu", "text": "Linked ONB-59 to ONB-59, same root cause."}
+{"channel": "commerce", "ts": 1739008051686, "author": "person:nadia-novak", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "commerce", "ts": 1740244902827, "author": "person:elif-ishikawa", "text": "Pairing with Rhea Wexler on Notifications today."}
+{"channel": "commerce", "ts": 1740930801383, "author": "person:nadia-novak", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "commerce", "ts": 1741343922880, "author": "person:dmitri-rosales", "text": "The Instant Payouts retro notes are up."}
+{"channel": "commerce", "ts": 1741354292574, "author": "person:lars-albescu", "text": "Kicking off the Partner API design review next week."}
+{"channel": "commerce", "ts": 1741429345063, "author": "person:dmitri-rosales", "text": "Load test for audit-log-svc finished, numbers look normal."}
+{"channel": "commerce", "ts": 1741598885117, "author": "person:elif-ishikawa", "text": "The Data Warehouse retro notes are up."}
+{"channel": "commerce", "ts": 1741800574230, "author": "person:dmitri-rosales", "text": "Notifications dashboards are back after the metrics outage."}
+{"channel": "commerce", "ts": 1742409780047, "author": "person:talia-sato", "text": "Saanvi Bergstrom works on chargeback-defense."}
+{"channel": "commerce", "ts": 1744020311321, "author": "person:elif-ishikawa", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "commerce", "ts": 1745429878819, "author": "person:nikhil-dahl", "text": "The Commerce demo moved to Thursday."}
+{"channel": "commerce", "ts": 1746871902559, "author": "person:dmitri-rosales", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "commerce", "ts": 1746874104727, "author": "person:nadia-novak", "text": "The Insights demo moved to Thursday."}
+{"channel": "commerce", "ts": 1747313424110, "author": "person:elif-ishikawa", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "commerce", "ts": 1747851409685, "author": "person:lars-albescu", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "commerce", "ts": 1749890535283, "author": "person:nikhil-dahl", "text": "Load test for geo-lookup-svc finished, numbers look normal."}
+{"channel": "commerce", "ts": 1750496481774, "author": "person:zofia-zamora", "text": "Saanvi Bergstrom works on Chargeback Defense."}
+{"channel": "commerce", "ts": 1752662624681, "author": "person:talia-sato", "text": "Email Relay dashboards are back after the metrics outage."}
+{"channel": "commerce", "ts": 1752858648476, "author": "person:dmitri-rosales", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "commerce", "ts": 1756319705592, "author": "person:nikhil-dahl", "text": "Can someone review the audit-log-svc runbook changes?"}
+{"channel": "commerce", "ts": 1756564013403, "author": "person:nadia-novak", "text": "Load test for Notifications finished, numbers look normal."}
+{"channel": "commerce", "ts": 1756828714839, "author": "person:talia-sato", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "commerce", "ts": 1757148828697, "author": "person:amara-xu", "text": "Lars Albescu works on Wallet Launch."}
+{"channel": "commerce", "ts": 1757935511883, "author": "person:dmitri-rosales", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "commerce", "ts": 1758365537026, "author": "person:zofia-zamora", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "commerce", "ts": 1759686654904, "author": "person:amara-xu", "text": "Reminder that Billing and Billing-v2 have separate on-call rotas."}
+{"channel": "commerce", "ts": 1759775060633, "author": "person:amara-xu", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "commerce", "ts": 1759777034601, "author": "person:zofia-zamora", "text": "RDS-16 is blocked on a config change."}
+{"channel": "commerce", "ts": 1760029500006, "author": "person:zofia-zamora", "text": "Load test for Email Relay finished, numbers look normal."}
+{"channel": "commerce", "ts": 1761396656958, "author": "person:nikhil-dahl", "text": "Billing-v2 is part of discovery-revamp."}
+{"channel": "commerce", "ts": 1761480226116, "author": "person:amara-xu", "text": "The Commerce demo moved to Thursday."}
+{"channel": "commerce", "ts": 1762344687463, "author": "person:talia-sato", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "commerce", "ts": 1762763278545, "author": "person:nikhil-dahl", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "commerce", "ts": 1765534644712, "author": "person:nikhil-dahl", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "commerce", "ts": 1769430052805, "author": "person:lars-albescu", "text": "Search Index depends on Geo Lookup."}
+{"channel": "commerce", "ts": 1770555923162, "author": "person:elif-ishikawa", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "commerce", "ts": 1770643074526, "author": "person:nikhil-dahl", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "commerce", "ts": 1771350003196, "author": "person:lars-albescu", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "commerce", "ts": 1771408041529, "author": "person:zofia-zamora", "text": "Pairing with Soren Zielinski on Email Relay today."}
+{"channel": "commerce", "ts": 1773829647628, "author": "person:nadia-novak", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "commerce", "ts": 1774446349530, "author": "person:nadia-novak", "text": "Deploying search-index-svc to staging after lunch."}
+{"channel": "commerce", "ts": 1774715239691, "author": "person:lars-albescu", "text": "Who has context on the Billing-v2 alerts from last night?"}
+{"channel": "commerce", "ts": 1774783017163, "author": "person:nikhil-dahl", "text": "Load test for Geo Lookup finished, numbers look normal."}
+{"channel": "commerce", "ts": 1775031340956, "author": "person:elif-ishikawa", "text": "Can someone triage ONB-59?"}
+{"channel": "commerce", "ts": 1775381236168, "author": "person:nadia-novak", "text": "The Commerce demo moved to Thursday."}
+{"channel": "commerce", "ts": 1775550295699, "author": "person:amara-xu", "text": "feature-flags-svc dashboards are back after the metrics outage."}
+{"channel": "commerce", "ts": 1776181501190, "author": "person:elif-ishikawa", "text": "Can someone triage COM-7?"}
+{"channel": "commerce", "ts": 1776620920651, "author": "person:talia-sato", "text": "Nikhil Dahl leads Wallet Launch now."}
+{"channel": "commerce", "ts": 1777290562155, "author": "person:elif-ishikawa", "text": "Pairing with Saanvi Bergstrom on Notifications today."}
+{"channel": "commerce", "ts": 1778763499822, "author": "person:zofia-zamora", "text": "Who has context on the Email Relay alerts from last night?"}
+{"channel": "commerce", "ts": 1779552614634, "author": "person:amara-xu", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "commerce", "ts": 1779994448712, "author": "person:lars-albescu", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "commerce", "ts": 1780145605543, "author": "person:dmitri-rosales", "text": "For context, Insights owns Partner API."}
+{"channel": "commerce", "ts": 1781183963793, "author": "person:nikhil-dahl", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "commerce", "ts": 1781189783666, "author": "person:dmitri-rosales", "text": "Who has context on the Geo Lookup alerts from last night?"}
+{"channel": "commerce", "ts": 1781719583289, "author": "person:nikhil-dahl", "text": "Deploying Billing-v2 to staging after lunch."}
+{"channel": "commerce", "ts": 1781950503125, "author": "person:talia-sato", "text": "The Insights demo moved to Thursday."}
+{"channel": "commerce", "ts": 1782117619763, "author": "person:nikhil-dahl", "text": "Pairing with Felix on Billing today."}
+{"channel": "commerce", "ts": 1783327207349, "author": "person:elif-ishikawa", "text": "ONB-52 is blocked on a config change."}
+{"channel": "commerce", "ts": 1784291443143, "author": "person:nikhil-dahl", "text": "Who owns Session Store?"}
+{"channel": "commerce", "ts": 1784295583143, "author": "person:arjun-vasquez", "text": "Who owns Session Store?", "thread_ts": 1784291443143}
+{"channel": "commerce", "ts": 1785140268252, "author": "person:zofia-zamora", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "commerce", "ts": 1786784479932, "author": "person:lars-albescu", "text": "Pairing with Sam Gunnarsson on Session Store today."}
+{"channel": "commerce", "ts": 1787071894417, "author": "person:zofia-zamora", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "commerce", "ts": 1787854168459, "author": "person:elif-ishikawa", "text": "The Wallet Launch retro notes are up."}
+{"channel": "commerce", "ts": 1788263303065, "author": "person:amara-xu", "text": "Who has context on the Search Index alerts from last night?"}
+{"channel": "commerce", "ts": 1788266656830, "author": "person:nikhil-dahl", "text": "Closed ONB-105, the fix is live."}
+{"channel": "commerce", "ts": 1788941552387, "author": "person:amara-xu", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "commerce", "ts": 1790417542633, "author": "person:lars-albescu", "text": "Geo Lookup dashboards are back after the metrics outage."}

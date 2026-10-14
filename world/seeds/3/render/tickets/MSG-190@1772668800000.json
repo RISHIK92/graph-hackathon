@@ -1,0 +1,15 @@
+{
+  "key": "MSG-190",
+  "title": "Event Bus: missing audit fields",
+  "description": "Event Bus shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:cyrus-lindgren", "at": "2026-03-05"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-05"}
+  ],
+  "component_history": [
+    {"about": "system:event-bus", "at": "2026-03-05"}
+  ],
+  "comments": []
+}

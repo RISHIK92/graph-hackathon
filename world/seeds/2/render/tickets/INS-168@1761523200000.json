@@ -1,0 +1,18 @@
+{
+  "key": "INS-168",
+  "title": "Partner API: missing audit fields",
+  "description": "Partner API shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:zofia-arnesen", "at": "2025-10-27"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-27"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2025-10-27"}
+  ],
+  "comments": [
+    {"author": "person:zofia-arnesen", "at": "2025-10-27", "text": "Same symptom as COM-24, probably one root cause."},
+    {"author": "person:esme-chaudhry", "at": "2025-10-27", "text": "Same symptom as COM-79, probably one root cause."}
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "key": "RDS-60",
+  "title": "Fraud Scoring: stale cache entries",
+  "description": "fraud-scoring-svc shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:chiara-rasmussen", "at": "2025-06-26"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-06-26"},
+    {"state": "in_progress", "at": "2025-07-04"},
+    {"state": "done", "at": "2025-07-17"}
+  ],
+  "component_history": [
+    {"about": "system:fraud-scoring", "at": "2025-06-26"}
+  ],
+  "comments": []
+}

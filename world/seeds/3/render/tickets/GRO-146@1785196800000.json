@@ -1,0 +1,19 @@
+{
+  "key": "GRO-146",
+  "title": "Feature Flags: missing audit fields",
+  "description": "feature-flags-svc shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:arjun-moreau", "at": "2026-07-28"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-07-21"},
+    {"state": "in_progress", "at": "2026-07-28"}
+  ],
+  "component_history": [
+    {"about": "system:feature-flags", "at": "2026-07-21"}
+  ],
+  "comments": [
+    {"author": "person:callum-varga", "at": "2026-07-26", "text": "Blocked until MSG-152 lands."},
+    {"author": "person:arjun-moreau", "at": "2026-07-28", "text": "Same symptom as RDS-184, probably one root cause."}
+  ]
+}

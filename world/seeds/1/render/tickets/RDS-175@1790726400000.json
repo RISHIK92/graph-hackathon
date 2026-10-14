@@ -1,0 +1,18 @@
+{
+  "key": "RDS-175",
+  "title": "Billing: noisy alerts at night",
+  "description": "Billing shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:rhea-hartley", "at": "2026-09-19"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-09-19"},
+    {"state": "in_progress", "at": "2026-09-30"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2026-09-19"}
+  ],
+  "comments": [
+    {"author": "person:wren-mbatha", "at": "2026-09-29", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

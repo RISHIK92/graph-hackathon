@@ -1,0 +1,17 @@
+{
+  "key": "MSG-13",
+  "title": "Smart Routing: a flaky integration test",
+  "description": "Smart Routing shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:elif-dunmore", "at": "2026-03-24"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-24"}
+  ],
+  "component_history": [
+    {"about": "project:smart-routing", "at": "2026-03-24"}
+  ],
+  "comments": [
+    {"author": "person:talia-zamora", "at": "2026-03-24", "text": "Blocked until GRO-181 lands."}
+  ]
+}

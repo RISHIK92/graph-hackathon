@@ -1,0 +1,20 @@
+{
+  "key": "COM-167",
+  "title": "Billing: timeouts under peak load",
+  "description": "Billing shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:talia-sato", "at": "2026-09-12"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-09-12"},
+    {"state": "in_progress", "at": "2026-09-22"},
+    {"state": "done", "at": "2026-09-30"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2026-09-12"},
+    {"about": "system:session-store", "at": "2026-09-14"}
+  ],
+  "comments": [
+    {"author": "person:nikhil-dahl", "at": "2026-09-15", "text": "Same symptom as COM-137, probably one root cause."}
+  ]
+}

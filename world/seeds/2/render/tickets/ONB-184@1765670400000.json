@@ -1,0 +1,17 @@
+{
+  "key": "ONB-184",
+  "title": "Billing-v2: missing audit fields",
+  "description": "Billing-v2 shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:darius-oyelaran", "at": "2025-11-27"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-11-09"},
+    {"state": "in_progress", "at": "2025-11-27"},
+    {"state": "done", "at": "2025-12-14"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2025-11-09"}
+  ],
+  "comments": []
+}

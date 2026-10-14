@@ -1,0 +1,16 @@
+{
+  "key": "COM-34",
+  "title": "Audit Log: noisy alerts at night",
+  "description": "Audit Log shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:nadia-novak", "at": "2026-06-06"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-06-06"},
+    {"state": "in_progress", "at": "2026-06-20"}
+  ],
+  "component_history": [
+    {"about": "system:audit-log", "at": "2026-06-06"}
+  ],
+  "comments": []
+}

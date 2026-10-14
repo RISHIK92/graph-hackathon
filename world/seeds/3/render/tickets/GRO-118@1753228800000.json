@@ -1,0 +1,20 @@
+{
+  "key": "GRO-118",
+  "title": "Billing-v2: a retry storm after deploys",
+  "description": "Billing-v2 shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-zielinski", "at": "2025-07-10"},
+    {"who": "person:saanvi-quiroga", "at": "2025-07-21"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-07-10"},
+    {"state": "in_progress", "at": "2025-07-11"},
+    {"state": "done", "at": "2025-07-23"}
+  ],
+  "component_history": [
+    {"about": "system:billing-v2", "at": "2025-07-10"}
+  ],
+  "comments": [
+    {"author": "person:cyrus-lindgren", "at": "2025-07-13", "text": "Moved to the next sprint after triage."}
+  ]
+}

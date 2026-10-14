@@ -1,0 +1,19 @@
+{
+  "key": "RSK-124",
+  "title": "Image Resizer: missing audit fields",
+  "description": "image-resizer-svc shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "team:risk", "at": "2026-05-24"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-05-24"},
+    {"state": "in_progress", "at": "2026-06-09"},
+    {"state": "done", "at": "2026-07-04"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2026-05-24"}
+  ],
+  "comments": [
+    {"author": "person:leila-chaudhry", "at": "2026-06-21", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

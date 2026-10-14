@@ -1,0 +1,19 @@
+{
+  "key": "COM-69",
+  "title": "Geo Lookup: timeouts under peak load",
+  "description": "geo-lookup-svc shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:nikhil-dahl", "at": "2025-12-25"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-25"},
+    {"state": "in_progress", "at": "2026-01-13"},
+    {"state": "done", "at": "2026-02-11"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-12-25"}
+  ],
+  "comments": [
+    {"author": "person:dmitri-rosales", "at": "2025-12-28", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

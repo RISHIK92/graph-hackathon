@@ -1,0 +1,71 @@
+{"channel": "risk", "ts": 1736851707627, "author": "person:quentin-gunnarsson", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "risk", "ts": 1736958338395, "author": "person:soren-abernathy", "text": "Event Bus dashboards are back after the metrics outage."}
+{"channel": "risk", "ts": 1737198960405, "author": "person:quentin-gunnarsson", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "risk", "ts": 1737279211922, "author": "person:anders-yilmaz", "text": "The Messaging demo moved to Thursday."}
+{"channel": "risk", "ts": 1737793463775, "author": "person:soren-abernathy", "text": "Can someone review the Event Bus runbook changes?"}
+{"channel": "risk", "ts": 1737889369227, "author": "person:mirela-dahl", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "risk", "ts": 1738318562399, "author": "person:nikhil-galloway", "text": "Load test for Billing finished, numbers look normal."}
+{"channel": "risk", "ts": 1738421817149, "author": "person:maya-petrov", "text": "Mads Haddad works on discovery-revamp."}
+{"channel": "risk", "ts": 1739990080009, "author": "person:rhea-sato", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "risk", "ts": 1740504430711, "author": "person:quentin-gunnarsson", "text": "RSK-17 is blocked on a config change."}
+{"channel": "risk", "ts": 1741019535642, "author": "person:quentin-gunnarsson", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "risk", "ts": 1741450113610, "author": "person:anders-yilmaz", "text": "Auth Gateway is part of Gift Cards."}
+{"channel": "risk", "ts": 1742738345219, "author": "person:nikhil-galloway", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "risk", "ts": 1744043520083, "author": "person:soren-abernathy", "text": "Pairing with Ilse Kowal on Email Relay today."}
+{"channel": "risk", "ts": 1745412429057, "author": "person:mirela-dahl", "text": "Who has context on the session-store-svc alerts from last night?"}
+{"channel": "risk", "ts": 1745947998158, "author": "person:mads-haddad", "text": "Who has context on the Email Relay alerts from last night?"}
+{"channel": "risk", "ts": 1746105633145, "author": "person:mirela-dahl", "text": "Billing dashboards are back after the metrics outage."}
+{"channel": "risk", "ts": 1746106859982, "author": "person:maya-petrov", "text": "The Smart Routing retro notes are up."}
+{"channel": "risk", "ts": 1746619217428, "author": "person:nikhil-galloway", "text": "Load test for Feature Flags finished, numbers look normal."}
+{"channel": "risk", "ts": 1747217023987, "author": "person:mirela-dahl", "text": "The Messaging demo moved to Thursday."}
+{"channel": "risk", "ts": 1748024331676, "author": "person:maya-petrov", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "risk", "ts": 1748442514047, "author": "person:maya-petrov", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "risk", "ts": 1749381951180, "author": "person:mads-haddad", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "risk", "ts": 1749640013528, "author": "person:quentin-gunnarsson", "text": "Deploying Email Relay to staging after lunch."}
+{"channel": "risk", "ts": 1750776138021, "author": "person:nikhil-galloway", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "risk", "ts": 1752159371074, "author": "person:maya-petrov", "text": "Rhea leads Account Recovery now."}
+{"channel": "risk", "ts": 1752601038382, "author": "person:mads-haddad", "text": "Who has context on the Billing-v2 alerts from last night?"}
+{"channel": "risk", "ts": 1753640732743, "author": "person:soren-abernathy", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "risk", "ts": 1753786403787, "author": "person:mirela-dahl", "text": "Load test for email-relay-svc finished, numbers look normal."}
+{"channel": "risk", "ts": 1755708381239, "author": "person:mirela-dahl", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "risk", "ts": 1755772701397, "author": "person:anders-yilmaz", "text": "Is the Billing-v2 cutover blocking the Billing reconciliation job?"}
+{"channel": "risk", "ts": 1757941506868, "author": "person:maya-petrov", "text": "Deploying Feature Flags to staging after lunch."}
+{"channel": "risk", "ts": 1758196521358, "author": "person:quentin-gunnarsson", "text": "Billing depends on Auth Gateway."}
+{"channel": "risk", "ts": 1758389723793, "author": "person:anders-yilmaz", "text": "Pairing with Nikhil Galloway on Audit Log today."}
+{"channel": "risk", "ts": 1758449598329, "author": "person:mirela-dahl", "text": "The Risk demo moved to Thursday."}
+{"channel": "risk", "ts": 1758884608502, "author": "person:mirela-dahl", "text": "The Messaging demo moved to Thursday."}
+{"channel": "risk", "ts": 1760090732737, "author": "person:rhea-sato", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "risk", "ts": 1760893042762, "author": "person:mirela-dahl", "text": "For context, Messaging owns Event Bus."}
+{"channel": "risk", "ts": 1762170297071, "author": "person:nikhil-galloway", "text": "Pairing with Talia on Auth Gateway today."}
+{"channel": "risk", "ts": 1762353670196, "author": "person:anders-yilmaz", "text": "Reminder that Growth planning starts at ten."}
+{"channel": "risk", "ts": 1762860727730, "author": "person:anders-yilmaz", "text": "Closed RSK-142, the fix is live."}
+{"channel": "risk", "ts": 1763054233066, "author": "person:quentin-gunnarsson", "text": "Deploying Image Resizer to staging after lunch."}
+{"channel": "risk", "ts": 1764774425749, "author": "person:mirela-dahl", "text": "The Messaging demo moved to Thursday."}
+{"channel": "risk", "ts": 1764923418690, "author": "person:maya-petrov", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "risk", "ts": 1766069812982, "author": "person:quentin-gunnarsson", "text": "Can someone triage GRO-93?"}
+{"channel": "risk", "ts": 1766394271729, "author": "person:mads-haddad", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "risk", "ts": 1766923080136, "author": "person:anders-yilmaz", "text": "Pairing with Bianca Brennan on Image Resizer today."}
+{"channel": "risk", "ts": 1772380837764, "author": "person:quentin-gunnarsson", "text": "For context, Messaging owns Event Bus."}
+{"channel": "risk", "ts": 1773164581341, "author": "person:soren-abernathy", "text": "The Growth demo moved to Thursday."}
+{"channel": "risk", "ts": 1773400182995, "author": "person:rhea-sato", "text": "Quentin Gunnarsson works on Discovery Revamp."}
+{"channel": "risk", "ts": 1774284128310, "author": "person:soren-abernathy", "text": "Reminder that Messaging planning starts at ten."}
+{"channel": "risk", "ts": 1775149034539, "author": "person:anders-yilmaz", "text": "The Messaging demo moved to Thursday."}
+{"channel": "risk", "ts": 1775149505905, "author": "person:mads-haddad", "text": "Load test for Audit Log finished, numbers look normal."}
+{"channel": "risk", "ts": 1776970193377, "author": "person:rhea-sato", "text": "Who has context on the audit-log-svc alerts from last night?"}
+{"channel": "risk", "ts": 1778162571112, "author": "person:anders-yilmaz", "text": "Maybe Greta Achebe leads Growth?"}
+{"channel": "risk", "ts": 1779191745591, "author": "person:mads-haddad", "text": "Deploying billing-v2-svc to staging after lunch."}
+{"channel": "risk", "ts": 1779388003883, "author": "person:mads-haddad", "text": "Who has context on the email-relay-svc alerts from last night?"}
+{"channel": "risk", "ts": 1779897270395, "author": "person:quentin-gunnarsson", "text": "Leila leads risk-team."}
+{"channel": "risk", "ts": 1782549184794, "author": "person:nikhil-galloway", "text": "Who has context on the Event Bus alerts from last night?"}
+{"channel": "risk", "ts": 1782743985415, "author": "person:rhea-sato", "text": "Pairing with Oskar on billing-v2-svc today."}
+{"channel": "risk", "ts": 1783075785571, "author": "person:leila-chaudhry", "text": "Load test for billing-svc finished, numbers look normal."}
+{"channel": "risk", "ts": 1783791679599, "author": "person:quentin-gunnarsson", "text": "Picking up RDS-106 today."}
+{"channel": "risk", "ts": 1783864560721, "author": "person:leila-chaudhry", "text": "Audit Log dashboards are back after the metrics outage."}
+{"channel": "risk", "ts": 1786015989210, "author": "person:soren-abernathy", "text": "Email Relay depends on Image Resizer."}
+{"channel": "risk", "ts": 1786190460437, "author": "person:rhea-sato", "text": "RSK-158 is blocked on a config change."}
+{"channel": "risk", "ts": 1787141162097, "author": "person:rhea-sato", "text": "Kicking off the Chargeback Defense design review next week."}
+{"channel": "risk", "ts": 1788359133035, "author": "person:leila-chaudhry", "text": "Thanks Soren W., the billing-svc alert is quiet again."}
+{"channel": "risk", "ts": 1788433475926, "author": "person:jada-carrow", "text": "Billing-v2 is taking the new merchants, Billing stays on the old flow for now."}
+{"channel": "risk", "ts": 1788604441852, "author": "person:jada-carrow", "text": "Pairing with Elif Dunmore on Session Store today."}
+{"channel": "risk", "ts": 1789213902088, "author": "person:anders-yilmaz", "text": "Load test for Session Store finished, numbers look normal."}
+{"channel": "risk", "ts": 1790341620671, "author": "person:nikhil-galloway", "text": "Can someone triage MSG-137?"}

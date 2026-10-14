@@ -1,0 +1,13 @@
+{
+  "key": "RDS-156",
+  "title": "Feature Flags: missing audit fields",
+  "description": "Feature Flags shows missing audit fields since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-06-03"}
+  ],
+  "component_history": [
+    {"about": "system:feature-flags", "at": "2025-06-03"}
+  ],
+  "comments": []
+}

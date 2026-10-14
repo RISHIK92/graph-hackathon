@@ -1,0 +1,18 @@
+{
+  "key": "INS-140",
+  "title": "Partner API: noisy alerts at night",
+  "description": "partner-api shows noisy alerts at night since the last release.",
+  "assignee_history": [
+    {"who": "person:zofia-arnesen", "at": "2025-03-19"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-03-19"},
+    {"state": "in_progress", "at": "2025-04-02"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2025-03-19"}
+  ],
+  "comments": [
+    {"author": "person:rhea-wexler", "at": "2025-04-02", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

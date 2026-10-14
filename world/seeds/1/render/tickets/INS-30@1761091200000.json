@@ -1,0 +1,17 @@
+{
+  "key": "INS-30",
+  "title": "Discovery Revamp: noisy alerts at night",
+  "description": "Discovery Revamp shows noisy alerts at night since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-09-05"},
+    {"state": "in_progress", "at": "2025-09-22"},
+    {"state": "done", "at": "2025-10-22"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2025-09-05"}
+  ],
+  "comments": [
+    {"author": "person:cyrus-quint", "at": "2025-10-22", "text": "This overlaps with INS-7, linking them."}
+  ]
+}

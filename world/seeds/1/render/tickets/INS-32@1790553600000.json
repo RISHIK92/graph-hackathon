@@ -1,0 +1,19 @@
+{
+  "key": "INS-32",
+  "title": "Session Store: timeouts under peak load",
+  "description": "session-store-svc shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "team:insights", "at": "2026-09-04"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-09-04"},
+    {"state": "in_progress", "at": "2026-09-06"},
+    {"state": "done", "at": "2026-09-28"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-09-04"}
+  ],
+  "comments": [
+    {"author": "person:elif-takahashi", "at": "2026-09-11", "text": "This overlaps with FUL-21, linking them."}
+  ]
+}

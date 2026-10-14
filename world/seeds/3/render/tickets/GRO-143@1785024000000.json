@@ -1,0 +1,17 @@
+{
+  "key": "GRO-143",
+  "title": "Chargeback Defense: high p99 latency",
+  "description": "Chargeback Defense shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:arjun-moreau", "at": "2026-07-26"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-07-26"}
+  ],
+  "component_history": [
+    {"about": "project:chargeback-defense", "at": "2026-07-26"}
+  ],
+  "comments": [
+    {"author": "person:mirela-dahl", "at": "2026-07-26", "text": "Blocked until GRO-146 lands."}
+  ]
+}

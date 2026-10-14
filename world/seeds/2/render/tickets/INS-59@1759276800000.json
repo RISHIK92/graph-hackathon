@@ -1,0 +1,18 @@
+{
+  "key": "INS-59",
+  "title": "Partner API: slow cold starts",
+  "description": "Partner API shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-petrov", "at": "2025-10-01"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-10-01"}
+  ],
+  "component_history": [
+    {"about": "project:partner-api", "at": "2025-10-01"}
+  ],
+  "comments": [
+    {"author": "person:bianca-pellegrino", "at": "2025-10-01", "text": "Reproduced on staging, logs are attached."},
+    {"author": "person:bianca-pellegrino", "at": "2025-10-01", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

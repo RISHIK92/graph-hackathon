@@ -1,0 +1,18 @@
+{
+  "key": "MSG-146",
+  "title": "Auth Gateway: high p99 latency",
+  "description": "Auth Gateway shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:saanvi-quiroga", "at": "2025-09-08"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-09-08"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-09-08"}
+  ],
+  "comments": [
+    {"author": "person:bianca-brennan", "at": "2025-09-08", "text": "Blocked until RSK-1 lands."},
+    {"author": "person:rafael-nakamura", "at": "2025-09-08", "text": "Same symptom as GRO-162, probably one root cause."}
+  ]
+}

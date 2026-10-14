@@ -1,0 +1,17 @@
+{
+  "key": "GRO-181",
+  "title": "Feature Flags: high p99 latency",
+  "description": "feature-flags-svc shows high p99 latency since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-03-03"},
+    {"state": "in_progress", "at": "2025-03-21"},
+    {"state": "done", "at": "2025-04-02"}
+  ],
+  "component_history": [
+    {"about": "system:feature-flags", "at": "2025-03-03"}
+  ],
+  "comments": [
+    {"author": "person:callum-varga", "at": "2025-03-29", "text": "Same symptom as RSK-17, probably one root cause."}
+  ]
+}

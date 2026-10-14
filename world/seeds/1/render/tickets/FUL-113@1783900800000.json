@@ -1,0 +1,18 @@
+{
+  "key": "FUL-113",
+  "title": "Billing: timeouts under peak load",
+  "description": "Billing shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "team:fulfilment", "at": "2026-03-03"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-02-21"},
+    {"state": "in_progress", "at": "2026-03-03"},
+    {"state": "done", "at": "2026-03-20"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2026-02-21"},
+    {"about": "system:rate-limiter", "at": "2026-07-13"}
+  ],
+  "comments": []
+}

@@ -1,0 +1,20 @@
+{
+  "key": "RDS-16",
+  "title": "Audit Log: timeouts under peak load",
+  "description": "Audit Log shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:bianca-pellegrino", "at": "2025-04-16"},
+    {"who": "person:oskar-petrov", "at": "2025-04-17"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-04-16"},
+    {"state": "in_progress", "at": "2025-05-03"},
+    {"state": "done", "at": "2025-05-12"}
+  ],
+  "component_history": [
+    {"about": "system:audit-log", "at": "2025-04-16"}
+  ],
+  "comments": [
+    {"author": "person:anders-dunmore", "at": "2025-04-23", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

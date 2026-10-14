@@ -1,0 +1,17 @@
+{
+  "key": "MSG-115",
+  "title": "Auth Gateway: a flaky integration test",
+  "description": "Auth Gateway shows a flaky integration test since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-09-20"},
+    {"state": "in_progress", "at": "2025-10-10"},
+    {"state": "done", "at": "2025-10-17"}
+  ],
+  "component_history": [
+    {"about": "system:auth-gateway", "at": "2025-09-20"}
+  ],
+  "comments": [
+    {"author": "person:talia-zamora", "at": "2025-10-11", "text": "Moved to the next sprint after triage."}
+  ]
+}

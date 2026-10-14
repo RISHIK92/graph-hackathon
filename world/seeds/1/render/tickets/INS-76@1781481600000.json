@@ -1,0 +1,18 @@
+{
+  "key": "INS-76",
+  "title": "Pricing Engine: stale cache entries",
+  "description": "Pricing Engine shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:darius-ekwueme", "at": "2025-11-05"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-11-05"}
+  ],
+  "component_history": [
+    {"about": "system:pricing-engine", "at": "2025-11-05"},
+    {"about": "system:billing-v2", "at": "2026-06-15"}
+  ],
+  "comments": [
+    {"author": "person:teodor-arnesen", "at": "2026-02-02", "text": "This overlaps with RDS-86, linking them."}
+  ]
+}

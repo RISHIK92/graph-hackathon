@@ -1,0 +1,15 @@
+{
+  "key": "RDS-144",
+  "title": "Session Store: missing audit fields",
+  "description": "Session Store shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "person:quentin-gunnarsson", "at": "2025-03-15"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-03-15"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-03-15"}
+  ],
+  "comments": []
+}

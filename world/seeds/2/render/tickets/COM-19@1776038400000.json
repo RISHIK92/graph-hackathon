@@ -1,0 +1,16 @@
+{
+  "key": "COM-19",
+  "title": "Geo Lookup: timeouts under peak load",
+  "description": "Geo Lookup shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "team:commerce", "at": "2026-04-13"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-04-11"},
+    {"state": "in_progress", "at": "2026-04-13"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2026-04-11"}
+  ],
+  "comments": []
+}

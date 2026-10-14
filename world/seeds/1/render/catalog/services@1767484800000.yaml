@@ -1,0 +1,199 @@
+projects:
+  - id: project:account-recovery
+    name: "Account Recovery"
+    aliases: ["account-recovery"]
+    owner: team:risk
+    owner_from: 2025-01-01
+  - id: project:chargeback-defense
+    name: "Chargeback Defense"
+    aliases: ["chargeback-defense"]
+    owner: team:risk
+    owner_from: 2025-01-01
+  - id: project:core-banking
+    name: "Core Banking"
+    aliases: ["core-banking"]
+    owner: team:payments
+    owner_from: 2025-01-01
+  - id: project:discovery-revamp
+    name: "Discovery Revamp"
+    aliases: ["discovery-revamp"]
+    owner: team:insights
+    owner_from: 2025-01-01
+  - id: project:instant-payouts
+    name: "Instant Payouts"
+    aliases: ["instant-payouts"]
+    owner: team:fulfilment
+    owner_from: 2025-01-01
+  - id: project:loyalty-rewards
+    name: "Loyalty Rewards"
+    aliases: ["loyalty-rewards"]
+    owner: team:insights
+    owner_from: 2025-01-01
+  - id: project:merchant-portal
+    name: "Merchant Portal"
+    aliases: ["merchant-portal"]
+    owner: team:fulfilment
+    owner_from: 2025-01-01
+  - id: project:shared-services
+    name: "Shared Services"
+    aliases: ["shared-services"]
+    owner: team:platform
+    owner_from: 2025-01-01
+  - id: project:store-locator
+    name: "Store Locator"
+    aliases: ["store-locator"]
+    owner: team:insights
+    owner_from: 2026-01-04
+  - id: project:wallet-launch
+    name: "Wallet Launch"
+    aliases: ["wallet-launch"]
+    owner: team:fulfilment
+    owner_from: 2025-01-01
+systems:
+  - id: system:aurora
+    name: "Aurora"
+    aliases: ["aurora-cluster"]
+    tier: 1
+    owner: team:infra
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:billing
+    name: "Billing"
+    aliases: ["billing-svc"]
+    tier: 2
+    owner: team:fulfilment
+    owner_from: 2025-01-01
+    project: project:instant-payouts
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:rate-limiter, from: 2025-01-01}
+  - id: system:billing-v2
+    name: "Billing-v2"
+    aliases: ["billing-v2-svc"]
+    tier: 3
+    owner: team:risk
+    owner_from: 2025-01-01
+    project: project:chargeback-defense
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:billing, from: 2025-01-01}
+  - id: system:checkout
+    name: "Checkout"
+    aliases: ["checkout-api"]
+    tier: 1
+    owner: team:payments
+    owner_from: 2025-01-01
+    project: project:core-banking
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:ledger, from: 2025-01-01}
+  - id: system:fraud-scoring
+    name: "Fraud Scoring"
+    aliases: ["fraud-scoring-svc"]
+    tier: 1
+    owner: team:fulfilment
+    owner_from: 2025-01-01
+    project: project:wallet-launch
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:rate-limiter, from: 2025-01-01}
+  - id: system:geo-lookup
+    name: "Geo Lookup"
+    aliases: ["geo-lookup-svc"]
+    tier: 2
+    owner: team:fulfilment
+    owner_from: 2025-01-01
+    project: project:loyalty-rewards
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:image-resizer
+    name: "Image Resizer"
+    aliases: ["image-resizer-svc"]
+    tier: 2
+    owner: team:risk
+    owner_from: 2025-01-01
+    project: project:store-locator
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:session-store, from: 2025-01-01}
+  - id: system:ledger
+    name: "Ledger"
+    aliases: ["ledger-service"]
+    tier: 1
+    owner: team:platform
+    owner_from: 2025-01-01
+    project: project:core-banking
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:postgres-main, from: 2025-01-01}
+  - id: system:postgres-main
+    name: "Postgres Main"
+    aliases: ["Postgres", "postgres-main"]
+    tier: 1
+    owner: team:infra
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:pricing-engine
+    name: "Pricing Engine"
+    aliases: ["pricing-engine-svc"]
+    tier: 2
+    owner: team:insights
+    owner_from: 2025-01-01
+    project: project:wallet-launch
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:geo-lookup, from: 2025-01-01}
+  - id: system:rate-limiter
+    name: "Rate Limiter"
+    aliases: ["rate-limiter-svc"]
+    tier: 3
+    owner: team:risk
+    owner_from: 2025-01-01
+    project: project:store-locator
+    project_from: 2025-01-01
+    depends_on: []
+  - id: system:reporting
+    name: "Reporting"
+    aliases: ["reporting-service"]
+    tier: 2
+    owner: team:platform
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:ledger, from: 2025-01-01}
+  - id: system:session-store
+    name: "Session Store"
+    aliases: ["session-store-svc"]
+    tier: 3
+    owner: team:insights
+    owner_from: 2025-01-01
+    project: project:wallet-launch
+    project_from: 2025-01-01
+    depends_on: []
+    dropped_depends_on:
+      - {id: system:rate-limiter, at: 2025-06-13}
+  - id: system:statements
+    name: "Statements"
+    aliases: ["statements-ui"]
+    tier: 2
+    owner: team:infra
+    owner_from: 2025-01-01
+    project: project:shared-services
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:reporting, from: 2025-01-01}
+  - id: system:webhook-dispatcher
+    name: "Webhook Dispatcher"
+    aliases: ["webhook-dispatcher-svc"]
+    tier: 2
+    owner: team:insights
+    owner_from: 2025-01-01
+    project: project:merchant-portal
+    project_from: 2025-01-01
+    depends_on:
+      - {id: system:image-resizer, from: 2025-01-01}

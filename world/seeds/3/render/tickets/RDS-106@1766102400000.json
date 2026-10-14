@@ -1,0 +1,17 @@
+{
+  "key": "RDS-106",
+  "title": "Billing: high p99 latency",
+  "description": "Billing shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:farah-rasmussen", "at": "2025-12-13"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-04"},
+    {"state": "in_progress", "at": "2025-12-13"},
+    {"state": "done", "at": "2025-12-19"}
+  ],
+  "component_history": [
+    {"about": "system:billing", "at": "2025-12-04"}
+  ],
+  "comments": []
+}

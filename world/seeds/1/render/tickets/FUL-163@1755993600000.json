@@ -1,0 +1,17 @@
+{
+  "key": "FUL-163",
+  "title": "Geo Lookup: slow cold starts",
+  "description": "Geo Lookup shows slow cold starts since the last release.",
+  "assignee_history": [
+    {"who": "person:rhea-hartley", "at": "2025-08-24"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-24"}
+  ],
+  "component_history": [
+    {"about": "system:geo-lookup", "at": "2025-08-24"}
+  ],
+  "comments": [
+    {"author": "person:chiara-rasmussen", "at": "2025-08-24", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

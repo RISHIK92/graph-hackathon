@@ -1,0 +1,18 @@
+{
+  "key": "RDS-111",
+  "title": "Session Store: a retry storm after deploys",
+  "description": "Session Store shows a retry storm after deploys since the last release.",
+  "assignee_history": [
+    {"who": "person:soren-abernathy", "at": "2025-04-18"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-04-18"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-04-18"}
+  ],
+  "comments": [
+    {"author": "person:mads-haddad", "at": "2025-04-18", "text": "Rolled out the fix behind a feature flag."},
+    {"author": "person:anders-yilmaz", "at": "2025-04-18", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

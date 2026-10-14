@@ -1,0 +1,15 @@
+{
+  "key": "RDS-99",
+  "title": "Fraud Scoring: missing audit fields",
+  "description": "Fraud Scoring shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "team:fulfilment", "at": "2026-01-08"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-01-08"}
+  ],
+  "component_history": [
+    {"about": "system:fraud-scoring", "at": "2026-01-08"}
+  ],
+  "comments": []
+}

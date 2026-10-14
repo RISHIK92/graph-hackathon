@@ -1,0 +1,17 @@
+{
+  "key": "INS-33",
+  "title": "Pricing Engine: a retry storm after deploys",
+  "description": "Pricing Engine shows a retry storm after deploys since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-07-12"},
+    {"state": "in_progress", "at": "2026-07-14"},
+    {"state": "done", "at": "2026-07-24"}
+  ],
+  "component_history": [
+    {"about": "system:pricing-engine", "at": "2026-07-12"}
+  ],
+  "comments": [
+    {"author": "person:elif-takahashi", "at": "2026-07-18", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

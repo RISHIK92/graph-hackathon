@@ -1,0 +1,17 @@
+{
+  "key": "INS-7",
+  "title": "Discovery Revamp: timeouts under peak load",
+  "description": "Discovery Revamp shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-07-14"},
+    {"state": "in_progress", "at": "2025-07-26"}
+  ],
+  "component_history": [
+    {"about": "project:discovery-revamp", "at": "2025-07-14"}
+  ],
+  "comments": [
+    {"author": "person:darius-ekwueme", "at": "2025-07-19", "text": "Moved to the next sprint after triage."},
+    {"author": "person:soren-esposito", "at": "2025-07-20", "text": "Blocked until INS-194 lands."}
+  ]
+}

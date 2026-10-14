@@ -1,0 +1,68 @@
+{"channel": "fulfilment", "ts": 1736526932823, "author": "person:wren-mbatha", "text": "The Insights demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1736767275251, "author": "person:esme-oyelaran", "text": "Load test for Webhook Dispatcher finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1738754306449, "author": "person:greta-carrow", "text": "Linked FUL-76 to INS-33, same root cause."}
+{"channel": "fulfilment", "ts": 1740229523907, "author": "person:kalinda-castellanos", "text": "Linked FUL-76 to INS-24, same root cause."}
+{"channel": "fulfilment", "ts": 1740938555426, "author": "person:bianca-ishikawa", "text": "Deploying Session Store to staging after lunch."}
+{"channel": "fulfilment", "ts": 1741702230826, "author": "person:bianca-ishikawa", "text": "geo-lookup-svc dashboards are back after the metrics outage."}
+{"channel": "fulfilment", "ts": 1742058134715, "author": "person:bianca-ishikawa", "text": "Chiara H. works on Store Locator."}
+{"channel": "fulfilment", "ts": 1743078688621, "author": "person:chiara-rasmussen", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "fulfilment", "ts": 1743164771238, "author": "person:wren-mbatha", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "fulfilment", "ts": 1744034822576, "author": "person:valeria-whitfield", "text": "Deploying billing-v2-svc to staging after lunch."}
+{"channel": "fulfilment", "ts": 1745769377200, "author": "person:rhea-hartley", "text": "Picking up FUL-76 today."}
+{"channel": "fulfilment", "ts": 1747418948383, "author": "person:esme-oyelaran", "text": "Is the Billing-v2 cutover blocking the Billing reconciliation job?"}
+{"channel": "fulfilment", "ts": 1747556618619, "author": "person:kalinda-castellanos", "text": "Pairing with Aiko on image-resizer-svc today.", "thread_ts": 1747418948383}
+{"channel": "fulfilment", "ts": 1748540775360, "author": "person:rhea-hartley", "text": "Load test for Webhook Dispatcher finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1748694847384, "author": "person:valeria-whitfield", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "fulfilment", "ts": 1749145756568, "author": "person:greta-carrow", "text": "Deploying billing-svc to staging after lunch."}
+{"channel": "fulfilment", "ts": 1749209341135, "author": "person:wren-mbatha", "text": "Load test for image-resizer-svc finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1749477140785, "author": "person:chiara-rasmussen", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1749543444804, "author": "person:bianca-ishikawa", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "fulfilment", "ts": 1749814548825, "author": "person:greta-carrow", "text": "Can someone review the Fraud Scoring runbook changes?"}
+{"channel": "fulfilment", "ts": 1750937368971, "author": "person:kalinda-castellanos", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "fulfilment", "ts": 1751306689373, "author": "person:esme-oyelaran", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "fulfilment", "ts": 1752514549829, "author": "person:rhea-hartley", "text": "The Risk demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1753101392246, "author": "person:greta-carrow", "text": "Pairing with Nikhil on Billing today."}
+{"channel": "fulfilment", "ts": 1754470553446, "author": "person:chiara-rasmussen", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "fulfilment", "ts": 1754566481080, "author": "person:kalinda-castellanos", "text": "Kicking off the Wallet Launch design review next week."}
+{"channel": "fulfilment", "ts": 1755255034987, "author": "person:rhea-hartley", "text": "Pairing with Bianca Ishikawa on Webhook Dispatcher today."}
+{"channel": "fulfilment", "ts": 1756144499688, "author": "person:esme-oyelaran", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "fulfilment", "ts": 1756226282523, "author": "person:esme-oyelaran", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "fulfilment", "ts": 1756301121482, "author": "person:kalinda-castellanos", "text": "Who has context on the Session Store alerts from last night?"}
+{"channel": "fulfilment", "ts": 1756816494706, "author": "person:chiara-rasmussen", "text": "Thanks Chiara R., merged the billing-v2-svc fix."}
+{"channel": "fulfilment", "ts": 1756834174041, "author": "person:esme-oyelaran", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "fulfilment", "ts": 1757233389062, "author": "person:esme-oyelaran", "text": "Linked RDS-60 to RSK-124, same root cause."}
+{"channel": "fulfilment", "ts": 1758385797970, "author": "person:valeria-whitfield", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "fulfilment", "ts": 1760376628076, "author": "person:rhea-hartley", "text": "The Account Recovery retro notes are up."}
+{"channel": "fulfilment", "ts": 1761988083267, "author": "person:rhea-hartley", "text": "Session Store dashboards are back after the metrics outage."}
+{"channel": "fulfilment", "ts": 1764344557267, "author": "person:valeria-whitfield", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1764611198581, "author": "person:esme-oyelaran", "text": "Load test for Fraud Scoring finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1767257958385, "author": "person:wren-mbatha", "text": "Closed RSK-160, the fix is live."}
+{"channel": "fulfilment", "ts": 1767459075131, "author": "person:bianca-ishikawa", "text": "Load test for webhook-dispatcher-svc finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1767720616271, "author": "person:wren-mbatha", "text": "The Insights demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1767864186052, "author": "person:rhea-hartley", "text": "Can someone review the Session Store runbook changes?"}
+{"channel": "fulfilment", "ts": 1768153929298, "author": "person:valeria-whitfield", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "fulfilment", "ts": 1768823846118, "author": "person:bianca-ishikawa", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "fulfilment", "ts": 1769006830350, "author": "person:kalinda-castellanos", "text": "Can someone review the Billing-v2 runbook changes?"}
+{"channel": "fulfilment", "ts": 1769788646324, "author": "person:valeria-whitfield", "text": "The Risk demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1770460961395, "author": "person:valeria-whitfield", "text": "Rate Limiter dashboards are back after the metrics outage."}
+{"channel": "fulfilment", "ts": 1770984751613, "author": "person:esme-oyelaran", "text": "Deploying webhook-dispatcher-svc to staging after lunch."}
+{"channel": "fulfilment", "ts": 1771771131508, "author": "person:valeria-whitfield", "text": "Load test for Billing-v2 finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1772461510450, "author": "person:wren-mbatha", "text": "The Store Locator retro notes are up."}
+{"channel": "fulfilment", "ts": 1773674453724, "author": "person:wren-mbatha", "text": "Kicking off the Store Locator design review next week."}
+{"channel": "fulfilment", "ts": 1773995138854, "author": "person:kalinda-castellanos", "text": "Kicking off the Merchant Portal design review next week."}
+{"channel": "fulfilment", "ts": 1774339969876, "author": "person:greta-carrow", "text": "The Insights demo moved to Thursday."}
+{"channel": "fulfilment", "ts": 1776255993747, "author": "person:esme-oyelaran", "text": "pricing-engine-svc dashboards are back after the metrics outage."}
+{"channel": "fulfilment", "ts": 1777911970872, "author": "person:rhea-hartley", "text": "Billing-v2 is part of Chargeback Defense."}
+{"channel": "fulfilment", "ts": 1778331928634, "author": "person:chiara-rasmussen", "text": "Picking up FUL-76 today."}
+{"channel": "fulfilment", "ts": 1781092807996, "author": "person:wren-mbatha", "text": "The Account Recovery retro notes are up."}
+{"channel": "fulfilment", "ts": 1782580584964, "author": "person:emeka-achebe", "text": "Fulfilment owns Chargeback Defense now."}
+{"channel": "fulfilment", "ts": 1782843948788, "author": "person:esme-oyelaran", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "fulfilment", "ts": 1782895788046, "author": "person:wren-mbatha", "text": "Load test for fraud-scoring-svc finished, numbers look normal."}
+{"channel": "fulfilment", "ts": 1784479445643, "author": "person:rhea-hartley", "text": "The Merchant Portal retro notes are up."}
+{"channel": "fulfilment", "ts": 1787502606169, "author": "person:bianca-ishikawa", "text": "Deploying Webhook Dispatcher to staging after lunch."}
+{"channel": "fulfilment", "ts": 1787668375199, "author": "person:greta-carrow", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "fulfilment", "ts": 1789134451596, "author": "person:esme-oyelaran", "text": "The Wallet Launch retro notes are up."}
+{"channel": "fulfilment", "ts": 1789392565505, "author": "person:wren-mbatha", "text": "Wren Mbatha works on merchant-portal."}
+{"channel": "fulfilment", "ts": 1789463121623, "author": "person:bianca-ishikawa", "text": "Elif leads Loyalty Rewards."}
+{"channel": "fulfilment", "ts": 1789734656184, "author": "person:chiara-rasmussen", "text": "Deploying Fraud Scoring to staging after lunch."}
+{"channel": "fulfilment", "ts": 1790706604679, "author": "person:rhea-hartley", "text": "Esme Oyelaran leads Instant Payouts."}

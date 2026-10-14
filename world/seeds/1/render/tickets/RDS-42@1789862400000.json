@@ -1,0 +1,13 @@
+{
+  "key": "RDS-42",
+  "title": "Ledger balance reads time out for Reporting",
+  "description": "Nightly Reporting jobs that read balances from ledger-service time out after the Aurora failover test.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2026-09-20"}
+  ],
+  "component_history": [
+    {"about": "system:ledger", "at": "2026-09-20"}
+  ],
+  "comments": []
+}

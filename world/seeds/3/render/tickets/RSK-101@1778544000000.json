@@ -1,0 +1,19 @@
+{
+  "key": "RSK-101",
+  "title": "Session Store: missing audit fields",
+  "description": "Session Store shows missing audit fields since the last release.",
+  "assignee_history": [
+    {"who": "team:risk", "at": "2026-04-06"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-04-06"},
+    {"state": "in_progress", "at": "2026-04-21"},
+    {"state": "done", "at": "2026-05-12"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2026-04-06"}
+  ],
+  "comments": [
+    {"author": "person:mads-haddad", "at": "2026-04-27", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

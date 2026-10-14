@@ -1,0 +1,5 @@
+{"channel": "ledger", "ts": 1771409100000, "author": "person:ana-costa", "text": "Cutover rehearsal for ledger-service went fine, replication caught up in four minutes."}
+{"channel": "ledger", "ts": 1789982040000, "author": "person:jonah-feld", "text": "Reporting nightly jobs are timing out on ledger-service reads again, I filed RDS-42."}
+{"channel": "ledger", "ts": 1789983060000, "author": "person:ana-costa", "text": "The Aurora failover test ran on Friday, so check the reader endpoint in the Reporting config first.", "thread_ts": 1789982040000}
+{"channel": "ledger", "ts": 1789984020000, "author": "person:priya-raman", "text": "I will look at the Ledger dashboards this afternoon.", "thread_ts": 1789982040000}
+{"channel": "ledger", "ts": 1789984920000, "author": "person:jonah-feld", "text": "Thanks, I added the Reporting query timings to RDS-42.", "thread_ts": 1789982040000}

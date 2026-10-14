@@ -1,0 +1,17 @@
+{
+  "key": "INS-97",
+  "title": "Session Store: timeouts under peak load",
+  "description": "Session Store shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-03-01"},
+    {"state": "in_progress", "at": "2025-03-14"},
+    {"state": "done", "at": "2025-03-23"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-03-01"}
+  ],
+  "comments": [
+    {"author": "person:soren-esposito", "at": "2025-03-01", "text": "Same symptom as RSK-188, probably one root cause."}
+  ]
+}

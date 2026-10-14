@@ -1,0 +1,15 @@
+{
+  "key": "RSK-183",
+  "title": "Image Resizer: timeouts under peak load",
+  "description": "Image Resizer shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-08-06"},
+    {"state": "in_progress", "at": "2025-08-11"},
+    {"state": "done", "at": "2025-09-07"}
+  ],
+  "component_history": [
+    {"about": "system:image-resizer", "at": "2025-08-06"}
+  ],
+  "comments": []
+}

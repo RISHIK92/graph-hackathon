@@ -1,0 +1,16 @@
+{
+  "key": "MSG-55",
+  "title": "Smart Routing: high p99 latency",
+  "description": "Smart Routing shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "team:messaging", "at": "2025-03-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-03-02"},
+    {"state": "in_progress", "at": "2025-03-21"}
+  ],
+  "component_history": [
+    {"about": "project:smart-routing", "at": "2025-03-02"}
+  ],
+  "comments": []
+}

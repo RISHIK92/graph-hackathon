@@ -1,0 +1,17 @@
+{
+  "key": "RDS-185",
+  "title": "Email Relay: a flaky integration test",
+  "description": "email-relay-svc shows a flaky integration test since the last release.",
+  "assignee_history": [
+    {"who": "person:mads-haddad", "at": "2025-12-13"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-12-13"},
+    {"state": "in_progress", "at": "2025-12-28"},
+    {"state": "done", "at": "2026-01-09"}
+  ],
+  "component_history": [
+    {"about": "system:email-relay", "at": "2025-12-13"}
+  ],
+  "comments": []
+}

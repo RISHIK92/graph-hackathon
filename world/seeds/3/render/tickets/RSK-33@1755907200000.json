@@ -1,0 +1,17 @@
+{
+  "key": "RSK-33",
+  "title": "Session Store: stale cache entries",
+  "description": "Session Store shows stale cache entries since the last release.",
+  "assignee_history": [
+    {"who": "person:mirela-dahl", "at": "2025-08-02"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-08-02"},
+    {"state": "in_progress", "at": "2025-08-09"},
+    {"state": "done", "at": "2025-08-23"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-08-02"}
+  ],
+  "comments": []
+}

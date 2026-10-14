@@ -1,0 +1,63 @@
+{"channel": "incidents", "ts": 1737032915939, "author": "person:felix-mbatha", "text": "The Discovery Revamp retro notes are up."}
+{"channel": "incidents", "ts": 1737559882117, "author": "person:felix-mbatha", "text": "Load test for Search Index finished, numbers look normal."}
+{"channel": "incidents", "ts": 1737641378082, "author": "person:hugo-yoon", "text": "Who has context on the Audit Log alerts from last night?", "thread_ts": 1737559882117}
+{"channel": "incidents", "ts": 1737714754268, "author": "person:aiko-carrow", "text": "Kicking off the Loyalty Rewards design review next week."}
+{"channel": "incidents", "ts": 1738342654561, "author": "person:soren-zielinski", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "incidents", "ts": 1739375083757, "author": "person:darius-oyelaran", "text": "Can someone review the geo-lookup-svc runbook changes?"}
+{"channel": "incidents", "ts": 1741615939977, "author": "person:talia-sato", "text": "Can someone review the Feature Flags runbook changes?"}
+{"channel": "incidents", "ts": 1742660493081, "author": "person:nikhil-dahl", "text": "Pairing with Aiko Carrow on Billing-v2 today."}
+{"channel": "incidents", "ts": 1744125818782, "author": "person:arjun-vasquez", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1745087503205, "author": "person:paloma-kowal", "text": "Billing-v2 depends on session-store-svc."}
+{"channel": "incidents", "ts": 1745312397554, "author": "person:hugo-yoon", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "incidents", "ts": 1748011009076, "author": "person:kai-udeh", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1748339334772, "author": "person:arjun-vasquez", "text": "Can someone triage ONB-72?"}
+{"channel": "incidents", "ts": 1749640838606, "author": "person:arjun-vasquez", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1750436079051, "author": "person:lorenzo-ueda", "text": "Talia Sato leads Commerce."}
+{"channel": "incidents", "ts": 1751717610404, "author": "person:soren-zielinski", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "incidents", "ts": 1752774352922, "author": "person:lorenzo-ueda", "text": "Load test for notifications-svc finished, numbers look normal."}
+{"channel": "incidents", "ts": 1753286585941, "author": "person:oskar-petrov", "text": "The Gift Cards retro notes are up."}
+{"channel": "incidents", "ts": 1753373129049, "author": "person:rhea-wexler", "text": "Who has context on the geo-lookup-svc alerts from last night?"}
+{"channel": "incidents", "ts": 1753518056714, "author": "person:paloma-kowal", "text": "The Instant Payouts retro notes are up."}
+{"channel": "incidents", "ts": 1754484831751, "author": "person:sam-gunnarsson", "text": "Reminder that Onboarding planning starts at ten."}
+{"channel": "incidents", "ts": 1755024582212, "author": "person:aiko-carrow", "text": "Linked ONB-72 to INS-154, same root cause."}
+{"channel": "incidents", "ts": 1755177121291, "author": "person:hugo-yoon", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1755883135020, "author": "person:hugo-yoon", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "incidents", "ts": 1756482806792, "author": "person:selin-kariuki", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "incidents", "ts": 1758028940670, "author": "person:zofia-arnesen", "text": "Pairing with Felix Mbatha on Search Index today."}
+{"channel": "incidents", "ts": 1758560382309, "author": "person:saanvi-bergstrom", "text": "Can someone review the audit-log-svc runbook changes?"}
+{"channel": "incidents", "ts": 1758735834634, "author": "person:amara-xu", "text": "Can someone triage ONB-132?"}
+{"channel": "incidents", "ts": 1758982991669, "author": "person:lorenzo-ueda", "text": "Load test for geo-lookup-svc finished, numbers look normal."}
+{"channel": "incidents", "ts": 1761573595578, "author": "person:aiko-carrow", "text": "Deploying email-relay-svc to staging after lunch."}
+{"channel": "incidents", "ts": 1761992443359, "author": "person:rhea-wexler", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "incidents", "ts": 1762677948054, "author": "person:talia-sato", "text": "The Instant Payouts retro notes are up."}
+{"channel": "incidents", "ts": 1762966561505, "author": "person:sam-gunnarsson", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "incidents", "ts": 1763202522610, "author": "person:yusuf-haddad", "text": "COM-62 is blocked on a config change."}
+{"channel": "incidents", "ts": 1764774420589, "author": "person:valeria-moreau", "text": "Who has context on the Email Relay alerts from last night?"}
+{"channel": "incidents", "ts": 1764846663408, "author": "person:sam-gunnarsson", "text": "The Insights demo moved to Thursday."}
+{"channel": "incidents", "ts": 1765205156622, "author": "person:lars-albescu", "text": "Kicking off the Partner API design review next week."}
+{"channel": "incidents", "ts": 1765735617207, "author": "person:felix-mbatha", "text": "Pairing with Amara Xu on Billing-v2 today."}
+{"channel": "incidents", "ts": 1766839561635, "author": "person:hugo-yoon", "text": "ONB-198 is blocked on a config change."}
+{"channel": "incidents", "ts": 1768033754643, "author": "person:esme-chaudhry", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "incidents", "ts": 1769591642338, "author": "person:paloma-kowal", "text": "The Instant Payouts retro notes are up."}
+{"channel": "incidents", "ts": 1769862527922, "author": "person:maya-quiroga", "text": "Kicking off the Discovery Revamp design review next week."}
+{"channel": "incidents", "ts": 1770114603124, "author": "person:anders-dunmore", "text": "The Onboarding demo moved to Thursday."}
+{"channel": "incidents", "ts": 1771349960034, "author": "person:nikhil-dahl", "text": "Kicking off the Instant Payouts design review next week."}
+{"channel": "incidents", "ts": 1771674755646, "author": "person:oskar-petrov", "text": "Load test for session-store-svc finished, numbers look normal."}
+{"channel": "incidents", "ts": 1773142816893, "author": "person:aiko-carrow", "text": "The Loyalty Rewards retro notes are up."}
+{"channel": "incidents", "ts": 1774029545156, "author": "person:hugo-yoon", "text": "Reminder that Commerce planning starts at ten."}
+{"channel": "incidents", "ts": 1777032664918, "author": "person:darius-oyelaran", "text": "The Wallet Launch retro notes are up."}
+{"channel": "incidents", "ts": 1778230032536, "author": "person:nikhil-dahl", "text": "Deploying Email Relay to staging after lunch."}
+{"channel": "incidents", "ts": 1779468406184, "author": "person:rhea-wexler", "text": "Pairing with Zofia Arnesen on Session Store today."}
+{"channel": "incidents", "ts": 1780071385284, "author": "person:felix-mbatha", "text": "Can someone review the Search Index runbook changes?"}
+{"channel": "incidents", "ts": 1780649321101, "author": "person:yusuf-haddad", "text": "Deploying email-relay-svc to staging after lunch."}
+{"channel": "incidents", "ts": 1781114945366, "author": "person:bianca-pellegrino", "text": "Kicking off the Data Warehouse design review next week."}
+{"channel": "incidents", "ts": 1782566848317, "author": "person:esme-chaudhry", "text": "Deploying Audit Log to staging after lunch."}
+{"channel": "incidents", "ts": 1784103902812, "author": "person:esme-chaudhry", "text": "Who has context on the Audit Log alerts from last night?"}
+{"channel": "incidents", "ts": 1785150936644, "author": "person:valeria-moreau", "text": "Elif Ishikawa leads Instant Payouts."}
+{"channel": "incidents", "ts": 1785231753284, "author": "person:nadia-novak", "text": "ONB-152 is blocked on a config change."}
+{"channel": "incidents", "ts": 1785510447019, "author": "person:yusuf-haddad", "text": "The Partner API retro notes are up."}
+{"channel": "incidents", "ts": 1785610792597, "author": "person:sam-gunnarsson", "text": "Can someone triage ONB-59?"}
+{"channel": "incidents", "ts": 1786091163467, "author": "person:anders-dunmore", "text": "INS-48 is blocked on a config change."}
+{"channel": "incidents", "ts": 1788176377259, "author": "person:darius-oyelaran", "text": "Who has context on the Billing alerts from last night?"}
+{"channel": "incidents", "ts": 1789142978308, "author": "person:yusuf-haddad", "text": "Can someone review the billing-v2-svc runbook changes?"}
+{"channel": "incidents", "ts": 1790497659740, "author": "person:isaac-delacroix", "text": "Pairing with Bianca Pellegrino on Email Relay today."}

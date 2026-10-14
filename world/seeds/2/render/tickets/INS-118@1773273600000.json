@@ -1,0 +1,17 @@
+{
+  "key": "INS-118",
+  "title": "Audit Log: timeouts under peak load",
+  "description": "Audit Log shows timeouts under peak load since the last release.",
+  "assignee_history": [
+    {"who": "person:oskar-petrov", "at": "2026-03-12"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2026-03-12"}
+  ],
+  "component_history": [
+    {"about": "system:audit-log", "at": "2026-03-12"}
+  ],
+  "comments": [
+    {"author": "person:esme-chaudhry", "at": "2026-03-12", "text": "Rolled out the fix behind a feature flag."}
+  ]
+}

@@ -1,0 +1,55 @@
+{"channel": "general", "ts": 1736689827186, "author": "person:joaquin-blackwood", "text": "Chiara Holloway works on chargeback-defense."}
+{"channel": "general", "ts": 1737898797170, "author": "person:anders-jaramillo", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "general", "ts": 1737976464973, "author": "person:jules-grimaldi", "text": "Image Resizer is part of store-locator."}
+{"channel": "general", "ts": 1740134317329, "author": "person:mirela-yilmaz", "text": "Who has context on the Image Resizer alerts from last night?"}
+{"channel": "general", "ts": 1744882944179, "author": "person:esme-oyelaran", "text": "Deploying Geo Lookup to staging after lunch."}
+{"channel": "general", "ts": 1744892490909, "author": "person:joaquin-blackwood", "text": "Deploying billing-svc to staging after lunch."}
+{"channel": "general", "ts": 1744988614571, "author": "person:mirela-yilmaz", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "general", "ts": 1745775505710, "author": "person:dmitri-kariuki", "text": "Can someone triage INS-80?"}
+{"channel": "general", "ts": 1746117387631, "author": "person:yara-xu", "text": "Can someone triage INS-80?"}
+{"channel": "general", "ts": 1748107799402, "author": "person:amara-kowal", "text": "Linked FUL-128 to FUL-128, same root cause."}
+{"channel": "general", "ts": 1749661245432, "author": "person:valeria-whitfield", "text": "Who has context on the Rate Limiter alerts from last night?"}
+{"channel": "general", "ts": 1750169532232, "author": "person:elif-takahashi", "text": "Risk owns Merchant Portal now."}
+{"channel": "general", "ts": 1750618025503, "author": "person:darius-ekwueme", "text": "Pairing with Saanvi on Session Store today."}
+{"channel": "general", "ts": 1751044569524, "author": "person:elif-takahashi", "text": "The Insights demo moved to Thursday."}
+{"channel": "general", "ts": 1751303010792, "author": "person:jada-sato", "text": "Kicking off the Account Recovery design review next week."}
+{"channel": "general", "ts": 1751479969371, "author": "person:saanvi-thorne", "text": "Picking up RSK-160 today."}
+{"channel": "general", "ts": 1753963591285, "author": "person:rohan-ferreira", "text": "Who has context on the Billing-v2 alerts from last night?"}
+{"channel": "general", "ts": 1756110833475, "author": "person:saanvi-thorne", "text": "The Chargeback Defense retro notes are up."}
+{"channel": "general", "ts": 1757160884566, "author": "person:chiara-rasmussen", "text": "Kicking off the Account Recovery design review next week."}
+{"channel": "general", "ts": 1758037646831, "author": "person:mirela-yilmaz", "text": "Who leads Insights?"}
+{"channel": "general", "ts": 1758042326831, "author": "person:bianca-ishikawa", "text": "Who leads Insights?", "thread_ts": 1758037646831}
+{"channel": "general", "ts": 1758726312447, "author": "person:elif-takahashi", "text": "Closed FUL-21, the fix is live."}
+{"channel": "general", "ts": 1759082174587, "author": "person:nadia-laine", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "general", "ts": 1763315648988, "author": "person:bianca-ishikawa", "text": "Can someone review the session-store-svc runbook changes?"}
+{"channel": "general", "ts": 1765279552294, "author": "person:nikhil-galloway", "text": "Greta works on Merchant Portal."}
+{"channel": "general", "ts": 1768048952823, "author": "person:valeria-whitfield", "text": "The Fulfilment demo moved to Thursday."}
+{"channel": "general", "ts": 1770812408030, "author": "person:saanvi-thorne", "text": "Deploying Fraud Scoring to staging after lunch."}
+{"channel": "general", "ts": 1771081015684, "author": "person:soren-esposito", "text": "Reminder that Fulfilment planning starts at ten."}
+{"channel": "general", "ts": 1771843974985, "author": "person:mirela-yilmaz", "text": "Pairing with Greta on Fraud Scoring today."}
+{"channel": "general", "ts": 1772269186229, "author": "person:wren-mbatha", "text": "Can someone review the image-resizer-svc runbook changes?"}
+{"channel": "general", "ts": 1772360770625, "author": "person:wren-mbatha", "text": "Reminder that Risk planning starts at ten."}
+{"channel": "general", "ts": 1772464381390, "author": "person:cyrus-quint", "text": "Can someone review the Billing runbook changes?"}
+{"channel": "general", "ts": 1772546827720, "author": "person:esme-oyelaran", "text": "Who has context on the Rate Limiter alerts from last night?"}
+{"channel": "general", "ts": 1772982415810, "author": "person:aiko-fontaine", "text": "Can someone review the image-resizer-svc runbook changes?"}
+{"channel": "general", "ts": 1773157772325, "author": "person:joaquin-blackwood", "text": "Insights owns Account Recovery now."}
+{"channel": "general", "ts": 1774108888312, "author": "person:valeria-whitfield", "text": "Can someone review the Image Resizer runbook changes?"}
+{"channel": "general", "ts": 1776096970643, "author": "person:chiara-holloway", "text": "Thanks Chiara H., the billing-svc alert is quiet again."}
+{"channel": "general", "ts": 1776447840800, "author": "person:esme-oyelaran", "text": "Load test for Webhook Dispatcher finished, numbers look normal."}
+{"channel": "general", "ts": 1780588834537, "author": "person:nadia-laine", "text": "Kicking off the Merchant Portal design review next week."}
+{"channel": "general", "ts": 1781437289226, "author": "person:rafael-zamora", "text": "Can someone triage INS-7?"}
+{"channel": "general", "ts": 1782575679375, "author": "person:anders-jaramillo", "text": "Pairing with Rhea Hartley on Billing today."}
+{"channel": "general", "ts": 1783075362480, "author": "person:bianca-ishikawa", "text": "Deploying Billing-v2 to staging after lunch."}
+{"channel": "general", "ts": 1783768496564, "author": "person:jada-sato", "text": "Load test for Fraud Scoring finished, numbers look normal."}
+{"channel": "general", "ts": 1784042400000, "author": "person:kwame-asante", "text": "Platform owns Statements now."}
+{"channel": "general", "ts": 1784305511511, "author": "person:rhea-hartley", "text": "Rate Limiter dashboards are back after the metrics outage."}
+{"channel": "general", "ts": 1784995794306, "author": "person:soren-esposito", "text": "Picking up FUL-111 today."}
+{"channel": "general", "ts": 1785490303930, "author": "person:saanvi-thorne", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "general", "ts": 1785757133939, "author": "person:nadia-laine", "text": "Can someone triage RDS-61?"}
+{"channel": "general", "ts": 1786558977669, "author": "person:nadia-laine", "text": "Deploying Billing to staging after lunch."}
+{"channel": "general", "ts": 1786706247722, "author": "person:callum-haddad", "text": "Can someone review the Fraud Scoring runbook changes?"}
+{"channel": "general", "ts": 1786893042500, "author": "person:chiara-rasmussen", "text": "Pairing with Yara Xu on Billing-v2 today."}
+{"channel": "general", "ts": 1787920954983, "author": "person:nikhil-galloway", "text": "Kicking off the Account Recovery design review next week."}
+{"channel": "general", "ts": 1789905755685, "author": "person:kai-udeh", "text": "Geo Lookup dashboards are back after the metrics outage."}
+{"channel": "general", "ts": 1790155558147, "author": "person:jules-grimaldi", "text": "Reminder that Insights planning starts at ten."}
+{"channel": "general", "ts": 1790783627985, "author": "person:amara-kowal", "text": "Reminder that Fulfilment planning starts at ten."}

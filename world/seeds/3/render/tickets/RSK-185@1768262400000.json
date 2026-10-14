@@ -1,0 +1,17 @@
+{
+  "key": "RSK-185",
+  "title": "Session Store: timeouts under peak load",
+  "description": "session-store-svc shows timeouts under peak load since the last release.",
+  "assignee_history": [],
+  "state_history": [
+    {"state": "open", "at": "2025-12-18"},
+    {"state": "in_progress", "at": "2025-12-26"},
+    {"state": "done", "at": "2026-01-13"}
+  ],
+  "component_history": [
+    {"about": "system:session-store", "at": "2025-12-18"}
+  ],
+  "comments": [
+    {"author": "person:rhea-sato", "at": "2025-12-25", "text": "Reproduced on staging, logs are attached."}
+  ]
+}

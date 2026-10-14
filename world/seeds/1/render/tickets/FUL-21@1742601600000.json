@@ -1,0 +1,20 @@
+{
+  "key": "FUL-21",
+  "title": "Fraud Scoring: high p99 latency",
+  "description": "Fraud Scoring shows high p99 latency since the last release.",
+  "assignee_history": [
+    {"who": "person:esme-oyelaran", "at": "2025-02-22"}
+  ],
+  "state_history": [
+    {"state": "open", "at": "2025-02-22"},
+    {"state": "in_progress", "at": "2025-03-13"},
+    {"state": "done", "at": "2025-03-22"}
+  ],
+  "component_history": [
+    {"about": "system:fraud-scoring", "at": "2025-02-22"}
+  ],
+  "comments": [
+    {"author": "person:esme-oyelaran", "at": "2025-03-05", "text": "Rolled out the fix behind a feature flag."},
+    {"author": "person:chiara-rasmussen", "at": "2025-03-12", "text": "Same symptom as RSK-194, probably one root cause."}
+  ]
+}
