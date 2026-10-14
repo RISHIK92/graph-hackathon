@@ -1,0 +1,39 @@
+Results
+    Aggregate
+        Apply
+            Aggregate
+                Apply
+                    Aggregate
+                        Apply
+                            Aggregate
+                                Apply
+                                    Aggregate
+                                        Apply
+                                            Node By Index Scan | (x:Entity)
+                                            Optional
+                                                Conditional Traverse | (s)->(p:Person)
+                                                    Filter
+                                                        Conditional Traverse | (x)->(s:Span)
+                                                            Argument
+                                    Optional
+                                        Filter
+                                            Conditional Traverse | (x)-[r:LEADS|OWNS|WORKS_ON]->(p2:Person)
+                                                Argument
+                            Optional
+                                Filter
+                                    Edge By Index Scan | [l:LEADS]
+                                        Filter
+                                            Edge By Index Scan | [o:OWNS]
+                                                Argument
+                    Optional
+                        Filter
+                            Edge By Index Scan | [asg:ASSIGNED_TO]
+                                Filter
+                                    Edge By Index Scan | [ab:ABOUT]
+                                        Argument
+            Optional
+                Filter
+                    Edge By Index Scan | [db:DECIDED_BY]
+                        Filter
+                            Edge By Index Scan | [af:AFFECTS]
+                                Argument

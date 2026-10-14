@@ -1,0 +1,9 @@
+Results
+    Distinct
+        Join
+            Project
+                Filter
+                    Node By Index Scan | (p:Assertion)
+            Project
+                Filter
+                    Node By Index Scan | (p:Assertion)

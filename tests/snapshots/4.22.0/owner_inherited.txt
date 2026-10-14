@@ -1,0 +1,8 @@
+Results
+    Project
+        Filter
+            Edge By Index Scan | [o:OWNS]
+                Project
+                    Filter
+                        Edge By Index Scan | [pp:PART_OF]
+                            Node By Index Scan | (x:Entity)

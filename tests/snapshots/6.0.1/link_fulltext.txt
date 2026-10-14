@@ -1,0 +1,3 @@
+Limit
+    Project
+        Node By Fulltext Index Scan

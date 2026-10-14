@@ -1,0 +1,4 @@
+Project
+    Filter
+        Node By Index Scan | (a:Assertion)
+            Unwind

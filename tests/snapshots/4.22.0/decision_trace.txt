@@ -1,0 +1,26 @@
+Results
+    Aggregate
+        Apply
+            Aggregate
+                Apply
+                    Aggregate
+                        Apply
+                            Aggregate
+                                Apply
+                                    Node By Index Scan | (d:Decision)
+                                    Optional
+                                        Conditional Traverse | (old:Decision)->(old:Decision)
+                                            Conditional Variable Length Traverse | (d)-[anon_0:REPLACES*0..5]->(old)
+                                                Argument
+                            Optional
+                                Filter
+                                    Edge By Index Scan | [db:DECIDED_BY]
+                                        Argument
+                    Optional
+                        Filter
+                            Edge By Index Scan | [af:AFFECTS]
+                                Argument
+            Optional
+                Filter
+                    Conditional Traverse | (d)-[m:MOTIVATED_BY]->(s:Span)
+                        Argument

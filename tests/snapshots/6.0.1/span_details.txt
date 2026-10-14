@@ -1,0 +1,7 @@
+Project
+    Aggregate
+        Sort
+            Project
+                Filter
+                    Conditional Traverse | (s)<-[h:HAS_SPAN]-(src:Source)
+                        Unwind

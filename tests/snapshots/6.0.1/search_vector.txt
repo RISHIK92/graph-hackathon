@@ -1,0 +1,4 @@
+Sort
+    Project
+        Filter
+            Node By Vector Index Scan

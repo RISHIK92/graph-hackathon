@@ -1,0 +1,5 @@
+Results
+    Project
+        Filter
+            Edge By Index Scan | [r:REPLACES]
+                Node By Index Scan | (d:Decision)

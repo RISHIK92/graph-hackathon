@@ -1,0 +1,9 @@
+Results
+    Distinct
+        Join
+            Distinct
+                Project
+                    Node By Index Scan | (a:Assertion)
+            Distinct
+                Project
+                    Node By Index Scan | (a:Assertion)

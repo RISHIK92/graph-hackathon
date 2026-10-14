@@ -1,0 +1,8 @@
+Results
+    Project
+        Aggregate
+            Sort
+                Project
+                    Conditional Traverse | (s)-[h:HAS_SPAN]->(src:Source)
+                        Node By Index Scan | (s:Span)
+                            Unwind

@@ -1,0 +1,10 @@
+Aggregate
+    Optional Conditional Traverse | (t)<-(ac)
+        Aggregate
+            Optional Conditional Traverse | (ps)<-(ac)
+                Aggregate
+                    Optional Conditional Traverse | (ac)->(pa:Assertion)
+                        Aggregate
+                            Optional Conditional Traverse | (ac)->(b:Assertion)
+                                Filter
+                                    Node By Index Scan | (ac:Action)

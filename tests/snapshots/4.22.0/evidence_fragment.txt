@@ -1,0 +1,10 @@
+Results
+    Project
+        Project
+            Apply
+                Node By Index Scan | (a:Assertion)
+                    Unwind
+                Aggregate
+                    Filter
+                        Conditional Traverse | (a)-[ev:EVIDENCED_BY]->(s)
+                            Argument

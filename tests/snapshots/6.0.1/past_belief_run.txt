@@ -1,0 +1,50 @@
+Sort
+    Project
+        Aggregate
+            Apply
+                Filter
+                    Project
+                        Project
+                            Aggregate
+                                Project
+                                    Apply
+                                        Project
+                                            Apply
+                                                Distinct
+                                                    Project
+                                                        Apply
+                                                            Filter
+                                                                Project
+                                                                    Project
+                                                                        Apply
+                                                                            Project
+                                                                                Apply
+                                                                                    Filter
+                                                                                        Node By Index Scan | (a:Assertion)
+                                                                                    Aggregate
+                                                                                        Filter
+                                                                                            Conditional Traverse | (a)-[ev:EVIDENCED_BY]->(anon_0)
+                                                                                                Argument
+                                                                            Aggregate
+                                                                                Filter
+                                                                                    Conditional Traverse | (a)-[d:DISPUTES]->(anon_1)
+                                                                                        Argument
+                                                            Optional
+                                                                Filter
+                                                                    PathBuilder
+                                                                        Conditional Variable Length Traverse | (b)-[anon_2:CONTINUES|SUPERSEDES*1..50]->(a)
+                                                                            Filter
+                                                                                All Node Scan | (b)
+                                                                                    Argument
+                                                Aggregate
+                                                    Filter
+                                                        Conditional Traverse | (b)-[ev:EVIDENCED_BY]->(anon_3)
+                                                            Argument
+                                        Aggregate
+                                            Filter
+                                                Conditional Traverse | (b)-[d:DISPUTES]->(anon_4)
+                                                    Argument
+                Optional
+                    Filter
+                        Conditional Variable Length Traverse | (a)-[anon_5:CONTINUES*1..50]->(m)
+                            Argument

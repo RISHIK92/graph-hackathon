@@ -1,0 +1,10 @@
+Distinct
+    Union
+        Distinct
+            Project
+                Filter
+                    Node By Index Scan | (a:Assertion)
+        Distinct
+            Project
+                Filter
+                    Node By Index Scan | (a:Assertion)

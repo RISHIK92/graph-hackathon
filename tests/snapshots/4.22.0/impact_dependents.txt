@@ -1,0 +1,8 @@
+Results
+    Limit
+        Sort
+            Project
+                Conditional Traverse | (s:Entity)->(s:Entity)
+                    Filter
+                        Conditional Variable Length Traverse | (x)-[anon_0:DEPENDS_ON*1..3]->(s)
+                            Node By Index Scan | (x:Entity)

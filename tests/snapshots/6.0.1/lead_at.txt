@@ -1,0 +1,6 @@
+Project
+    Filter
+        Filter
+            Edge By Index Scan | (t)-[l:LEADS]->(p:Entity)
+                Filter
+                    Node By Index Scan | (t:Entity)

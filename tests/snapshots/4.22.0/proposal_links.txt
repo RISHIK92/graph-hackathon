@@ -1,0 +1,11 @@
+Results
+    Aggregate
+        Apply
+            Aggregate
+                Optional Conditional Traverse | (p)->(ac:Action)
+                    Node By Index Scan | (p:Assertion)
+                        Unwind
+            Optional
+                Filter
+                    Conditional Traverse | (p)->(c:Assertion)
+                        Argument

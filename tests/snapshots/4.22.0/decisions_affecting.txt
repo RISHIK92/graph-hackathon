@@ -1,0 +1,6 @@
+Results
+    Sort
+        Project
+            Filter
+                Edge By Index Scan | [a:AFFECTS]
+                    Node By Index Scan | (x:Entity)

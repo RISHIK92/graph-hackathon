@@ -1,0 +1,8 @@
+Limit
+    Sort
+        Project
+            Filter
+                Filter
+                    Edge By Index Scan | (x)-[o:OWNS]->(owner:Entity)
+                        Filter
+                            Node By Index Scan | (x:Entity)

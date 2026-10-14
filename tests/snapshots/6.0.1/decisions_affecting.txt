@@ -1,0 +1,7 @@
+Sort
+    Project
+        Filter
+            Filter
+                Edge By Index Scan | (x)-[a:AFFECTS]->(d:Decision)
+                    Filter
+                        Node By Index Scan | (x:Entity)

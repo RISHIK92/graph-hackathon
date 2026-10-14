@@ -1,0 +1,7 @@
+Results
+    Distinct
+        Join
+            Project
+                Node By Index Scan | (e:Entity)
+            Project
+                Node By Index Scan | (e:Entity)

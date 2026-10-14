@@ -1,0 +1,8 @@
+Limit
+    Sort
+        Project
+            Filter
+                PathBuilder
+                    Conditional Variable Length Traverse | (s)-[anon_0:DEPENDS_ON*1..3]->(x)
+                        Filter
+                            Node By Index Scan | (x:Entity)

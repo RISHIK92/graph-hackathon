@@ -1,0 +1,41 @@
+Project
+    Aggregate
+        Project
+            Apply
+                Project
+                    Apply
+                        Project
+                            Apply
+                                Project
+                                    Apply
+                                        Project
+                                            Apply
+                                                Project
+                                                    Apply
+                                                        Filter
+                                                            Node By Index Scan | (m:Assertion)
+                                                                Unwind
+                                                        Aggregate
+                                                            Filter
+                                                                Conditional Traverse | (m)-[ev:EVIDENCED_BY]->(s)
+                                                                    Argument
+                                                Optional
+                                                    Filter
+                                                        Conditional Traverse | (x)-[sp:SUPERSEDES]->(m:Assertion)
+                                                            Argument
+                                        Optional
+                                            Filter
+                                                Conditional Traverse | (c)-[dp:DISPUTES]->(m)
+                                                    Argument
+                                Aggregate
+                                    Filter
+                                        Conditional Traverse | (x)-[ev:EVIDENCED_BY]->(anon_0)
+                                            Argument
+                        Aggregate
+                            Filter
+                                Conditional Traverse | (x)-[d:DISPUTES]->(anon_1)
+                                    Argument
+                Aggregate
+                    Filter
+                        Conditional Traverse | (c)-[ev:EVIDENCED_BY]->(s)
+                            Argument

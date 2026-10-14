@@ -1,0 +1,8 @@
+Distinct
+    Union
+        Project
+            Filter
+                Node By Index Scan | (e:Entity)
+        Project
+            Filter
+                Node By Index Scan | (e:Entity)

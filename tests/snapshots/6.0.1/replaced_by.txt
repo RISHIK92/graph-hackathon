@@ -1,0 +1,6 @@
+Project
+    Filter
+        Filter
+            Edge By Index Scan | (d)-[r:REPLACES]->(n:Decision)
+                Filter
+                    Node By Index Scan | (d:Decision)

@@ -1,0 +1,10 @@
+Results
+    Aggregate
+        Optional Conditional Traverse | (ac)->(t:Entity)
+            Aggregate
+                Optional Conditional Traverse | (ac)->(ps:Source)
+                    Aggregate
+                        Optional Conditional Traverse | (ac)->(pa:Assertion)
+                            Aggregate
+                                Optional Conditional Traverse | (ac)->(b:Assertion)
+                                    Node By Index Scan | (ac:Action)

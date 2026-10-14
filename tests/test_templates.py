@@ -1,0 +1,462 @@
+"""Template rule R2 (README §3) and the 06 §1 rows "Template goldens" and "Index use".
+
+Every `.cypher` template in brain/templates runs on a small hand-built fixture graph, on both FalkorDB
+versions (conftest `g`), and is checked four ways in one test per template:
+
+1. golden rows: hand-written expected values for the key fields (ids, names, aids), not a recording;
+2. an EXPLAIN snapshot under tests/snapshots/<version>/<template>.txt, written on first run and
+   compared afterwards (`SNAPSHOT_UPDATE=1` rewrites; a diff fails with a unified diff);
+3. index use: the plan contains an index scan for the anchor named first in the header's `indexes:`;
+4. label leak (F4): no Traverse/Expand/Scan operator gives a template variable a label the template
+   did not give it (6.0.1 attached a comprehension's `:Assertion` to an outer variable, README F4).
+
+Known per-version failures are listed in KNOWN_FAILURES with the reason; a listed check that passes
+fails the test so the list can't go stale.
+"""
+from __future__ import annotations
+
+import difflib
+import os
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+import pytest
+
+from brain import providers, store, templates
+from brain.actions import Actions, Actor
+from brain.config import MAX
+from brain.db import Graph, with_params
+from brain.write_path import Candidate, WritePath
+
+from .conftest import PORTS, make_span, seed_basic
+
+SNAP_DIR = Path(__file__).parent / "snapshots"
+ENTITY_LABELS = {"Entity", "Person", "Team", "Project", "System", "Decision", "Ticket"}
+INDEX_OPS = ("Node By Index Scan", "Edge By Index Scan", "Node By Fulltext Index Scan",
+             "Node By Vector Index Scan", "ProcedureCall")   # ProcedureCall: 4.22.0's fulltext/vector entry
+
+# (template, version, check) -> reason. Observed Oct 2026 on the fixture below; see the module docstring.
+KNOWN_FAILURES: dict[tuple[str, str, str], str] = {
+    ("decision_trace", "6.0.1", "golden"):
+        "6.0.1 planner: OPTIONAL MATCH (d)-[db:DECIDED_BY]->(who:Entity) WHERE <db filter> after an aggregating "
+        "WITH places the Filter below the Conditional Traverse, so `deciders` is [{null}]. 4.22.0 is correct. "
+        "Fix shape (verified on both): OPTIONAL MATCH ... WITH d, replaced, db, who WHERE db.valid_from <= $V ...",
+    ("experts_signals", "6.0.1", "golden"):
+        "6.0.1 planner: same Filter-below-Traverse shape on (d)-[db:DECIDED_BY]->(p5:Person) after the "
+        "previous aggregating WITH, so `decided` is [{null}]. 4.22.0 is correct.",
+    ("span_details", "6.0.1", "index"):
+        "6.0.1 plans UNWIND $sids ... MATCH (s:Span {id:sid}) as a Conditional Traverse straight off the Unwind "
+        "with no Node By Index Scan on Span.id (rows are still correct). 4.22.0 uses the index.",
+}
+
+
+# fixture graph
+
+TEXTS = {
+    "sp_lead": "Priya leads Payments", "sp_own_old": "Platform owns Ledger", "sp_own": "Payments owns Ledger",
+    "sp_chat": "Infra owns Ledger", "sp_dep1": "Checkout depends on Ledger",
+    "sp_dep2": "Storefront depends on Checkout", "sp_part": "Ledger is part of Commerce",
+    "sp_own_proj": "Platform owns Commerce", "sp_adr": "ADR-002 replaces ADR-001 and affects Ledger",
+    "sp_about": "RDS-42 is about Ledger",
+}
+
+
+@dataclass
+class Fixture:
+    g: Graph
+    version: str
+    ids: dict[str, str]
+    now: int
+
+    def vec(self, text: str) -> list[float]:
+        return providers.embed([text])[0]
+
+
+@pytest.fixture
+def fx(g, clock) -> Fixture:
+    """Payments owns Ledger (from t=5, after Platform t=1..5) with Priya leading Payments; Infra's chat
+    claim is a disputed challenger; Storefront -> Checkout -> Ledger DEPENDS_ON; Ledger PART_OF Commerce
+    which Platform owns; ADR-002 REPLACES ADR-001, AFFECTS Ledger, DECIDED_BY Priya, MOTIVATED_BY sp_adr,
+    accepted; RDS-42 ABOUT Ledger; one route_to_owner proposal (RDS-42 -> Priya, draft source)."""
+    version = next(v for v, p in PORTS.items() if p == g.port)
+    seed_basic(g)
+    store.upsert_entities(g, [
+        {"id": "system:checkout", "name": "Checkout", "aliases": [], "tier": 1},
+        {"id": "system:storefront", "name": "Storefront", "aliases": [], "tier": 2},
+        {"id": "project:commerce", "name": "Commerce", "aliases": []},
+        {"id": "decision:adr-002", "name": "ADR-002", "aliases": [], "title": "Move Ledger to Postgres"},
+    ])
+    g.write("UNWIND $rows AS x MATCH (n:Entity {id:x.id}) SET n.embedding = vecf32(x.e)",
+            {"rows": [{"id": i, "e": providers.embed([n])[0]} for i, n in
+                      [("system:ledger", "Ledger"), ("team:payments", "Payments"), ("person:priya", "Priya Raman")]]})
+    for sid, text in TEXTS.items():
+        make_span(g, sid, text, 1)
+    g.write("UNWIND $rows AS x MATCH (s:Span {id:x.id}) SET s.embedding = vecf32(x.e)",
+            {"rows": [{"id": sid, "e": providers.embed([t])[0]} for sid, t in TEXTS.items()]})
+    store.create_source(g, {"id": "sess1", "doc_key": "chat_session:brain:sess1", "kind": "chat_session",
+                            "status": "active", "is_latest": True, "ingested_at": 1, "user_id": "u1"})
+    make_span(g, "turn1", "who owns ledger?", 7, src="sess1", kind="chat_session", role="user")
+    make_span(g, "turn2", "Payments owns Ledger.", 8, src="sess1", kind="chat_session", role="agent")
+    store.add_mentions(g, [{"span_id": "sp_own", "entity_id": "system:ledger", "start": 0, "end": 6,
+                            "method": "exact", "hedged": False}])
+    store.add_authored_by(g, [{"span_id": "sp_own", "person_id": "person:bob"}])
+
+    wp = WritePath(g, clock)
+    ids: dict[str, str] = {}
+
+    def fact(pred, s, o, vf, span, form="structured", value=""):
+        plan = wp.new_plan()
+        out = wp.add_candidate(plan, Candidate(pred, s, o, object_value=value, valid_from=vf, span_id=span,
+                                               quote_end=len(TEXTS[span]), form=form, source_id="src:test"))
+        wp.execute(plan)
+        clock.tick()
+        return out["assertion_id"]
+
+    ids["lead"] = fact("LEADS", "person:priya", "team:payments", 1, "sp_lead")
+    ids["own_old"] = fact("OWNS", "team:platform", "system:ledger", 1, "sp_own_old")
+    ids["own"] = fact("OWNS", "team:payments", "system:ledger", 5, "sp_own")
+    ids["chat"] = fact("OWNS", "team:infra", "system:ledger", 6, "sp_chat", form="chat")
+    ids["dep1"] = fact("DEPENDS_ON", "system:checkout", "system:ledger", 1, "sp_dep1")
+    ids["dep2"] = fact("DEPENDS_ON", "system:storefront", "system:checkout", 1, "sp_dep2")
+    ids["part"] = fact("PART_OF", "system:ledger", "project:commerce", 1, "sp_part")
+    ids["own_proj"] = fact("OWNS", "team:platform", "project:commerce", 1, "sp_own_proj")
+    ids["replaces"] = fact("REPLACES", "decision:adr-002", "decision:adr-001", 3, "sp_adr")
+    ids["affects"] = fact("AFFECTS", "decision:adr-002", "system:ledger", 3, "sp_adr")
+    ids["decided"] = fact("DECIDED_BY", "decision:adr-002", "person:priya", 3, "sp_adr")
+    ids["status"] = fact("HAS_STATUS", "decision:adr-002", "", 3, "sp_adr", value="accepted")
+    ids["about"] = fact("ABOUT", "ticket:rds-42", "system:ledger", 1, "sp_about")
+    store.add_motivated_by(g, "decision:adr-002", "sp_adr", "context", clock())
+    r = Actions(g, clock).route_to_owner(Actor("person:eve", client="test"), ticket_id="ticket:rds-42")
+    ids["proposal"], ids["action"] = r["proposal"], r["action_id"]
+    clock.tick(10)
+    return Fixture(g, version, ids, clock())
+
+
+# parameters and golden rows per template
+
+PARAMS = {
+    "action_read": lambda f: {"id": f.ids["action"]},
+    "assertions_by_id": lambda f: {"ids": [f.ids["own"], f.ids["chat"]]},
+    "chains_for_entity": lambda f: {"e": "system:ledger", "p": "OWNS"},
+    "decision_trace": lambda f: {"d": "decision:adr-002", "V": f.now, "T": f.now},
+    "decisions_affecting": lambda f: {"x": "system:ledger", "V": f.now},
+    "evidence_fragment": lambda f: {"aids": [f.ids["own"], f.ids["proposal"]], "T": f.now},
+    "experts_signals": lambda f: {"x": "system:ledger", "V": f.now},
+    "impact_dependents": lambda f: {"x": "system:ledger", "V": f.now},
+    "lead_at": lambda f: {"t": "team:payments", "V": f.now},
+    "link_exact": lambda f: {"q": "ledger-service"},
+    "link_fulltext": lambda f: {"q": "ledger"},
+    "link_vector": lambda f: {"k": 3, "vec": f.vec("Ledger")},
+    "owner_at": lambda f: {"x": "system:ledger", "V": f.now},
+    "owner_inherited": lambda f: {"x": "system:ledger", "V": f.now},
+    "owner_previous": lambda f: {"x": "system:ledger", "V": f.now},
+    "past_belief_members": lambda f: {"members": [f.ids["own"]], "T": f.now},
+    "past_belief_run": lambda f: {"chain": "ch_OWNS:system:ledger", "T": f.now, "V": f.now},
+    "proposal_links": lambda f: {"ids": [f.ids["proposal"]], "now": f.now},
+    "proposals_about": lambda f: {"e": "ticket:rds-42"},
+    "replaced_by": lambda f: {"d": "decision:adr-001", "V": f.now},
+    "run_members": lambda f: {"run": f.ids["own"]},
+    "search_fulltext": lambda f: {"q": "ledger"},
+    "search_vector": lambda f: {"k": 4, "vec": f.vec("Payments owns Ledger")},
+    "session_spans": lambda f: {"user": "u1"},
+    "span_details": lambda f: {"sids": ["sp_own", "turn1"], "T": f.now},
+}
+
+
+def _by(rows, key):
+    return {r[key]: r for r in rows}
+
+
+def g_action_read(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["action"]["id"] == f.ids["action"] and r["action"]["kind"] == "route_to_owner"
+    assert r["action"]["actor"] == "person:eve" and r["action"]["status"] == "done"
+    assert set(r["based_on"]) == {f.ids["about"], f.ids["own"], f.ids["lead"]}
+    assert r["produced"] == [f.ids["proposal"]]
+    assert len(r["sources"]) == 1 and r["sources"][0].startswith("src_draft_")
+    assert r["targets"] == ["ticket:rds-42"]
+
+
+def g_assertions_by_id(f, rows):
+    r = _by(rows, "assertion_id")
+    assert set(r) == {f.ids["own"], f.ids["chat"]}
+    own, chat = r[f.ids["own"]], r[f.ids["chat"]]
+    assert (own["predicate"], own["subject_id"], own["object_id"]) == ("OWNS", "team:payments", "system:ledger")
+    assert (own["status"], own["authority"], own["valid_from"], own["valid_to"]) == ("current", 4, 5, MAX)
+    assert own["run_id"] == f.ids["own"] and own["chain_id"] == "ch_OWNS:system:ledger"
+    assert own["statement"] == "Payments owns Ledger" and own["retracted_at"] == MAX and own["negated"] is False
+    assert (chat["subject_id"], chat["status"], chat["authority"], chat["run_id"]) == ("team:infra", "disputed", 1, "")
+
+
+def g_chains_for_entity(f, rows):
+    assert rows == [{"chain": "ch_OWNS:system:ledger", "q": ""}]
+
+
+def g_decision_trace(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert (r["id"], r["name"], r["title"]) == ("decision:adr-002", "ADR-002", "Move Ledger to Postgres")
+    assert (r["status"], r["status_aid"]) == ("accepted", f.ids["status"])
+    assert set(r["replaced"]) == {"decision:adr-002", "decision:adr-001"}      # *0.. includes d itself
+    assert r["affects"] == [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["affects"]}]
+    assert r["motivated"] == [{"span": "sp_adr", "section": "context", "action_id": ""}]
+    assert r["deciders"] == [{"id": "person:priya", "name": "Priya Raman", "aid": f.ids["decided"]}]
+
+
+def g_decisions_affecting(f, rows):
+    assert rows == [{"id": "decision:adr-002", "name": "ADR-002", "title": "Move Ledger to Postgres",
+                     "status": "accepted", "aid": f.ids["affects"]}]
+
+
+def g_evidence_fragment(f, rows):
+    r = _by(rows, "aid")
+    assert set(r) == {f.ids["own"], f.ids["proposal"]}
+    assert r[f.ids["own"]]["evs"] == [{"span": "sp_own", "form": "structured", "authority": 4, "qs": 0,
+                                       "qe": len(TEXTS["sp_own"]), "src": "src:test"}]
+    assert r[f.ids["proposal"]]["evs"] == []     # rank-0 draft evidence is dropped (A59)
+
+
+def g_experts_signals(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["authored"] == [{"person": "person:bob", "kind": "authored", "ref": "sp_own", "ts": 1}]
+    assert r["leads"] == [{"person": "person:priya", "kind": "LEADS", "ref": f.ids["lead"], "ts": 1}]
+    assert [x for x in r["direct"] if x["person"]] == []           # no Person owns Ledger directly
+    assert [x for x in r["tickets"] if x["person"]] == []          # the routing is only proposed
+    assert [x for x in r["decided"] if x["person"]] == [
+        {"person": "person:priya", "kind": "DECIDED_BY", "ref": f.ids["decided"], "ts": 3}]
+
+
+def g_impact_dependents(f, rows):
+    assert [(r["id"], r["name"], r["tier"], r["hops"]) for r in rows] == [
+        ("system:checkout", "Checkout", 1, 1), ("system:storefront", "Storefront", 2, 2)]
+    assert rows[0]["node_ids"] == ["system:ledger", "system:checkout"] and rows[0]["aids"] == [f.ids["dep1"]]
+    assert rows[1]["node_ids"] == ["system:ledger", "system:checkout", "system:storefront"]
+    assert rows[1]["aids"] == [f.ids["dep1"], f.ids["dep2"]]
+
+
+def g_lead_at(f, rows):
+    assert rows == [{"lead": "person:priya", "name": "Priya Raman", "aid": f.ids["lead"], "vf": 1, "vt": MAX,
+                     "authority": 4}]
+
+
+def g_link_exact(f, rows):
+    assert [(r["id"], r["name"]) for r in rows] == [("system:ledger", "Ledger")]
+    assert set(rows[0]["labels"]) == {"Entity", "System"}
+
+
+def g_link_fulltext(f, rows):
+    assert [(r["id"], r["name"]) for r in rows] == [("system:ledger", "Ledger")]
+    assert rows[0]["score"] > 0
+
+
+def g_link_vector(f, rows):
+    assert rows[0]["id"] == "system:ledger" and abs(rows[0]["score"]) < 1e-5     # distance 0 to itself
+    assert {r["id"] for r in rows} == {"system:ledger", "team:payments", "person:priya"}
+    assert [r["score"] for r in rows] == sorted(r["score"] for r in rows)        # ascending (R6)
+
+
+def g_owner_at(f, rows):
+    assert rows == [{"owner": "team:payments", "name": "Payments", "aid": f.ids["own"], "vf": 5, "vt": MAX,
+                     "authority": 4}]
+
+
+def g_owner_inherited(f, rows):
+    assert rows == [{"owner": "team:platform", "name": "Platform", "aid": f.ids["own_proj"], "vf": 1, "vt": MAX,
+                     "authority": 4, "via": "project:commerce", "via_name": "Commerce", "via_aid": f.ids["part"]}]
+
+
+def g_owner_previous(f, rows):
+    assert rows == [{"owner": "team:platform", "name": "Platform", "aid": f.ids["own_old"], "vf": 1, "vt": 5,
+                     "authority": 4}]
+
+
+def g_past_belief_members(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["id"] == f.ids["own"] and r["valid_from"] == 5
+    assert len(r["evs"]) == 1
+    assert dict(r["evs"][0]) == {"span": "sp_own", "form": "structured", "authority": 4, "ts": 1}
+    assert r["sup_vfs"] == []
+    assert len(r["challengers"]) == 1
+    assert dict(r["challengers"][0]) == {"id": f.ids["chat"], "last_ts": 1}
+
+
+def g_past_belief_run(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["id"] == f.ids["own"]
+    assert (r["subject_id"], r["object_id"], r["object_value"]) == ("team:payments", "system:ledger", "")
+    assert r["negated"] is False and r["valid_from"] == 5
+    assert r["others"] == []
+
+
+def g_proposal_links(f, rows):
+    assert rows == [{"id": f.ids["proposal"], "producers": [f.ids["action"]], "confirmed_by": []}]
+
+
+def g_proposals_about(f, rows):
+    assert rows == [{"id": f.ids["proposal"]}]
+
+
+def g_replaced_by(f, rows):
+    assert rows == [{"id": "decision:adr-002", "aid": f.ids["replaces"]}]
+
+
+def g_run_members(f, rows):
+    assert rows == [{"id": f.ids["own"]}]
+
+
+def g_search_fulltext(f, rows):
+    assert {r["id"] for r in rows} == {"sp_own_old", "sp_own", "sp_chat", "sp_dep1", "sp_part", "sp_adr",
+                                       "sp_about", "turn1"}            # turn2 is an agent span (excluded)
+    assert _by(rows, "id")["turn1"] == {"id": "turn1", "ts": 7, "kind": "chat_session", "score": rows[0]["score"]}
+
+
+def g_search_vector(f, rows):
+    assert rows[0]["id"] == "sp_own" and abs(rows[0]["score"]) < 1e-5
+    assert "turn2" not in {r["id"] for r in rows}                               # agent span filtered after YIELD
+    assert [r["score"] for r in rows] == sorted(r["score"] for r in rows)
+    assert all(r["kind"] == "wiki" for r in rows)
+
+
+def g_session_spans(f, rows):
+    assert rows == [{"id": "turn1", "text": "who owns ledger?", "ts": 7}]
+
+
+def g_span_details(f, rows):
+    r = _by(rows, "id")
+    assert set(r) == {"sp_own", "turn1"}
+    assert (r["sp_own"]["text"], r["sp_own"]["ts"], r["sp_own"]["kind"], r["sp_own"]["role"]) == (
+        TEXTS["sp_own"], 1, "wiki", "human")
+    assert r["sp_own"]["revs"] == [{"src": "src:test", "title": "src:test", "uri": "", "kind": "wiki",
+                                    "doc_key": "src:test", "cs": 0, "ce": len(TEXTS["sp_own"]), "live": True}]
+    assert r["turn1"]["role"] == "user"
+    assert [(x["src"], x["kind"], x["live"]) for x in r["turn1"]["revs"]] == [("sess1", "chat_session", True)]
+
+
+GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}
+
+
+# plan helpers
+
+def explain_lines(g: Graph, cypher: str, params: dict) -> list[str]:
+    """Raw GRAPH.EXPLAIN, normalised. The client's ExecutionPlan string is lossy (it cuts `OWNS|LEADS`
+    at the bar and drops operators), so the raw reply is used."""
+    out = g.raw("GRAPH.EXPLAIN", g.name, with_params(cypher, params))
+    lines = [x.decode() if isinstance(x, bytes) else str(x) for x in out]
+
+    def sort_types(m: re.Match) -> str:   # 6.0.1/4.22 prints a multi-type edge's types in varying order
+        types = [t.lstrip(":") for t in m.group(2).split("|")]
+        return "[" + m.group(1) + ":" + "|".join(sorted(types)) + m.group(3)
+
+    return [re.sub(r"\[(\w*):([\w:|]+\|[\w:|]+)([\]*])", sort_types, re.sub(r"[_@]anon_(\d+)", r"anon_\1", ln.rstrip()))
+            for ln in lines]
+
+
+def check_snapshot(version: str, name: str, plan: list[str]) -> None:
+    path = SNAP_DIR / version / f"{name}.txt"
+    text = "\n".join(plan) + "\n"
+    if os.environ.get("SNAPSHOT_UPDATE") == "1" or not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        return
+    old = path.read_text()
+    if old != text:
+        diff = "\n".join(difflib.unified_diff(old.splitlines(), text.splitlines(), "stored", "current", lineterm=""))
+        raise AssertionError(f"EXPLAIN plan for {name} on {version} differs from {path.relative_to(SNAP_DIR.parent)} "
+                             f"(a plan change is a review item, R2; SNAPSHOT_UPDATE=1 rewrites):\n{diff}")
+
+
+def check_index(name: str, plan: list[str]) -> None:
+    anchor = templates.header(name)["indexes"].split(",")[0].strip()
+    text = "\n".join(plan)
+    if anchor.startswith("full-text"):
+        ok = "Fulltext Index Scan" in text or "ProcedureCall" in text
+    elif anchor.startswith("vector"):
+        ok = "Vector Index Scan" in text or "ProcedureCall" in text
+    else:
+        label = anchor.split(".")[0]
+        labels = ENTITY_LABELS if label == "Entity" else {label}
+        ok = any(re.search(rf"Node By Index Scan \| \(\w+:{lab}\)", text) for lab in labels)
+    assert ok, f"{name}: no index scan for anchor {anchor!r} in plan:\n{text}"
+
+
+def template_labels(name: str) -> dict[str, set[str]]:
+    """Variable -> labels the template body itself gives it (empty set: declared without a label)."""
+    body = templates.body(name)
+    out: dict[str, set[str]] = {}
+    for var, label in re.findall(r"\((\w+)(?::(\w+))?\s*[{)]", body):
+        out.setdefault(var, set())
+        if label:
+            out[var].add(label)
+    return out
+
+
+def check_label_leak(name: str, plan: list[str]) -> None:
+    allowed = template_labels(name)
+    leaks = []
+    for ln in plan:
+        if not any(op in ln for op in ("Traverse", "Expand", "Scan")):
+            continue
+        for var, label in re.findall(r"\((\w+):(\w+)[^)]*\)", ln):
+            if var in allowed and label not in allowed[var]:
+                leaks.append(f"{var} gained :{label} (template gives it {sorted(allowed[var]) or 'no label'}) in: {ln.strip()}")
+    assert not leaks, f"{name}: label leak (README F4, R2):\n" + "\n".join(leaks)
+
+
+def _run_checks(fx: Fixture, name: str, checks: list[tuple[str, callable]]) -> None:
+    unexpected, expected = [], []
+    for check, fn in checks:
+        key = (name, fx.version, check)
+        try:
+            fn()
+        except AssertionError as e:
+            if key in KNOWN_FAILURES:
+                expected.append(f"{check}: {KNOWN_FAILURES[key]}")
+            else:
+                unexpected.append(f"[{check}] {e}")
+        else:
+            if key in KNOWN_FAILURES:
+                unexpected.append(f"[{check}] passes on {fx.version}; remove it from KNOWN_FAILURES")
+    if unexpected:
+        pytest.fail("\n".join(unexpected))
+    if expected:
+        pytest.xfail("\n".join(expected))
+
+
+# tests
+
+@pytest.mark.parametrize("name", templates.all_names())
+def test_goldens(fx: Fixture, name: str):
+    params = PARAMS[name](fx)
+    rows = fx.g.ro(templates.body(name), params, template=name)
+    plan = explain_lines(fx.g, templates.body(name), params)
+    _run_checks(fx, name, [
+        ("golden", lambda: GOLDENS[name](fx, rows)),
+        ("snapshot", lambda: check_snapshot(fx.version, name, plan)),
+        ("index", lambda: check_index(name, plan)),
+        ("label_leak", lambda: check_label_leak(name, plan)),
+    ])
+
+
+def test_every_template_has_params_and_golden():
+    assert set(PARAMS) == set(templates.all_names()) == set(GOLDENS)
+
+
+@pytest.mark.parametrize("name", templates.all_names())
+def test_header(name: str):
+    """`// golden:` names a test in this file and `// params:` covers every `$param` in the body."""
+    h = templates.header(name)
+    m = re.fullmatch(r"tests/test_templates\.py::(\w+)\[(\w+)\]", h["golden"])
+    assert m, f"{name}: golden header {h['golden']!r} is not tests/test_templates.py::<test>[<template>]"
+    assert m.group(1) in globals() and callable(globals()[m.group(1)]), f"{name}: no test {m.group(1)}"
+    assert m.group(2) == name
+    declared = {p.strip().split(" ")[0] for p in h["params"].split(",")}
+    used = set(re.findall(r"\$(\w+)", templates.body(name)))
+    assert used <= declared, f"{name}: body uses {sorted(used - declared)} not listed in `// params:`"
+    for k in h["indexes"], h["purpose"], h["name"]:
+        assert k
+    assert h["name"] == name
