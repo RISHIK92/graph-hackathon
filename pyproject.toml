@@ -1,0 +1,17 @@
+[project]
+name = "company-brain"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["falkordb", "fastapi", "uvicorn[standard]", "pyyaml", "httpx", "numpy", "mcp", "sse-starlette"]
+
+[project.optional-dependencies]
+dev = ["pytest", "hypothesis"]
+
+[project.scripts]
+brain = "brain.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["brain*", "api*", "ingest*", "mcp_server*", "world*", "evals*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
