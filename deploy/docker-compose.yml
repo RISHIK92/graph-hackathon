@@ -1,0 +1,28 @@
+# Local and demo stack: pinned FalkorDB with a persistent volume (07 §2 option 1), API, MCP (HTTP), UI.
+services:
+  falkordb:
+    image: falkordb/falkordb-server:6.0.1      # the tested pin; 4.22.0 is the fallback (README A46)
+    ports: ["6379:6379"]
+    volumes: ["falkor-data:/var/lib/falkordb/data"]
+  api:
+    build: { context: .., dockerfile: deploy/Dockerfile.api }
+    env_file: ../.env
+    environment:
+      FALKOR_HOST: falkordb
+      FALKOR_PORT: "6379"
+      BRAIN_SCHEDULED_RESET: "on"
+    depends_on: [falkordb]
+    ports: ["8000:8000"]
+  mcp:
+    build: { context: .., dockerfile: deploy/Dockerfile.api }
+    command: ["python", "-m", "mcp_server.server", "--http", "--port", "8765"]
+    env_file: ../.env
+    environment: { FALKOR_HOST: falkordb, FALKOR_PORT: "6379" }
+    depends_on: [falkordb]
+    ports: ["8765:8765"]
+  ui:
+    build: { context: .., dockerfile: deploy/Dockerfile.ui }
+    depends_on: [api]
+    ports: ["3000:3000"]
+volumes:
+  falkor-data:
