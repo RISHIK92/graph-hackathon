@@ -1,0 +1,18 @@
+[
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_9ebf485ae0",
+  "steps": 24,
+  "questions": 5,
+  "refused": {},
+  "seconds": 8.3
+ },
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_97d170e155",
+  "steps": 0,
+  "questions": 5,
+  "refused": {},
+  "seconds": 8.6
+ }
+]
