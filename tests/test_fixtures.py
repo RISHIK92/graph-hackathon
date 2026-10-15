@@ -205,11 +205,11 @@ def test_fx_r1_s5_confirm_undo_reconfirm_distinct_ids_and_past_reads(world):
 def test_fx_r1_s5_proposal_shows_confirmed_then_proposed_then_confirmed(world):
     g, now, t0, Pid, F30, F50 = _run_s5(world)
     h = history_facts(g, now, "ticket:rds-42", "ASSIGNED_TO", T=t0 + 35, V=t0 + 35)
-    assert h[Pid]["confirmed_by"] == {"assertion_id": F30}                           # P shows confirmed
+    assert h[Pid]["confirmed_by"]["assertion_id"] == F30                           # P shows confirmed
     h = history_facts(g, now, "ticket:rds-42", "ASSIGNED_TO", T=t0 + 45, V=t0 + 45)
     assert "confirmed_by" not in h[Pid]                                                # P shows proposed
     h = history_facts(g, now, "ticket:rds-42", "ASSIGNED_TO", T=t0 + 55, V=t0 + 55)
-    assert h[Pid]["confirmed_by"] == {"assertion_id": F50}                           # P shows confirmed
+    assert h[Pid]["confirmed_by"]["assertion_id"] == F50                           # P shows confirmed
 
 
 # FX-R1-S6: a later structured statement overrides a confirmation (L5)
@@ -674,7 +674,7 @@ def test_fx_r2_s9_withdraw_then_undo_confirmation(world):
     now = clock.tick()
     h = history_facts(g, now, "ticket:rds-42", "ASSIGNED_TO")
     assert h[X]["status"] == "proposed" and status_of(g, N) == "current"
-    assert h[X]["confirmed_by"] == {"assertion_id": N}                                       # confirmed, not pending
+    assert h[X]["confirmed_by"]["assertion_id"] == N                                       # confirmed, not pending
     acts.undo_action(actor("person:eve"), r["action_id"])                                      # undo R
     assert status_of(g, X) == "retracted" and status_of(g, N) == "current"
     assert g.ro("MATCH (ac:Action {id:$id}) RETURN ac.status AS s", {"id": r["action_id"]})[0]["s"] == "undone"

@@ -1,6 +1,6 @@
 "use client";
 
-import { chainLabel, factStatus, fmtDate, statusTone } from "@/lib/format";
+import { approvedText, chainLabel, factStatus, fmtDate, statusTone } from "@/lib/format";
 import { useOpenMode, useStore } from "@/lib/store";
 import type { Pack } from "@/lib/types";
 import { ActionChip, FactRow } from "./Chips";
@@ -29,7 +29,7 @@ export function HistoryTimeline({ pack }: { pack: Pack }) {
                   <div>
                     <FactRow fact={f} spans={it.spans} />
                     {f.overruled_by && <div className="sub">Overruled: the other side was confirmed {fmtDate(f.overruled_by.confirmed_at)}.</div>}
-                    {f.confirmed_by && <div className="sub">Confirmed. <button className="link-btn" onClick={() => f.action_id && openAction(f.action_id, mode)}>View confirmation</button></div>}
+                    {f.confirmed_by && <div className="sub">{approvedText(f.confirmed_by)}{f.confirmed_by.action_id && <> <button className="link-btn" onClick={() => f.confirmed_by?.action_id && openAction(f.confirmed_by.action_id, mode)}>View confirmation</button></>}</div>}
                   </div>
                 </div>
               );

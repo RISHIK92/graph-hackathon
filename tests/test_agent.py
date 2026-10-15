@@ -489,3 +489,30 @@ def test_llm_draft_cannot_answer_about_an_unknown_name(world, monkeypatch):
     ev = run(agent, s, "Who owns Orbit Relay?")
     assert any(e["event"] == "tool_result" and e["items"] for e in ev if e.get("name") == "search_spans")
     assert answer_of(ev)["abstained"]
+
+
+def test_confirmed_proposals_are_resolved_not_pending(world):
+    """B3: once confirmed, a proposal names its approver and leaves the answer prose; a pending question
+    then says nothing is pending."""
+    g, clock = world["g"], world["clock"]
+    _decision_world(world)
+    acts = Actions(g, clock)
+    r = acts.route_to_owner(Actor("person:eve"), ticket_id="ticket:rds-42")
+    d = acts.draft_adr_supersession(Actor("person:eve"), "decision:adr-002", "move Ledger to CockroachDB")
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    lead = answer_of(run(agent, s, "Is anything pending for ADR-002?"))["assembled"]["lead"]
+    assert lead.startswith(f"Yes, {len(d['proposals'])} proposals: ") and "Waiting on " in lead, lead
+    acts.confirm_fact(Actor("person:priya"), action_id=r["action_id"])
+    acts.confirm_fact(Actor("person:priya"), action_id=d["action_id"])
+    clock.tick()
+    ans = answer_of(run(agent, s, "Why did you route RDS-42 to Priya?"))
+    assert not any("pending confirmation" in l["text"] for l in ans["assembled"]["lines"])
+    prop = next(f for p in ans["packs"].values() for it in p["items"] for f in it["facts"]
+                if f["assertion_id"] == r["proposal"])
+    assert prop["confirmed_by"]["by"] == "Priya Raman" and prop["confirmed_by"]["at"] == clock() - 1
+    ans = answer_of(run(agent, s, "Is anything pending for ADR-002?"))
+    assert ans["assembled"]["lead"] == "Nothing is pending."
+    assert answer_of(run(agent, s, "Why was ADR-001 superseded?"))["assembled"]["lead"] != "Nothing is pending."
+    assert not any("pending confirmation" in l["text"] for l in ans["assembled"]["lines"])

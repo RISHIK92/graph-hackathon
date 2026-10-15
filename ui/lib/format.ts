@@ -13,6 +13,11 @@ export function fmtDate(ms: number | null | undefined): string {
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
+/** B3: a confirmed proposal is resolved: "Approved by Priya Raman, 14 Oct 2026". */
+export function approvedText(c: NonNullable<Fact["confirmed_by"]>): string {
+  return `Approved${c.by ? ` by ${c.by}` : ""}${c.at ? `, ${fmtDate(c.at)}` : ""}.`;
+}
+
 /** "12 Mar 2026, 15:07 UTC" */
 export function fmtDateTime(ms: number | null | undefined): string {
   if (!ms) return "?";

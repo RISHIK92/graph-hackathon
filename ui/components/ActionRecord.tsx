@@ -4,7 +4,7 @@ import { ArrowUpRight, FileText, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { qs } from "@/lib/api";
-import { actionKindLabel, fmtDateTime } from "@/lib/format";
+import { actionKindLabel, approvedText, fmtDateTime } from "@/lib/format";
 import { useApi, useOpenMode, useStore } from "@/lib/store";
 import type { ActionSummary, ActionView, Fact, Pack } from "@/lib/types";
 import { EligibilityBadge, FactRow, PackContext } from "./Chips";
@@ -113,7 +113,12 @@ export function ActionRecord({ id, inPage }: { id: string; inPage?: boolean }) {
         <section className="inspector-section">
           <span className="t-label">Produced</span>
           {produced.length ? (
-            <div className="facts facts-host">{produced.map((f: Fact) => <FactRow key={f.assertion_id} fact={f} spans={item?.spans} />)}</div>
+            <div className="facts facts-host">{produced.map((f: Fact) => (
+              <div key={f.assertion_id}>
+                <FactRow fact={f} spans={item?.spans} />
+                {f.confirmed_by && <div className="sub">{approvedText(f.confirmed_by)}</div>}
+              </div>
+            ))}</div>
           ) : <Placeholder>No new facts.</Placeholder>}
           {canConfirm && <ConfirmControl actionId={id} label="Confirm proposal" what={me.summary} />}
         </section>

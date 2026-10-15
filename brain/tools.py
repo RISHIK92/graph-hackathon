@@ -201,7 +201,11 @@ def facts(ctx: Ctx, aids: list[str], with_disputes: bool = True) -> list[dict]:
             if links:
                 f["action_id"] = (links[0]["producers"] or [""])[0]
                 if links[0]["confirmed_by"]:
-                    f["confirmed_by"] = {"assertion_id": links[0]["confirmed_by"][0]}
+                    cid = links[0]["confirmed_by"][0]
+                    by = ctx.q("withdrawn_by", {"id": cid})
+                    ac = action_summary(ctx, by[0]["ac"]) if by else {}
+                    f["confirmed_by"] = {"assertion_id": cid, "action_id": ac.get("action_id"),
+                                         "by": (ac.get("actor") or {}).get("name"), "at": ac.get("recorded_at")}
         p = registry.get(a["predicate"], a["qualifier"] or "")
         run = view["run_of"].get(aid)
         if with_disputes and p.functional and f["status"] == "current" and run:

@@ -19,7 +19,7 @@ export interface Fact {
   recorded_at?: number;
   open_disputes: string[];
   action_id?: string;
-  confirmed_by?: { assertion_id: string };
+  confirmed_by?: { assertion_id: string; action_id?: string | null; by?: string | null; at?: number | null };
   overruled_by?: { confirmed_at: number; run_id: string };
 }
 

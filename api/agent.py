@@ -162,7 +162,7 @@ class Agent:
                  "assembled": assemble(ver["kept"], ctx.packs, answer.get("explanation", "")),
                  "packs": {pid: packs[pid] for pid in packs}}
         final["assembled"]["lead"] = lead_sentence(plan["intent"], ver["kept"], packs, ctx.as_of, lambda a: self._settlers(s, a),
-                                                   self._now_statement)
+                                                   self._now_statement, text)
         if ver["abstained"]:
             final["nearest"] = [it.get("path") for p in packs.values() for it in p["items"] if it.get("path")][:3]
             final["missing"] = gap or missing(plan, text)
@@ -319,8 +319,8 @@ class Agent:
         extra = [c for c in base["claims"] if c.get("assertion_ids") and not set(c["assertion_ids"]) & have]
         for i, c in enumerate(extra):
             c["claim_id"] = f"d{i + 1}"
-        return {"claims": relevant_claims(plan, llm["claims"] + extra), "explanation": llm.get("explanation", ""),
-                "drafted": "llm"}
+        return {"claims": unresolved(relevant_claims(plan, llm["claims"] + extra), packs),
+                "explanation": llm.get("explanation", ""), "drafted": "llm"}
 
     def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None,
                    timeout: float | None = None) -> dict:
@@ -664,6 +664,12 @@ _INTENT_PREDS = {"ownership": {"OWNS", "LEADS", "ASSIGNED_TO", "PART_OF", "MEMBE
                  "impact": {"DEPENDS_ON", "OWNS", "LEADS", "PART_OF"}}
 
 
+def unresolved(claims: list[dict], packs: dict[str, dict]) -> list[dict]:
+    """B3: a confirmed proposal is resolved; its confirmation is the current fact, so it leaves the prose."""
+    done = {f["assertion_id"] for p in packs.values() for it in p["items"] for f in it["facts"] if f.get("confirmed_by")}
+    return [c for c in claims if not set(c.get("assertion_ids") or []) & done]
+
+
 def relevant_claims(plan: dict, claims: list[dict]) -> list[dict]:
     keep = _INTENT_PREDS.get(plan.get("intent", ""))
     if not keep:
@@ -679,10 +685,19 @@ _KIND = {"catalog": "catalogue", "meeting": "meeting note", "adr": "ADR", "chat_
 
 
 def lead_sentence(intent: str, kept: list[dict], packs: dict[str, dict], as_of: int | None, settlers,
-                  now_statement) -> str:
+                  now_statement, question: str = "") -> str:
     """The fixed first sentence for disputes and past belief (item 18 fix 5; the item 16 M4/M11 wording),
     built from verified claims only. Other answers have none ("")."""
     ix = index_packs(packs)
+    if intent == "decision_trace" and re.search(r"pending|\bdrafts?\b|propos", question.lower()):
+        props = list(dict.fromkeys(a for c in kept if c.get("tense") == "proposed" for a in c["assertion_ids"]
+                                   if ix.facts.get(a, {}).get("status") == "proposed"))
+        if not props:
+            return "Nothing is pending."
+        who = settlers(props[0])
+        return (f"Yes, {len(props)} proposal{'s' if len(props) > 1 else ''}: "
+                + "; ".join(ix.facts[a]["statement"] for a in props) + "."
+                + (f" Waiting on {' or '.join(who)}." if who else ""))
 
     def kind(aid: str) -> str:
         k = next((ix.spans[s]["kind"] for s in sorted(ix.fact_spans.get(aid, ())) if s in ix.spans), "")
@@ -835,7 +850,7 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                         add_fact_claim(it, f, "current")
                 elif st == "superseded" and tool in ("get_history", "explain_action", "trace_decision", "get_owner"):
                     add_fact_claim(it, f, "historical")
-                elif st == "proposed":
+                elif st == "proposed" and not f.get("confirmed_by"):   # a confirmed proposal is resolved (B3)
                     add_fact_claim(it, f, "proposed")
                 elif st == "disputed" and tool == "get_history":
                     add_fact_claim(it, f, "current", True)
