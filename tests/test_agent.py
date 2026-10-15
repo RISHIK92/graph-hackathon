@@ -283,3 +283,13 @@ def test_counting_answers_keep_the_tool_sentence_with_an_llm(world, monkeypatch)
     ans = answer_of(run(agent, s, "How many systems does Payments own?"))
     assert [l["text"] for l in ans["assembled"]["lines"]] == ["Payments owns 2 systems: Checkout and Ledger."]
     assert not called
+
+
+def test_primary_team_is_a_modelled_question(world):
+    """A person's primary team is MEMBER_OF {primary}: it must be answered, not refused as an unmodelled attribute."""
+    _counting_world(world)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "What is Priya Raman's primary team today?"))
+    assert not ans["abstained"] and not ans.get("missing")
+    assert any("Payments" in l["text"] for l in ans["assembled"]["lines"])

@@ -505,7 +505,7 @@ _VOCAB = set("own owns owned owner owners ownership responsible lead leads leade
              "dependent break breaks broken down outage outages fail fails failure affected impact tell notify assigned assignee assign ticket tickets affect affects decision "
              "decisions decided decide adr replace replaces replaced supersede superseded status state work works "
              "working stale doc docs document documents path connected related history changed route routed know "
-             "knows expert experts ask".split())
+             "knows expert experts ask primary belong belongs membership".split())
 _NOT_NAMES = set("January February March April May June July August September October November December Monday "
                  "Tuesday Wednesday Thursday Friday Saturday Sunday".split())
 _RECORDS = "It records ownership, leads, teams, projects, dependencies, tickets and decisions."
