@@ -516,3 +516,22 @@ def test_confirmed_proposals_are_resolved_not_pending(world):
     assert ans["assembled"]["lead"] == "Nothing is pending."
     assert answer_of(run(agent, s, "Why was ADR-001 superseded?"))["assembled"]["lead"] != "Nothing is pending."
     assert not any("pending confirmation" in l["text"] for l in ans["assembled"]["lines"])
+
+
+def test_draft_adr_card_says_what_was_drafted_and_who_approves(world):
+    """B1: the draft gets the next ADR number and the requested title, and the action event carries one
+    sentence naming it, what it replaces and who must approve."""
+    g, wp, clock = world["g"], world["wp"], world["clock"]
+    _fact(wp, "HAS_STATUS", "decision:adr-001", "", 1, "sp7", value="accepted")
+    _fact(wp, "AFFECTS", "decision:adr-001", "system:ledger", 1, "sp7")
+    _fact(wp, "DECIDED_BY", "decision:adr-001", "person:priya", 1, "sp7")
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    ev = run(agent, s, "Draft an ADR superseding ADR-001: move Ledger to CockroachDB for multi-region writes")
+    act = next(e for e in ev if e["event"] == "action")
+    assert act["summary"] == ("Drafted ADR-002: Move Ledger to CockroachDB for multi-region writes (replaces ADR-001). "
+                              "Awaiting approval from Priya Raman (ADR-001 deciders).")
+    d = act["result"]["decision"]
+    assert g.ro("MATCH (d:Decision {id:$d}) RETURN d.name AS n, d.title AS t", {"d": d}) == \
+        [{"n": "ADR-002", "t": "Move Ledger to CockroachDB for multi-region writes"}]

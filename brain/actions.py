@@ -6,6 +6,7 @@ auditable.
 """
 from __future__ import annotations
 
+import re
 import threading
 import uuid
 from dataclasses import dataclass, field
@@ -670,18 +671,22 @@ class Actions:
             raise Refused("a draft needs at least one real rationale span (A55)")
         num = status[0]["n"]
         new_id = "decision:draft-" + ids._h(decision_id, now, actor.request_id)[:8]
-        new_name = f"Draft superseding {num}"
+        # B1: the next real ADR number and the requested change as its title, not "Draft superseding ADR-n"
+        taken = [int(m.group(1)) for n in names.values() if (m := re.fullmatch(r"ADR-(\d+)", n or ""))]
+        new_name = f"ADR-{max(taken, default=0) + 1:03d}"
+        title = reason.strip().rstrip(".") or f"Supersede {num}"
+        title = title[0].upper() + title[1:]
         wp = WritePath(self.g, self.clock, {**names, new_id: new_name})
         plan = wp.new_plan(now)
-        props = self._action_props(actor, "draft_adr_supersession", now, f"Drafted {new_name}: {reason}")
+        props = self._action_props(actor, "draft_adr_supersession", now, f"Drafted {new_name}: {title} (replaces {num})")
         acid = props["id"]
         plan.new_entities.append({"label": "Decision", "props": {
             "id": new_id, "name": new_name, "aliases": [new_name.lower()], "aliases_text": new_name.lower(),
-            "description": reason, "number": "", "title": reason, "decided_at": now, "created_from": acid,
+            "description": reason, "number": new_name, "title": title, "decided_at": now, "created_from": acid,
             "status": "", "status_aid": ""}})
         lines = [f"{new_name} is accepted.", f"{num} is superseded.", f"{new_name} replaces {num}."]
         lines += [f"{new_name} affects {a['name']}." for a in affects]
-        lines.append(f"Context: {reason}")
+        lines.append(f"Context: {title}")
         sid, spans = self._draft_source(plan, acid, f"Draft ADR: {reason}", lines, now, actor.person_id)
         cands = [Candidate("HAS_STATUS", new_id, object_value="accepted"),
                  Candidate("HAS_STATUS", decision_id, object_value="superseded"),
@@ -700,7 +705,12 @@ class Actions:
         plan.session_id = actor.session_source_id
         self._run(wp, plan, actor, "draft_adr_supersession", [decision_id])
         self._notify_pending(plan, plan.produced_assertions)
-        return {"action_id": acid, "decision": new_id, "proposals": plan.produced_assertions}
+        pv = self.confirm_preview(actor.person_id, action_id=acid)
+        who = " or ".join(dict.fromkeys(e["name"] for e in pv["eligible"] if e.get("name")))
+        summary = f"Drafted {new_name}: {title} (replaces {num})." + (
+            f" Awaiting approval from {who} ({'any team lead' if pv['fallback'] else num + ' deciders'})." if who else "")
+        return {"action_id": acid, "decision": new_id, "name": new_name, "title": title,
+                "proposals": plan.produced_assertions, "summary": summary}
 
     # flag_stale_docs (A45, A75)
     def stale_detection(self, entity_id: str | None = None) -> list[dict]:

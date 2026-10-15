@@ -379,6 +379,9 @@ function ActionCard({ e }: { e: StreamEvent }) {
       </Notice>
     );
   }
+  // B1: the draft's proposed facts (status, replacement, affects), from the action's own pack
+  const proposals = new Set((res.proposals || []) as string[]);
+  const drafted = ((e.pack as Pack | undefined)?.items || []).flatMap((it) => it.facts).filter((f) => proposals.has(f.assertion_id));
   const eligible = (res.eligible || res.who_can_confirm || []) as { person_id: string; name: string; rule: string; path: string; aids?: string[] }[];
   return (
     <div className="action-card">
@@ -396,6 +399,9 @@ function ActionCard({ e }: { e: StreamEvent }) {
         </dl>
         {kind === "learn_fact" && res.status === "disputed" && (
           <Notice tone="warning" title="Recorded at chat rank as a challenger">It disputes the recorded fact until someone eligible confirms one side.</Notice>
+        )}
+        {kind === "draft_adr_supersession" && drafted.length > 0 && (
+          <div className="facts facts-host">{drafted.map((f) => <FactRow key={f.assertion_id} fact={f} />)}</div>
         )}
         {eligible.length > 0 && <WhoCan people={eligible.map((p) => ({ ...p, path: p.path || "" }))} verb="confirm" />}
         {(kind === "route_to_owner" || kind === "draft_adr_supersession") && e.action_id ? (

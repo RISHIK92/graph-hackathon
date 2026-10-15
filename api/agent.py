@@ -375,7 +375,7 @@ class Agent:
                 dec = [e for e in ents if e.startswith("decision:")]
                 if not dec:
                     raise Refused("name the ADR to supersede")
-                res = acts.draft_adr_supersession(actor, dec[0], text)
+                res = acts.draft_adr_supersession(actor, dec[0], text.split(":", 1)[1] if ":" in text else text)
             elif want == "flag_stale_docs":
                 res = acts.flag_stale_docs(actor, ents[0] if ents else None)
             elif want == "learn_fact":
@@ -402,7 +402,7 @@ class Agent:
         aid = res.get("action_id")
         pack = run_tool(ctx, "explain_action", {"action_id": aid}) if aid else None
         yield {"event": "action", "kind": want, "status": "done", "result": res, "action_id": aid,
-               "pack": pack, "undo_handle": aid}
+               "pack": pack, "undo_handle": aid, "summary": res.get("summary", "")}
 
 
 _TENSE = {"present": "current", "now": "current", "current": "current", "past": "historical",
