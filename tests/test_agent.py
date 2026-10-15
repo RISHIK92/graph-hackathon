@@ -664,3 +664,29 @@ def test_rendered_answers_carry_no_raw_ids(fx):  # noqa: F811
             assert not RAW.search(text), (q, text)
             seen.append(text)
     assert any("Priya Raman commented" in x for x in seen)
+
+
+def test_tell_me_about_gives_an_entity_summary(world):
+    """M9: "Tell me about X" is an entity summary (owner and lead, what it depends on, decisions), not a
+    pile of quotes; the lead names X and its owner."""
+    _decision_world(world)
+    assert heuristic_plan("Tell me about Ledger")["intent"] == "summary"
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ev = run(agent, s, "Tell me about Ledger")
+    tools = [e["name"] for e in ev if e["event"] == "tool_call"]
+    assert "get_owner" in tools and "trace_decision" in tools and "search_spans" not in tools
+    a = answer_of(ev)["assembled"]
+    assert a["lead"].startswith("Ledger: owned by Payments, led by Priya Raman"), a["lead"]
+    assert "ADR-002" in a["lead"]
+    assert not any(l["text"].startswith("rationale") or "because" in l["text"] for l in a["lines"])
+
+
+def test_front_matter_is_never_quoted(world):
+    """M9: a document's YAML front matter is metadata, not a statement to quote."""
+    g = world["g"]
+    make_span(g, "sp_fm", "---\nnumber: ADR-009\ntitle: Ledger cutover plan\ndeciders: [person:priya]\n---", 1)
+    agent = Agent(g, world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    lines = answer_of(run(agent, s, "ledger cutover plan"))["assembled"]["lines"]
+    assert not any("---" in l["text"] or "number:" in l["text"] for l in lines), lines

@@ -36,7 +36,7 @@ export function EntityActions({ data, id, inPage }: { data: EntityPanelData | nu
   const name = data?.name || id;
   return (
     <div className="row">
-      <Button size="sm" icon={MessageSquare} onClick={() => router.push(`/ask${qs({ q: `Tell me about ${name}` })}`)}>Ask about this</Button>
+      <Button size="sm" icon={MessageSquare} onClick={() => router.push(`/ask${qs({ q: `Tell me about ${name}`, send: "1" })}`)}>Ask about this</Button>
       {!inPage && <Button size="sm" variant="ghost" icon={ArrowUpRight} onClick={() => { closeInspector(); router.push(`/e/${encodeURIComponent(id)}`); }}>Open page</Button>}
     </div>
   );

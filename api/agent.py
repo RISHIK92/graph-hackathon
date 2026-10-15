@@ -26,7 +26,7 @@ from .verifier import assemble, check_lead, index_packs, verify
 from brain.ids import now_ms
 
 INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "aggregate", "fact", "memory",
-           "action", "other"]
+           "summary", "action", "other"]
 
 
 @dataclass
@@ -242,6 +242,8 @@ class Agent:
         if people and re.search(r"which team|primary team|what team|team is .* on|on which team", low):
             calls.append(("get_history", {"entity_id": people[0], "predicate": "MEMBER_OF", "current_only": True}))
             return calls
+        if intent == "summary" and tgt:
+            return calls + _summary_calls(tgt)
         if intent == "ownership" and tgt:
             if tgt.startswith("ticket:"):
                 calls.append(("get_history", {"entity_id": tgt, "predicate": "ASSIGNED_TO"}))
@@ -527,6 +529,22 @@ REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first veri
 
 # Offline planner and drafter
 
+def _summary_calls(x: str) -> list[tuple[str, dict]]:
+    """M9: what an entity summary reads, by kind: owner and lead, dependencies, decisions, memberships."""
+    kind = x.split(":")[0]
+    current = {"current_only": True}
+    if kind in ("system", "project"):
+        return [("get_owner", {"entity_id": x}), ("get_history", {"entity_id": x, "predicate": "DEPENDS_ON", **current}),
+                ("trace_decision", {"entity_id": x})]
+    if kind == "team":
+        return [("get_history", {"entity_id": x, "predicate": "LEADS", **current})]
+    if kind == "person":
+        return [("get_history", {"entity_id": x, "predicate": p, **current}) for p in ("MEMBER_OF", "LEADS")]
+    if kind == "decision":
+        return [("trace_decision", {"decision_id": x})]
+    return [("get_history", {"entity_id": x, "predicate": "ASSIGNED_TO", **current})]
+
+
 def heuristic_plan(text: str) -> dict:
     t = text.lower().strip()
     want = "none"
@@ -550,6 +568,8 @@ def heuristic_plan(text: str) -> dict:
     elif re.search(r"\b(my|the) (last|previous|earlier|first) (question|message)|what did i (ask|say|tell)|"
                    r"earlier in (this|the|our) (session|conversation|chat)|remind me what i", t):
         intent = "memory"    # conversation recall: answered from the session's own turns (item 18)
+    elif re.search(r"^(tell me about|what do you know about|give me an overview of|overview of|summari[sz]e)\b", t):
+        intent = "summary"   # M9: an entity summary (Graph "Ask about it", entity panels)
     elif re.search(r"^how many\b|^which \w+ (has|have) the (most|largest|biggest)\b", t):
         intent = "aggregate"
     elif re.search(r"what breaks|goes down|outage|impact|who do i tell|who should i tell|blast radius", t):
@@ -710,6 +730,11 @@ def aggregate_call(text: str, mentions: list[dict]) -> tuple[str, dict] | None:
                              "then": {"predicate": _pred(head), "direction": "in", "label": label}}
 
 
+def _front_matter(text: str) -> bool:
+    lines = [ln for ln in text.strip().splitlines() if ln.strip()]
+    return text.lstrip().startswith("---") or sum(bool(re.match(r"^[a-z_]+: ", ln)) for ln in lines) >= 2
+
+
 def _content(t: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+", t.lower()) if w not in _STOP and len(w) > 2}
 
@@ -717,6 +742,7 @@ def _content(t: str) -> set[str]:
 # Relations each intent asks about (item 18): other graph facts stay in the packs for the citation panel,
 # not in the prose. Intents not listed keep every claim.
 _INTENT_PREDS = {"ownership": {"OWNS", "LEADS", "ASSIGNED_TO", "PART_OF", "MEMBER_OF"},
+                 "summary": {"OWNS", "LEADS", "DEPENDS_ON", "PART_OF", "HAS_STATUS", "MEMBER_OF", "ASSIGNED_TO"},
                  "impact": {"DEPENDS_ON", "OWNS", "LEADS", "PART_OF"}}
 
 
@@ -806,6 +832,29 @@ def _names_list(xs: list[str]) -> str:
     return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
 
 
+def _summary_lead(plan: dict, graph: list, current: list, leads: dict) -> str:
+    """M9: "Ledger: owned by Payments, led by Priya Raman; depends on Aurora; decisions: ADR-007 (accepted)."."""
+    x = next((m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")), "")
+    if not x:
+        return ""
+    parts = []
+    own = next((f for _, f in current if f["predicate"] == "OWNS"), None)
+    if own:
+        team = own["statement"].split(" owns ", 1)[0]
+        lead = leads.get(own["subject_id"])
+        parts.append(f"owned by {team}" + (f", led by {lead['statement'].split(' leads ', 1)[0]}" if lead else ""))
+    deps = [f["statement"].split(" depends on ", 1)[1] for _, f in current if f["predicate"] == "DEPENDS_ON"
+            and f["statement"].startswith(x + " ")]
+    if deps:
+        parts.append(f"depends on {_names_list(deps)}")
+    dec = [f["statement"].replace(" is ", " (", 1) + ")" for _, f in current if f["predicate"] == "HAS_STATUS"]
+    if dec:
+        parts.append("decisions: " + ", ".join(dict.fromkeys(dec)))
+    if any(c.get("disputed") for c, _ in graph):
+        parts.append("an open dispute needs review")
+    return f"{x}: " + "; ".join(parts) + "." if parts else ""
+
+
 def _intent_lead(plan: dict, kept: list[dict], ix) -> str:
     """M4: the first sentence answers the asked intent from verified claims; "" when no shape fits."""
     intent = plan.get("intent", "")
@@ -825,6 +874,8 @@ def _intent_lead(plan: dict, kept: list[dict], ix) -> str:
             return (f"Route {ticket} to {who}, because {first['statement']}"
                     + (f" and {lead['statement']}." if lead else ".")) if ticket else ""
         return first["statement"] + "." + (f" {lead['statement']}." if lead else "")
+    if intent == "summary":
+        return _summary_lead(plan, graph, current, leads)
     if intent == "impact":
         deps = list(dict.fromkeys(f["statement"].split(" depends on ", 1)[0] for _, f in graph if f["predicate"] == "DEPENDS_ON"))
         tell = list(dict.fromkeys(f["statement"].split(" leads ", 1)[0] for f in leads.values()))
@@ -960,7 +1011,9 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
         for it in p["items"]:
             if it["label"] == "text_only" and tool in ("search_spans", "recall_session", "trace_decision") and it["spans"] \
                     and not it.get("rationale"):
-                s = it["spans"][0]
+                s = next((x for x in it["spans"] if not _front_matter(x["text"])), None)
+                if s is None:   # M9: a document's YAML front matter is metadata, never a quote
+                    continue
                 if tool not in ("trace_decision", "recall_session") and len(qwords & _content(s["text"])) < min(2, len(qwords)):
                     continue
                 if tool == "trace_decision" or len([c for c in claims if c["label"] == "text_only"]) < 3:
@@ -987,13 +1040,13 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                     add_fact_claim(it, f, "proposed")
                 elif st == "disputed" and tool == "get_history":
                     add_fact_claim(it, f, "current", True)
-    decision = _decision_claims(packs, question, claims)
+    decision = _decision_claims(packs, question, claims) if plan.get("intent") == "decision_trace" else None
     if decision is not None:
         return {"claims": decision, "explanation": ""}
     # decision rationale (MOTIVATED_BY spans) and expertise signals: quoted, text-only claims
     for p in packs.values():
         for it in p["items"]:
-            if p["tool"] == "trace_decision":
+            if p["tool"] == "trace_decision" and plan.get("intent") != "summary":
                 for sp in [x for x in it["spans"] if x.get("section") and not x.get("proposed")][:2]:
                     claims.append({"claim_id": f"c{len(claims) + 1}", "text": sp["text"][:240], "tense": "current",
                                    "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [],

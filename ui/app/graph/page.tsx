@@ -62,7 +62,7 @@ function GraphInner() {
   const askAbout = () => {
     const ns = selected.map((id) => names.get(id) || id);
     const qq = ns.length >= 2 ? `How are ${ns[0]} and ${ns[1]} connected?` : `Tell me about ${ns[0]}`;
-    router.push(`/ask${qs({ q: qq })}`);
+    router.push(`/ask${qs({ q: qq, send: "1" })}`);
   };
   const commitAsOf = (v: number) => {
     const next = v >= hi - 86400000 ? null : v;
