@@ -375,3 +375,24 @@ def test_decision_named_in_the_question_leads(world):
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "What was the reasoning behind ADR-001?"))
     assert ans["assembled"]["lines"][0]["text"].startswith("Run Ledger on Postgres (ADR-001, 1 Jan 1970), because")
+
+
+def test_decision_state_questions_answer_with_the_status_not_the_rationale(world):
+    """Item 18 fix 4: "What is the status of ADR-n?" asks for the status; the "because" lead is for why questions."""
+    _decision_world(world)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    lines = [l["text"] for l in answer_of(run(agent, s, "What is the status of ADR-002?"))["assembled"]["lines"]]
+    assert lines[0] == "ADR-002 is accepted" and not any("“" in l for l in lines), lines
+
+
+def test_claims_are_kept_only_for_what_the_intent_asks():
+    """Item 18 fix 4: graph claims whose relation the intent doesn't ask about stay in the packs, not the prose."""
+    from api.agent import relevant_claims
+
+    def c(i, pred, label="graph"):
+        return {"claim_id": f"c{i}", "label": label, "tense": "current", "fact": {"predicate": pred}}
+    claims = [c(1, "OWNS"), c(2, "LEADS"), c(3, "DEPENDS_ON"), c(4, "AFFECTS"), c(5, "", "text_only")]
+    assert [x["claim_id"] for x in relevant_claims({"intent": "ownership"}, claims)] == ["c1", "c2", "c5"]
+    assert [x["claim_id"] for x in relevant_claims({"intent": "impact"}, claims)] == ["c1", "c2", "c3", "c5"]
+    assert relevant_claims({"intent": "fact"}, claims) == claims

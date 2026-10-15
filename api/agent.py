@@ -276,9 +276,10 @@ class Agent:
     # draft
     def draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None = None) -> dict:
         base = {**deterministic_draft(plan, packs, text), "drafted": "deterministic"}
-        # Recall quotes the session's turns, and a count is the tool's own V10-checked sentence: no LLM rewrite.
+        # Recall quotes the session's turns, a count is the tool's own V10-checked sentence, and a decision
+        # trace has a fixed shape (the cited "because" first): no LLM rewrite.
         if not providers.llm_available() or plan["intent"] == "memory" or \
-                any(it["label"] == "aggregate" for p in packs.values() for it in p["items"]):
+                any(it["label"] == "aggregate" or it.get("rationale") for p in packs.values() for it in p["items"]):
             return base
         try:
             llm = self._llm_draft(text, plan, packs, errors)
@@ -293,13 +294,8 @@ class Agent:
         extra = [c for c in base["claims"] if c.get("assertion_ids") and not set(c["assertion_ids"]) & have]
         for i, c in enumerate(extra):
             c["claim_id"] = f"d{i + 1}"
-        # The fixed lead (a decision's cited "because") stays first even when the LLM leaves it out (item 18).
-        quoted = {s for c in kept for s in c.get("span_ids", [])}
-        lead = [c for c in base["claims"] if c.get("label") == "text_only" and c.get("context")
-                and not set(c["span_ids"]) & quoted]
-        for i, c in enumerate(lead):
-            c["claim_id"] = f"l{i + 1}"
-        return {"claims": lead + llm["claims"] + extra, "explanation": llm.get("explanation", ""), "drafted": "llm"}
+        return {"claims": relevant_claims(plan, llm["claims"] + extra), "explanation": llm.get("explanation", ""),
+                "drafted": "llm"}
 
     def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None) -> dict:
         slim = []
@@ -632,6 +628,19 @@ def _content(t: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+", t.lower()) if w not in _STOP and len(w) > 2}
 
 
+# Relations each intent asks about (item 18): other graph facts stay in the packs for the citation panel,
+# not in the prose. Intents not listed keep every claim.
+_INTENT_PREDS = {"ownership": {"OWNS", "LEADS", "ASSIGNED_TO", "PART_OF", "MEMBER_OF"},
+                 "impact": {"DEPENDS_ON", "OWNS", "LEADS", "PART_OF"}}
+
+
+def relevant_claims(plan: dict, claims: list[dict]) -> list[dict]:
+    keep = _INTENT_PREDS.get(plan.get("intent", ""))
+    if not keep:
+        return claims
+    return [c for c in claims if c.get("label") != "graph" or (c.get("fact") or {}).get("predicate") in keep]
+
+
 def _day(ms: int) -> str:
     d = datetime.fromtimestamp(ms / 1000, timezone.utc)
     return f"{d.day} {d:%b %Y}"
@@ -657,13 +666,16 @@ def _decision_claims(packs: dict[str, dict], question: str, claims: list[dict]) 
     why = [{"text": sp["text"][:240], "tense": "current" if sp.get("live") else "historical", "label": "text_only",
             "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [], "quote": sp["text"][:240],
             "disputed": False, "context": f"{head}, because" if i == 0 else f"rationale ({sp['section']})"}
-           for i, sp in enumerate([s for s in lead["spans"] if not s.get("proposed")][:3])]
+           for i, sp in enumerate([s for s in lead["spans"] if not s.get("proposed")][:3])] \
+        if re.search(r"\bwhy\b|reason|rationale|based on|because|motivat|justif", low) else []
 
     def about(c: dict, pred: str) -> bool:
         f = c.get("fact") or {}
         return c["label"] == "graph" and c["tense"] != "proposed" and f.get("predicate") == pred \
             and d in (f.get("subject_id"), f.get("object_id"))
-    structural = [c for c in claims if about(c, "REPLACES")][:1]
+    # A why question gets the rationale; any other question about a decision asks for its state.
+    structural = [] if why else [c for c in claims if about(c, "HAS_STATUS")][:1]
+    structural += [c for c in claims if about(c, "REPLACES")][:1]
     structural += [c for c in claims if about(c, "DECIDED_BY")][:3 - len(structural)]
     proposed = [c for c in claims if c["tense"] == "proposed"]
     pending = proposed and re.search(r"pending|\bdrafts?\b|propos|supersed", question.lower())
@@ -771,4 +783,4 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
             if it.get("note") == "open dispute":
                 for f in it["facts"]:
                     add_fact_claim(it, f, "current", True)
-    return {"claims": claims, "explanation": ""}
+    return {"claims": relevant_claims(plan, claims), "explanation": ""}
