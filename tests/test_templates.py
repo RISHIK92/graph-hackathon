@@ -289,6 +289,7 @@ PARAMS = {
     "snap_node_count": lambda f: {"_graph": _snap(f)},
     "snap_owns": lambda f: {"_graph": _snap(f)},
     "snap_pagerank": lambda f: {"_graph": _snap(f)},
+    "snap_part_of": lambda f: {"_graph": _snap(f)},
     "snap_paths": lambda f: {"_graph": _snap(f), "a": "person:priya", "b": "system:ledger", "types": list(snapshot.EDGE_TYPES)},
     "snap_person_edges": lambda f: {"_graph": _snap(f), "id": "person:priya"},
     "snap_wcc": lambda f: {"_graph": _snap(f)},
@@ -528,6 +529,10 @@ def g_snap_leaders(f, rows):
 def g_snap_owns(f, rows):
     assert sorted((r["owner"], r["id"], r["aid"]) for r in rows) == sorted([
         ("team:payments", "system:ledger", f.ids["own"]), ("team:platform", "project:commerce", f.ids["own_proj"])])
+
+
+def g_snap_part_of(f, rows):
+    assert rows == [{"id": "system:ledger", "project": "project:commerce", "aid": f.ids["part"]}]
 
 
 def g_snap_paths(f, rows):

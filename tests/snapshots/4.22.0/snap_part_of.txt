@@ -1,0 +1,4 @@
+Results
+    Project
+        Conditional Traverse | (s)-[e:PART_OF]->(p:N)
+            Node By Label Scan | (s:N)

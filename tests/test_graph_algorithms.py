@@ -151,3 +151,22 @@ def test_ranking_at_an_earlier_date_keeps_every_rank(world):
     lead = ans["assembled"]["lead"]
     assert lead.startswith("Most depended-on systems as of 1 Feb 2026: 1. Vault"), lead
     assert old
+
+
+def test_gaps_flag_systems_whose_owning_team_has_no_lead_even_if_a_member_leads_elsewhere(world):
+    """Walk finding: a member of the leaderless team who leads another team must not hide the gap."""
+    g, wp, clock = world["g"], world["wp"], world["clock"]
+    store.upsert_entities(g, [{"id": "system:orphan", "name": "Orphan", "aliases": []},
+                              {"id": "team:nolead", "name": "Nolead", "aliases": []}])
+    make_span(g, "sp_nl", "nolead owns orphan", 1)
+    make_span(g, "sp_nm", "priya member of nolead", 1)
+    _fact(wp, "OWNS", "team:nolead", "system:orphan", 1, "sp_nl")
+    plan = wp.new_plan()
+    wp.add_candidate(plan, Candidate("MEMBER_OF", "person:priya", "team:nolead", valid_from=1, span_id="sp_nm",
+                                     quote_end=5, form="structured", source_id="src:test"))
+    wp.execute(plan)
+    clock.tick()
+    pack = run_tool(Ctx(g, now=clock()), "knowledge_gaps", {})
+    systems = next(it["aggregate"] for it in pack["items"] if "system" in it["aggregate"]["text"])
+    assert "Orphan" in {m["name"] for m in systems["members"]}
+    assert systems["text"].startswith("1 system with no owner who has a lead now: Orphan")

@@ -990,12 +990,23 @@ def knowledge_gaps(ctx: Ctx, as_of: int | None = None) -> dict:
     led = {r["team"] for r in sx.q("snap_leaders", {})}
     leaders = {r["person"] for r in sx.q("snap_leaders", {})}
     owns = {r["id"]: r for r in sx.q("snap_owns", {})}
+    part = {r["id"]: r for r in sx.q("snap_part_of", {})}
     has_lead = {r["c"] for r in comps if r["id"] in leaders}
-    systems = sorted((r for r in comps if "System" in r["labels"] and r["c"] not in has_lead), key=lambda r: r["name"])
+
+    def owner(x: str) -> dict | None:   # direct, else through the project it is part of
+        return owns.get(x) or (owns.get(part[x]["project"]) if x in part else None)
+
+    def gap(r: dict) -> bool:
+        o = owner(r["id"])
+        # unreachable from any lead (components), or owned by a team that has none (a member who leads
+        # another team puts a lead in the component, so the owner is checked directly as well)
+        return r["c"] not in has_lead or o is None or (o["owner"].startswith("team:") and o["owner"] not in led)
+    systems = sorted((r for r in comps if "System" in r["labels"] and gap(r)), key=lambda r: r["name"])
     teams = sorted((r for r in comps if "Team" in r["labels"] and r["id"] not in led), key=lambda r: r["name"])
     if systems:
+        cite = [o for o in (owner(s["id"]) for s in systems) if o]
         _aggregate_item(ctx, pb, len(systems), [{"id": s["id"], "name": s["name"]} for s in systems],
-                        [owns[s["id"]]["aid"] for s in systems if s["id"] in owns],
+                        [o["aid"] for o in cite] + [part[s["id"]]["aid"] for s in systems if s["id"] in part and not owns.get(s["id"])],
                         f"{len(systems)} system{'s' if len(systems) != 1 else ''} with no owner who has a lead "
                         f"{_when(ctx)}: " + _names([s["name"] for s in systems]) + ".")
     if teams:

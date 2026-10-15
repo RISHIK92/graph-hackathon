@@ -813,7 +813,8 @@ def relevant_claims(plan: dict, claims: list[dict]) -> list[dict]:
 
 
 _PRESENT = {"OWNS": " owns ", "LEADS": " leads ", "ASSIGNED_TO": " is assigned to ", "MEMBER_OF": " is a member of ",
-            "DEPENDS_ON": " depends on ", "PART_OF": " is part of "}
+            "DEPENDS_ON": " depends on ", "PART_OF": " is part of ", "WORKS_ON": " works on ", "AFFECTS": " affects ",
+            "DECIDED_BY": " was decided by ", "ABOUT": " is about "}
 _PAST = {"OWNS": " owned ", "LEADS": " led ", "ASSIGNED_TO": " was assigned to ", "MEMBER_OF": " was a member of ",
          "DEPENDS_ON": " depended on ", "PART_OF": " was part of "}
 _KIND = {"catalog": "catalogue", "meeting": "meeting note", "adr": "ADR", "chat_session": "chat"}
