@@ -966,14 +966,17 @@ def connection_between(ctx: Ctx, from_id: str, to_id: str, as_of: int | None = N
     return pb.build()
 
 
-def key_people(ctx: Ctx, as_of: int | None = None, k: int = 5) -> dict:
+def key_people(ctx: Ctx, as_of: int | None = None, k: int = 5, person_ids: list[str] | None = None) -> dict:
+    """person_ids: rank everyone but return only those people (item 20, experts who also bridge teams)."""
     sx = _snap(ctx, as_of)
     how = (f"Ranked by how many connections between people, teams and systems run through them, {_when(ctx)} "
            "(betweenness over ownership, leads, membership, dependencies, work and what they wrote)")
-    pb = PackBuilder(ctx, "key_people", {"as_of": ctx.as_of, "k": k, "method": how})
+    pb = PackBuilder(ctx, "key_people", {"as_of": ctx.as_of, "k": k, "person_ids": person_ids, "method": how})
     nodes = sx.q("snap_node_count", {})[0]["n"]
     ranked = [r for r in _ranked(sx.q("snap_betweenness", {"n": max(nodes, 1), "seed": 7})) if r["score"] > 0]
     for i, r in enumerate(ranked[:k], start=1):
+        if person_ids is not None and r["id"] not in person_ids:
+            continue
         edges = sx.q("snap_person_edges", {"id": r["id"]})
         aids = [a for e in edges for a in run_aids(ctx, e["aid"])]
         it = fact_item(ctx, pb, aids, None, 1.0 / i, "graph", f"#{i} connector", extra_disputes=False) if aids else None
@@ -1059,9 +1062,11 @@ register(Tool("connection_between", "read", connection_between,
               _s({"from_id": STR, "to_id": STR, "as_of": INT}, ["from_id", "to_id"]),
               "Up to three shortest connections (at most 4 hops, either direction) between two entities at as_of, "
               "each edge cited. For 'how is X connected to Y' and 'who can introduce me to ...'."))
-register(Tool("key_people", "read", key_people, _s({"as_of": INT, "k": INT}, []),
+register(Tool("key_people", "read", key_people,
+              _s({"as_of": INT, "k": INT, "person_ids": {"type": "array", "items": STR}}, []),
               "The people most connections between teams, people and systems run through at as_of (betweenness): "
-              "single points of failure. A ranking with each person's role facts, not a fact."))
+              "single points of failure. A ranking with each person's role facts, not a fact. person_ids keeps "
+              "only those people among the top k."))
 register(Tool("knowledge_gaps", "read", knowledge_gaps, _s({"as_of": INT}, []),
               "Systems with no owner who has a lead, and teams with no lead, at as_of."))
 register(Tool("query_graph", "read", query_graph, _s({"question": STR}, ["question"]),

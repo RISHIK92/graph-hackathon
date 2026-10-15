@@ -187,3 +187,27 @@ def test_impact_answers_say_how_depended_on_the_system_is(world):
     pack = run_tool(Ctx(world["g"], now=world["clock"]()), "critical_systems", {"focus_id": "system:checkout"})
     ranked = [it["ranking"] for it in pack["items"] if it.get("ranking")]
     assert [(r["rank"], r["name"]) for r in ranked] == [(2, "Checkout")] and pack["items"][0]["facts"]
+
+
+def test_who_to_ask_names_the_expert_who_bridges_teams(world):
+    """Item 20: "who should I ask" pairs the experts with key_people: an expert who is also a top connector gets
+    one line saying so, cited by their own edges; only the experts are ranked."""
+    _counting_world(world)
+    g, clock = world["g"], world["clock"]
+    for sid in ("sp_b1", "sp_b2"):
+        make_span(g, sid, "checkout retries are capped at three", 1)
+    store.add_mentions(g, [{"span_id": sid, "entity_id": "system:checkout", "start": 0, "end": 8, "method": "exact",
+                            "hedged": False} for sid in ("sp_b1", "sp_b2")])
+    store.add_authored_by(g, [{"span_id": sid, "person_id": "person:bob"} for sid in ("sp_b1", "sp_b2")])
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    ev = run(agent, s, "Who should I ask about Checkout?")
+    kp = next(e for e in ev if e["event"] == "tool_call" and e["name"] == "key_people")
+    assert set(kp["args"]["person_ids"]) >= {"person:bob", "person:priya"}
+    lead = answer_of(ev)["assembled"]["lead"]
+    assert lead.startswith("Ask "), lead
+    assert "Bob Okafor also knows Checkout and is the #1 connector between people, teams and systems now." in lead \
+        or "Bob Okafor is also the #1 connector between people, teams and systems now." in lead, lead
+    pack = run_tool(Ctx(g, now=clock()), "key_people", {"person_ids": ["person:priya", "person:bob"]})
+    assert [it["ranking"]["name"] for it in pack["items"] if it.get("ranking")] == ["Bob Okafor"]

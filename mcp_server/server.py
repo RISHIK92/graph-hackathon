@@ -111,10 +111,11 @@ def connection_between(from_id: str, to_id: str, as_of: int | None = None) -> st
     return _pack("connection_between", {"from_id": from_id, "to_id": to_id, "as_of": as_of})
 
 
-def key_people(as_of: int | None = None, k: int = 5) -> str:
+def key_people(as_of: int | None = None, k: int = 5, person_ids: list[str] | None = None) -> str:
     """The people most connections between teams, people and systems run through (betweenness): single
-    points of failure. A ranking with each person's role facts."""
-    return _pack("key_people", {"as_of": as_of, "k": k})
+    points of failure. A ranking with each person's role facts. person_ids keeps only those people among the
+    top k."""
+    return _pack("key_people", {"as_of": as_of, "k": k, "person_ids": person_ids})
 
 
 def knowledge_gaps(as_of: int | None = None) -> str:

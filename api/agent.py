@@ -120,6 +120,10 @@ class Agent:
         gap = unmodelled(plan, text) or stale_docs_refusal(plan)
         calls = [] if gap else self.tool_calls(plan, text, ctx, s)
         for name, args in calls[:6]:
+            if callable(args):   # arguments that depend on an earlier call's pack
+                args = args(ctx)
+                if args is None:
+                    continue
             q0 = len(ctx.queries)
             yield {"event": "tool_call", "name": name, "args": args}
             try:
@@ -261,6 +265,7 @@ class Agent:
                 calls.append(("get_owner", {"entity_id": tgt}))
         elif intent == "expertise" and tgt:
             calls.append(("find_experts", {"entity_id": tgt}))
+            calls.append(("key_people", _expert_ids))
         elif intent == "decision_trace":
             dec = [e for e in ents if e.startswith("decision:")]
             calls.append(("trace_decision", {"decision_id": dec[0]} if dec else {"entity_id": tgt}))
@@ -541,6 +546,8 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
         return "Ranked systems with PageRank over their dependencies, on a snapshot of the graph at the date"
     if name == "connection_between":
         return f"Found the shortest connections between {x} and {entity_name(args.get('to_id', ''))} (shortest paths)"
+    if name == "key_people" and args.get("person_ids"):
+        return "Checked which of these experts the most connections run through (betweenness) on a snapshot of the graph"
     if name == "key_people":
         return "Ranked people by how many connections run through them (betweenness) on a snapshot of the graph"
     if name == "knowledge_gaps":
@@ -912,6 +919,13 @@ def _summary_lead(plan: dict, graph: list, current: list, leads: dict) -> str:
     return f"{x}: " + "; ".join(parts) + "." if parts else ""
 
 
+def _expert_ids(ctx: Ctx) -> dict | None:
+    """key_people restricted to the experts find_experts just ranked (item 20)."""
+    ids = [it["expert"]["person_id"] for p in ctx.packs.values() if p.get("tool") == "find_experts"
+           for it in p["items"] if it.get("expert")]
+    return {"person_ids": ids} if ids else None
+
+
 def _ranking_lead(intent: str, kept: list[dict], ix, packs: dict[str, dict]) -> str:
     """Item 17: a ranking says what it ranks and how, never a raw score: "Most depended-on systems now: 1. Ledger,
     2. Checkout. Ranked by ..."."""
@@ -999,7 +1013,17 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: di
             return ""
         name, _, signals = ex[0]["context"].partition("): ")
         signals = signals.split("; quote outdated", 1)[0]
-        return f"Ask {name.split(' (', 1)[0]} first. {signals[:1].upper() + signals[1:]}."
+        first = name.split(' (', 1)[0]
+        out = f"Ask {first} first. {signals[:1].upper() + signals[1:]}."
+        cited = {a for c in kept for a in c.get("assertion_ids") or []}
+        hubs = {it["ranking"]["id"]: it["ranking"] for p in (packs or {}).values() if p["tool"] == "key_people"
+                for it in p["items"] if it.get("ranking") and {f["assertion_id"] for f in it["facts"]} & cited}
+        hub = next((hubs[c["expert"]["person_id"]] for c in ex if c["expert"].get("person_id") in hubs), None)
+        if hub:
+            x = next((m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")), "")
+            out += (f" {hub['name']} is also" if hub["name"] == first else f" {hub['name']} also knows {x} and is") + \
+                f" the #{hub['rank']} connector between people, teams and systems {hub['when']}."
+        return out
     if intent == "decision_trace":
         why = next((c for c in kept if c.get("decision") and (c.get("context") or "").endswith("because")), None)
         if why:
@@ -1172,7 +1196,8 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                                    "tense": "historical" if sp.get("outdated") else "current",
                                    "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [],
                                    "label": "text_only", "quote": sp["text"][:200], "disputed": False,
-                                   "expert": {"score": ex["score"], "strength": _strength(ex["score"], top)},
+                                   "expert": {"score": ex["score"], "strength": _strength(ex["score"], top),
+                                              "person_id": ex["person_id"]},
                                    "context": _expert_line(steps[-1]["node"].get("name", ex["person_id"]),
                                                            steps[0]["node"].get("name", ""), ex, top, sp)})
     # the disputing assertions, as their own disputed claims (V5 pairs them with the current one)
