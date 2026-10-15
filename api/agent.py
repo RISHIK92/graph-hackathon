@@ -740,6 +740,26 @@ def lead_sentence(intent: str, kept: list[dict], packs: dict[str, dict], as_of: 
     return ""
 
 
+_SIGNALS = {"authored": "wrote {n} item{s} about {e}", "LEADS": "leads the team that owns {e}", "OWNS": "owns {e}",
+            "DECIDED_BY": "decided {n} ADR{s} about {e}", "ASSIGNED_TO": "has {n} ticket{s} about {e}",
+            "WORKS_ON": "works on {e}"}
+
+
+def _strength(score: float, top: float) -> str:
+    return "strong" if score >= 0.6 * top else "some" if score >= 0.3 * top else "light"
+
+
+def _expert_line(name: str, entity: str, ex: dict, top: float, sp: dict) -> str:
+    """M6: "Bob Okafor (strong): wrote 3 items about Ledger · leads the team that owns Ledger"; the score stays
+    on the claim for a tooltip, and an outdated quote says so."""
+    parts = [_SIGNALS.get(k, k.lower().replace("_", " ") + " {e}").format(n=n, s="s" if n > 1 else "", e=entity)
+             for k, n in sorted(ex["breakdown"].items(), key=lambda kv: kv[0] != "authored")]
+    line = f"{name} ({_strength(ex['score'], top)}): " + " · ".join(parts)
+    if sp.get("outdated"):
+        line += f"; quote outdated ({_KIND.get(sp['kind'], sp['kind'])}, before {_day(sp['outdated']['until'])})"
+    return line
+
+
 def _day(ms: int) -> str:
     d = datetime.fromtimestamp(ms / 1000, timezone.utc)
     return f"{d.day} {d:%b %Y}"
@@ -871,14 +891,18 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                                    "context": f"rationale ({sp['section']})"})
             if p["tool"] == "find_experts" and it.get("expert"):
                 ex = it["expert"]
-                sp = next((x for x in it["spans"] if not x.get("cites")), None)
+                quotes = [x for x in it["spans"] if not x.get("cites")]
+                sp = next((x for x in quotes if not x.get("outdated")), quotes[0] if quotes else None)
                 if sp:
-                    claims.append({"claim_id": f"c{len(claims) + 1}", "text": sp["text"][:200], "tense": "current",
+                    steps = (it.get("path") or {}).get("steps") or [{"node": {}}, {"node": {}}]
+                    top = max(x["expert"]["score"] for x in p["items"] if x.get("expert"))
+                    claims.append({"claim_id": f"c{len(claims) + 1}", "text": sp["text"][:200],
+                                   "tense": "historical" if sp.get("outdated") else "current",
                                    "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [],
                                    "label": "text_only", "quote": sp["text"][:200], "disputed": False,
-                                   "context": f"{((it.get('path') or {}).get('steps') or [{}, {'node': {}}])[-1]['node'].get('name', ex['person_id'])} "
-                                              f"(score {ex['score']}; signals: "
-                                              + ", ".join(f"{k}×{v}" for k, v in ex["breakdown"].items()) + ")"})
+                                   "expert": {"score": ex["score"], "strength": _strength(ex["score"], top)},
+                                   "context": _expert_line(steps[-1]["node"].get("name", ex["person_id"]),
+                                                           steps[0]["node"].get("name", ""), ex, top, sp)})
     # the disputing assertions, as their own disputed claims (V5 pairs them with the current one)
     for p in packs.values():
         for it in p["items"]:

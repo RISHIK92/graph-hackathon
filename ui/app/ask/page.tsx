@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, FileText, Flag, GitBranch, ListTree, MessageSquare, Search, Square, UserRound, Zap } from "lucide-react";
+import { ArrowUp, FileText, Flag, GitBranch, Info, ListTree, MessageSquare, Search, Square, UserRound, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { ActionChip, EligibilityBadge, FactRow, PackContext } from "@/components/Chips";
@@ -306,7 +306,10 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
                               if (span) s.openEvidence({ tab: "source", spanId: span.span_id, sourceId: span.source_id, quote: { start: span.quote_start, end: span.quote_end }, path, timeline: f ? timelineKeyOf(f) : null, title: span.title, packs, fromTurn: true });
                               else if (path) s.openEvidence({ tab: "path", path, packs, fromTurn: true, title: l.text });
                             }}
-                            extra={(c?.action_ids || []).map((a) => <ActionChip key={a} actionId={a} label="Proposed by action" />)}
+                            extra={<>
+                              {(c?.action_ids || []).map((a) => <ActionChip key={a} actionId={a} label="Proposed by action" />)}
+                              {c?.expert && <span title={`Ranking score ${c.expert.score} (relative strength: ${c.expert.strength})`}><Info className="icon-sm text-3" /></span>}
+                            </>}
                           />
                         );
                       })}

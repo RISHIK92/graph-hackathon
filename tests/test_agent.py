@@ -5,8 +5,9 @@ from brain.actions import Actions, Actor
 from brain.tools import Ctx, run_tool
 from brain.write_path import Candidate
 
-from .conftest import make_span
+from .conftest import Clock, make_span
 from .test_actions import _fact, world  # noqa: F401
+from .test_templates import fx  # noqa: F401
 
 
 def run(agent, s, text, **kw):
@@ -552,3 +553,23 @@ def test_rationale_claims_name_their_decision_and_old_reasons_are_historical(wor
     assert why and all(c["decision"] == {"name": "ADR-002", "status": "accepted"} for c in why)
     old = [c for c in answer_of(run(agent, s, "What was the reasoning behind ADR-001?"))["claims"] if c.get("decision")]
     assert old and all(c["decision"]["status"] == "superseded" and c["tense"] == "historical" for c in old)
+
+
+def test_expertise_reads_in_plain_language_and_flags_outdated_quotes(fx):  # noqa: F811
+    """M6: "Bob Okafor (strong): wrote 1 item about Ledger", no score or signal codes in the line; a quote
+    stating a fact that has since changed is marked outdated, not Current."""
+    g = fx.g
+    store.add_mentions(g, [{"span_id": "sp_own_old", "entity_id": "system:ledger", "start": 0, "end": 6,
+                            "method": "exact", "hedged": False}])
+    store.add_authored_by(g, [{"span_id": "sp_own_old", "person_id": "person:eve"}])
+    agent = Agent(g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Who knows about Ledger?"))
+    lines = [l["text"] for l in ans["assembled"]["lines"]]
+    assert not any("score" in l or "×" in l for l in lines), lines
+    bob = next(l for l in lines if l.startswith("Bob Okafor ("))
+    assert "wrote 1 item about Ledger" in bob and "“Payments owns Ledger”" in bob
+    eve = next(l for l in lines if l.startswith("Eve Lin ("))
+    assert "quote outdated (wiki, before " in eve
+    c = next(c for c in ans["claims"] if c.get("expert") and c["quote"] == "Platform owns Ledger")
+    assert c["tense"] == "historical" and c["expert"]["score"] > 0

@@ -505,6 +505,16 @@ def find_experts(ctx: Ctx, entity_id: str, k: int = 5) -> dict:
                                     "cites": [], "form": "", "authority": 0})
         if it is not None:
             it["expert"] = {"person_id": person, "score": round(info["score"], 3), "breakdown": dict(breakdown)}
+            # M6: a quote whose facts have all been replaced since is outdated, whatever the document says
+            quoted = [s["span_id"] for s in it["spans"] if not s["cites"]]
+            st: dict[str, list[dict]] = defaultdict(list)
+            for row in ctx.q("span_facts", {"sids": quoted, "max": MAX}) if quoted else []:
+                st[row["span"]].append(row)
+            for s in it["spans"]:
+                rows = st.get(s["span_id"]) or []
+                if rows and not any(x["status"] == "current" for x in rows):
+                    old = min(rows, key=lambda x: x["valid_to"])
+                    s["outdated"] = {"statement": old["statement"], "until": old["valid_to"]}
     return pb.build()
 
 

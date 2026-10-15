@@ -222,6 +222,8 @@ export interface Claim {
   quote?: string;
   /** A decision's reason: whose it is (M5). */
   decision?: { name: string; status: string };
+  /** An expertise line's ranking; shown only as a tooltip (M6). */
+  expert?: { score: number; strength: string };
 }
 
 export interface Line {

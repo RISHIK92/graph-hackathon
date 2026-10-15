@@ -283,6 +283,7 @@ PARAMS = {
     "source_exists": lambda f: {"id": "src:test"},
     "source_view": lambda f: {"id": "src:test"},
     "span_details": lambda f: {"sids": ["sp_own", "turn1"], "T": f.now},
+    "span_facts": lambda f: {"sids": ["sp_own_old", "sp_own"], "max": MAX},
     "span_view": lambda f: {"id": "sp_own", "max": MAX},
     "stale_detection": lambda f: {"max": MAX, "e": "team:platform"},
     "stale_override": lambda f: (_override(f), {"max": MAX})[1],
@@ -458,6 +459,12 @@ def g_search_vector(f, rows):
 
 def g_session_spans(f, rows):
     assert rows == [{"id": "turn1", "text": "who owns ledger?", "ts": 7}]
+
+
+def g_span_facts(f, rows):
+    assert sorted((r["span"], r["statement"], r["status"]) for r in rows) == [
+        ("sp_own", "Payments owns Ledger", "current"), ("sp_own_old", "Platform owns Ledger", "superseded")]
+    assert next(r["valid_to"] for r in rows if r["span"] == "sp_own_old") == 5
 
 
 def g_span_details(f, rows):
