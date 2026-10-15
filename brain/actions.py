@@ -405,6 +405,13 @@ class Actions:
                 "actor_eligible": mine is not None and not own, "self_proposed": own,
                 "missing_fact": self.missing_fact(targets) if el["fallback"] else None}
 
+    def _undo_summary(self, actor: Actor, ac: dict) -> str:
+        """M20: "Priya Raman undid the confirmation of “Infra owns Ledger”", not "undo of confirm_fact ac_…"."""
+        what = {"confirm_fact": "the confirmation of", "route_to_owner": "the proposal", "learn_fact": "the recorded fact",
+                "draft_adr_supersession": "the draft"}.get(ac["kind"], "the action")
+        text = (ac.get("summary") or "").split(" confirmed: ", 1)[-1]
+        return f"{self._names().get(actor.person_id, actor.person_id)} undid {what} “{text}”"
+
     def _proposer(self, targets: list[dict], action_id: str | None) -> str:
         """Who proposed what is being confirmed (a routing or a draft ADR); "" for anything else (M18)."""
         acs = [action_id] if action_id else [r["ac"] for t in targets if t["status"] == "proposed"
@@ -609,7 +616,7 @@ class Actions:
             for d in dec:
                 plan.motivated_remove.append({"decision": d["d"], "action_id": action_id})
         plan.extra_updates.append({"label": "Action", "id": action_id, "props": {"status": "undone", "undone_at": now}})
-        props = self._action_props(actor, "undo_action", now, f"undo of {ac['kind']} {action_id}",
+        props = self._action_props(actor, "undo_action", now, self._undo_summary(actor, ac),
                                    payload=payload({"undone": action_id}),
                                    eligibility="" if prev["undoers"][0]["person_id"] == actor.person_id else "holder")
         plan.action = props

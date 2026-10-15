@@ -271,3 +271,22 @@ def test_proposer_cannot_approve_own_proposal(world):
         with pytest.raises(Refused, match="you proposed this"):
             acts.confirm_fact(actor("person:priya"), **kw)
     assert not acts.confirm_preview("person:eve", action_id=r["action_id"])["self_proposed"]
+
+
+def test_action_lifecycle_reads_as_sentences(world):
+    """M20: a confirmation says what it made current and what lost; an undo says what it undid, in words."""
+    from brain.tools import Ctx, run_tool
+    g, clock = world["g"], world["clock"]
+    acts = Actions(g, clock)
+    make_span(g, "turn3", "Infra owns Ledger", clock(), src="sess1", kind="chat_session", role="user")
+    ch = acts.learn_fact(actor("person:eve"), "turn3", {"predicate": "OWNS", "subject_id": "team:infra",
+                                                       "object_id": "system:ledger"}, "sess1")
+    clock.tick()
+    c = acts.confirm_fact(actor("person:priya"), assertion_id=ch["assertion_id"])
+    clock.tick()
+    it = run_tool(Ctx(g, now=clock()), "explain_action", {"action_id": c["action_id"]})["items"][0]
+    assert [f["statement"] for f in it["confirmed"]["made_current"]] == ["Infra owns Ledger"]
+    assert [f["statement"] for f in it["confirmed"]["replaced"]] == ["Payments owns Ledger"]
+    u = acts.undo_action(actor("person:priya"), c["action_id"])
+    summary = g.ro("MATCH (a:Action {id:$id}) RETURN a.summary AS s", {"id": u["action_id"]})[0]["s"]
+    assert summary == "Priya Raman undid the confirmation of “Infra owns Ledger”"

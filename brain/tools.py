@@ -666,6 +666,25 @@ def _single_read(q: str) -> bool:
     return up.lstrip().startswith(("MATCH", "OPTIONAL MATCH", "WITH", "UNWIND", "RETURN", "CALL DB.IDX"))
 
 
+def _confirm_outcome(ctx: Ctx, action_id: str, summary: dict) -> dict:
+    """M20: what a confirmation made current, and which other statements of the same chains it replaced or
+    overruled, so the action record reads as a sentence rather than "Relied on: nothing"."""
+    made = list(dict.fromkeys([r["id"] for r in ctx.q("confirmed_targets", {"ac": action_id})] + summary["produced"]))
+    made_facts = [f for f in facts(ctx, made, with_disputes=False) if f["status"] in ("current", "superseded")]
+    replaced: dict[str, dict] = {}
+    overruled: dict[str, dict] = {}
+    starts = {f["valid_from"] for f in made_facts}
+    for a in assertions(ctx, made).values():
+        others = [x for x in chain_view(ctx, a["chain_id"])["state"].status if x not in made]
+        for f in facts(ctx, others, with_disputes=False):
+            if f.get("overruled_by"):
+                overruled.setdefault(f["statement"], f)
+            elif f["status"] == "superseded" and f["valid_to"] in starts:
+                replaced.setdefault(f["statement"], f)
+    return {"made_current": list({f["statement"]: f for f in made_facts}.values()),
+            "replaced": list(replaced.values()), "overruled": list(overruled.values())}
+
+
 def explain_action(ctx: Ctx, action_id: str) -> dict:
     pb = PackBuilder(ctx, "explain_action", {"action_id": action_id})
     summary = action_summary(ctx, action_id)
@@ -688,6 +707,8 @@ def explain_action(ctx: Ctx, action_id: str) -> dict:
                    f"{summary['kind']} by {summary['actor']['name']}", extra_disputes=False) \
         or pb.item("graph", 1.0, [], None, [])
     it["actions"] = [summary] + [action_summary(ctx, c["action"]) for c in confirms if c["action"]]
+    if summary["kind"] == "confirm_fact":
+        it["confirmed"] = _confirm_outcome(ctx, action_id, summary)
     it["then_now"] = out
     it["changed_since"] = changed
     it["confirms"] = confirms

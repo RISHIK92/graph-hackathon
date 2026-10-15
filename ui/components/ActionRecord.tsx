@@ -40,7 +40,13 @@ export function ActionRecord({ id, inPage }: { id: string; inPage?: boolean }) {
   const view = tn?.[when];
   const packs: Pack[] = data ? [data.pack] : [];
   const withdrawn = me?.status === "undone";
-  const status = withdrawn ? "withdrawn" : me?.status === "done" ? "done" : me?.status || "done";
+  // M20: a proposal is waiting until someone approves it; an undone action is "Undone"
+  const nowProduced = tn?.now.produced || [];
+  const proposal = me?.kind === "route_to_owner" || me?.kind === "draft_adr_supersession";
+  const status = withdrawn ? "undone"
+    : proposal && nowProduced.some((f) => f.confirmed_by) ? "approved"
+      : proposal && nowProduced.some((f) => f.status === "proposed") ? "waiting" : me?.status || "done";
+  const outcome = item?.confirmed;
 
   if (error) return <div style={{ padding: 16 }}><ErrorState message={error} onRetry={reload} /></div>;
   if (!data || !me) return <div style={{ padding: 16 }} className="stack-3"><Skeleton w="50%" h={16} /><Skeleton h={80} /><Skeleton h={36} /></div>;
@@ -98,35 +104,52 @@ export function ActionRecord({ id, inPage }: { id: string; inPage?: boolean }) {
           )}
         </div>
 
-        <section className="inspector-section">
-          <span className="t-label">Relied on</span>
-          {basedOn.length ? (
-            <div className="facts facts-host">
-              {basedOn.map((f: Fact) => (
-                <FactRow key={f.assertion_id} fact={f} spans={item?.spans}
-                  extra={changedIds.includes(f.assertion_id) && when === "now" ? <Chip tone="warning">Changed since</Chip> : undefined} />
-              ))}
-            </div>
-          ) : <Placeholder>Nothing. {me.kind === "learn_fact" ? "The fact was learned from chat." : ""}</Placeholder>}
-        </section>
-
-        <section className="inspector-section">
-          <span className="t-label">Produced</span>
-          {produced.length ? (
-            <div className="facts facts-host">{produced.map((f: Fact) => (
-              <div key={f.assertion_id}>
-                <FactRow fact={f} spans={item?.spans} />
-                {f.confirmed_by && <div className="sub">{approvedText(f.confirmed_by)}</div>}
+        {outcome ? (
+          <section className="inspector-section">
+            <span className="t-label">Made current</span>
+            <div className="facts facts-host">{outcome.made_current.map((f) => <FactRow key={f.assertion_id} fact={f} spans={item?.spans} />)}</div>
+            {outcome.replaced.length > 0 && <>
+              <span className="t-label">Replaced</span>
+              <div className="facts facts-host">{outcome.replaced.map((f) => <FactRow key={f.assertion_id} fact={f} spans={item?.spans} />)}</div>
+            </>}
+            {outcome.overruled.length > 0 && <>
+              <span className="t-label">Overruled</span>
+              <div className="facts facts-host">{outcome.overruled.map((f) => <FactRow key={f.assertion_id} fact={f} spans={item?.spans} />)}</div>
+            </>}
+          </section>
+        ) : (
+          <>
+          <section className="inspector-section">
+            <span className="t-label">Relied on</span>
+            {basedOn.length ? (
+              <div className="facts facts-host">
+                {basedOn.map((f: Fact) => (
+                  <FactRow key={f.assertion_id} fact={f} spans={item?.spans}
+                    extra={changedIds.includes(f.assertion_id) && when === "now" ? <Chip tone="warning">Changed since</Chip> : undefined} />
+                ))}
               </div>
-            ))}</div>
-          ) : <Placeholder>No new facts.</Placeholder>}
-          {canConfirm && <ConfirmControl actionId={id} label="Confirm proposal" what={me.summary} />}
-        </section>
+            ) : <Placeholder>Nothing. {me.kind === "learn_fact" ? "The fact was learned from chat." : ""}</Placeholder>}
+          </section>
+
+          <section className="inspector-section">
+            <span className="t-label">Produced</span>
+            {produced.length ? (
+              <div className="facts facts-host">{produced.map((f: Fact) => (
+                <div key={f.assertion_id}>
+                  <FactRow fact={f} spans={item?.spans} />
+                  {f.confirmed_by && <div className="sub">{approvedText(f.confirmed_by)}</div>}
+                </div>
+              ))}</div>
+            ) : <Placeholder>No new facts.</Placeholder>}
+            {canConfirm && <ConfirmControl actionId={id} label="Confirm proposal" what={me.summary} />}
+          </section>
+          </>
+        )}
 
         {data.draft_source && (
           <section className="inspector-section">
             <span className="t-label">Draft</span>
-            <Notice tone="warning" title={`Agent draft${withdrawn ? " (withdrawn)" : ""}`} actions={
+            <Notice tone="warning" title={`Agent draft${withdrawn ? " (undone)" : ""}`} actions={
               <Button size="sm" variant="link" icon={FileText} onClick={() => s.openEvidence({ tab: "source", sourceId: data.draft_source!, title: "Agent draft" }, mode)}>View the draft text</Button>
             }>Display only. A draft is never evidence and can never be cited.</Notice>
           </section>

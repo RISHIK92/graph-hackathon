@@ -62,7 +62,7 @@ export function factStatus(f: Fact, asOf?: number | null): DisplayStatus {
 export const STATUS_LABEL: Record<string, string> = {
   current: "Current", current_then: "Current then", historical: "Historical", disputed: "Disputed", overruled: "Overruled", proposed: "Proposed",
   confirmed: "Confirmed", withdrawn: "Withdrawn", retracted: "Retracted", unknown: "Unknown at date",
-  done: "Done", refused: "Refused", undone: "Undone", superseded: "Superseded", accepted: "Accepted", rejected: "Rejected", open: "Open", closed: "Closed",
+  done: "Done", waiting: "Waiting for approval", approved: "Approved", refused: "Refused", undone: "Undone", superseded: "Superseded", accepted: "Accepted", rejected: "Rejected", open: "Open", closed: "Closed",
 };
 
 /** Status → semantic encoding (DESIGN.md §3.2). Colour never alone: dot shape + word. */
@@ -72,7 +72,8 @@ export function statusTone(st: string): { tone: "success" | "error" | "accent" |
     // A dispute needs review, it isn't an error (M19): amber, the same on both sides
     case "disputed": return { tone: "warning", dot: "dot warning" };
     case "refused": return { tone: "error", dot: "dot error" };
-    case "proposed": return { tone: "accent", dot: "dot accent" };
+    case "proposed": case "waiting": return { tone: "accent", dot: "dot accent" };
+    case "approved": return { tone: "success", dot: "dot success" };
     case "overruled": case "withdrawn": case "retracted": case "undone": return { tone: "neutral", dot: "dot", strike: true };
     case "unknown": return { tone: "neutral", dot: "dot dashed" };
     case "rejected": return { tone: "neutral", dot: "dot hollow", strike: true };

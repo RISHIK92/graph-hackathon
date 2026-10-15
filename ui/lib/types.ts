@@ -95,6 +95,8 @@ export interface PackItem {
   };
   changed_since?: { assertion_id: string; then: string; now: string; statement: string }[];
   confirms?: { proposal: string; confirmed: string; status: string; action: string | null }[];
+  /** A confirmation's outcome (M20). */
+  confirmed?: { made_current: Fact[]; replaced: Fact[]; overruled: Fact[] };
 }
 
 export interface Pack {
