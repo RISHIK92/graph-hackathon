@@ -26,6 +26,7 @@ function GraphInner() {
   const [kinds, setKinds] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>(() => (params.get("select") || "").split(",").filter(Boolean));
   const [showDisputed, setShowDisputed] = useState(true);
+  const [legendOpen, setLegendOpen] = useState(true);
   // The clock is read after mount: Date.now() during render differs between server and client (B4).
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => setNow(Date.now()), []);
@@ -223,16 +224,19 @@ function GraphInner() {
             <Button size="sm" variant="ghost" icon={X} aria-label="Clear selection" onClick={() => setSelected([])} />
           </div>
         )}
-        <div className="legend" aria-label="Legend">
-          {ENTITY_LABELS.filter((l) => !hideTickets || l !== "Ticket").map((l) => {
+        <div className={`legend ${legendOpen ? "" : "closed"}`} aria-label="Legend">
+          <button className="legend-toggle" onClick={() => setLegendOpen((v) => !v)} aria-expanded={legendOpen}>{legendOpen ? "Hide legend" : "Legend"}</button>
+          {legendOpen && ENTITY_LABELS.filter((l) => !hideTickets || l !== "Ticket").map((l) => {
             const st = NODE_STYLE[l];
             const colour = dark ? st.dark : st.colour;
             const shape = st.shape === "diamond" ? "rotate(45deg) scale(0.8)" : undefined;
             return <span key={l} className="item"><i className="sw" style={{ background: colour, borderRadius: st.shape === "ellipse" ? "50%" : 2, transform: shape, clipPath: st.shape === "triangle" ? "polygon(50% 0, 100% 100%, 0 100%)" : undefined }} />{l}</span>;
           })}
-          <span className="item"><i className="ln" style={{ borderColor: "var(--border-strong)" }} />Fact valid at the date</span>
-          <span className="item"><i className="ln" style={{ borderColor: "var(--error-600)" }} /><Flag className="icon-sm text-error" />Open dispute</span>
-          <span className="item"><i className="ln" style={{ borderColor: "var(--warning-600)", borderTopStyle: "dashed" }} />Stale document</span>
+          {legendOpen && <>
+            <span className="item"><i className="ln" style={{ borderColor: "var(--border-strong)" }} />Fact valid at the date</span>
+            <span className="item"><i className="ln" style={{ borderColor: "var(--error-600)" }} /><Flag className="icon-sm text-error" />Open dispute</span>
+            <span className="item"><i className="ln" style={{ borderColor: "var(--warning-600)", borderTopStyle: "dashed" }} />Stale document</span>
+          </>}
         </div>
         <div className="zoomctl">
           <button onClick={() => canvas.current?.zoomIn()} aria-label="Zoom in"><Plus className="icon-sm" /></button>

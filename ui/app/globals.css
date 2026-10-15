@@ -483,6 +483,8 @@ details.details > .details-body { padding: var(--s-2) var(--s-3) var(--s-3); bor
 .graph-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--surface) 80%, transparent); z-index: 3; }
 .legend { position: absolute; left: var(--s-4); bottom: var(--s-4); z-index: 2; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-2); box-shadow: var(--shadow-1); padding: var(--s-2) var(--s-3); display: grid; grid-template-columns: auto auto; gap: 4px var(--s-4); font-size: var(--fs-small); color: var(--text-2); }
 .legend .item { display: flex; align-items: center; gap: 6px; }
+.legend-toggle { grid-column: 1 / -1; justify-self: start; font-size: var(--fs-small); color: var(--link); }
+.legend.closed { grid-template-columns: auto; }
 .legend .sw { width: 10px; height: 10px; flex: 0 0 auto; }
 .legend .ln { width: 18px; height: 0; border-top: 2px solid; }
 .zoomctl { position: absolute; right: var(--s-4); bottom: var(--s-4); z-index: 2; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-2); box-shadow: var(--shadow-1); overflow: hidden; }

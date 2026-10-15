@@ -110,9 +110,12 @@ const GraphCanvas = forwardRef<GraphHandle, {
               label: "data(label)", color: fg, "font-size": 10, "font-family": cssVar("--font", "Inter, system-ui"),
               "text-valign": "bottom", "text-margin-y": 4, "text-outline-color": bg, "text-outline-width": 2,
               "border-width": 1.5, "border-color": bg,
+              // m9: labels drop out when zoomed far out instead of piling up, and long names are cut short
+              "min-zoomed-font-size": 8, "text-wrap": "ellipsis", "text-max-width": "110px",
             },
           },
           { selector: "node[type = 'Ticket']", style: { "font-size": 8, color: muted } },
+          { selector: "node.hov", style: { "font-size": 14, "z-index": 20, "text-max-width": "240px", "min-zoomed-font-size": 0, "text-outline-width": 3 } },
           { selector: "node.sel", style: { "border-width": 3, "border-color": accent, "overlay-color": accent, "overlay-opacity": 0.12, "overlay-padding": 6 } },
           {
             selector: "edge",
@@ -139,6 +142,8 @@ const GraphCanvas = forwardRef<GraphHandle, {
       cy.on("tap", "edge", (ev) => handlers.current.onEdge?.(ev.target.data("raw") as CanvasEdge));
       cy.on("tap", (ev) => { if (ev.target === cy) handlers.current.onBackground?.(); });
       cy.on("mouseover", "edge", (ev) => ev.target.addClass("hl"));
+      cy.on("mouseover", "node", (ev) => ev.target.addClass("hov"));
+      cy.on("mouseout", "node", (ev) => ev.target.removeClass("hov"));
       cy.on("mouseout", "edge", (ev) => ev.target.removeClass("hl"));
       cy.on("position", "node", (ev) => { positions.current.set(ev.target.id(), { ...ev.target.position() }); });
       cy.nodes().forEach((n) => { positions.current.set(n.id(), { ...n.position() }); });
