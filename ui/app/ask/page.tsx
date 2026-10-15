@@ -8,7 +8,8 @@ import { ConfirmControl, RefusalCard, WhoCan } from "@/components/ConfirmControl
 import { collectDisputes, DisputeLine } from "@/components/Dispute";
 import { Button, Chip, Notice, Placeholder } from "@/components/ui";
 import { streamTurn, type StreamEvent } from "@/lib/api";
-import { fmtDate, fmtDateTime, initials, intentLabel, plural, predicateLabel } from "@/lib/format";
+import { fmtDate, fmtDateTime, initials, plural } from "@/lib/format";
+import { displayText, intentLabel, predicateLabel } from "@/lib/labels";
 import { useStore } from "@/lib/store";
 import type { Claim, Fact, Line, Pack, Path, Refusal, SpanItem } from "@/lib/types";
 
@@ -288,7 +289,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
               </div>
             ) : (
               <>
-                {lead && <div className="answer-lead">{lead}</div>}
+                {lead && <div className="answer-lead">{displayText(lead)}</div>}
                 {groups.map(([k, rows]) => (
                   <div key={k} className="answer-group facts-host">
                     {(groups.length > 1 || k !== "Answer") && <span className="t-label">{k}</span>}
@@ -378,14 +379,14 @@ function StatusLine({ t, plan, toolCalls, verification }: { t: Turn; plan?: Stre
   }
   const kept = verification ? Number(verification.kept) : undefined;
   const dropped = verification ? (verification.dropped as unknown[]).length : undefined;
+  const sources = new Set((t.answer?.claims || []).flatMap((c) => c.span_ids)).size;
   return (
     <div className="statusline">
       <span className="t-strong">{intentLabel(String(plan?.intent || ""))}</span>
       {plan?.wants_action && plan.wants_action !== "none" ? <Chip tone="accent" icon={Zap}>Action</Chip> : null}
-      {toolCalls.length > 0 && <><span className="sep">·</span><span>{plural(toolCalls.length, "tool")}</span></>}
-      {kept !== undefined && <><span className="sep">·</span><span>{plural(kept, "claim")} verified</span></>}
+      {kept !== undefined && <><span className="sep">·</span><span>checked {plural(kept, "fact")} against {plural(sources, "source")}</span></>}
       {dropped !== undefined && dropped > 0 && <><span className="sep">·</span><span className="text-warning">{dropped} dropped</span></>}
-      {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" onClick={() => s.openInspector({ kind: "trace", turnId: t.turnId! })}>Trace</Button>}
+      {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" onClick={() => s.openInspector({ kind: "trace", turnId: t.turnId! })}>How I answered</Button>}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import re
+
 from api.agent import Agent, heuristic_plan
 from api.verifier import verify
 from brain import store
@@ -630,3 +632,35 @@ def test_lead_check_rejects_a_sentence_that_misses_the_question():
     assert check_lead(plan, "Payments owns Ledger. Priya Raman leads Payments.")
     assert not check_lead(plan, "Priya Raman leads Payments.")
     assert not check_lead({**plan, "intent": "expertise"}, "Payments owns Ledger.")
+
+
+def test_trace_steps_read_as_sentences(world):
+    """M17: "how I answered" says each step in words; the tool name and query stay behind "Show query"."""
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Who owns Ledger?"))
+    steps = [c["sentence"] for c in agent.turn_log[ans["turn_id"]]["tool_calls"]]
+    assert steps == ["Found Ledger in the graph", "Looked up who owns Ledger → Payments (wiki)"]
+
+
+RAW = re.compile(r"\b(system|person|team|project|decision|ticket):[a-z0-9-]+|\b(as|sp|ac|pk|src)_[0-9a-f]{6,}|\b1\d{12}\b")
+
+
+def test_rendered_answers_carry_no_raw_ids(fx):  # noqa: F811
+    """M17: answer lines and lead sentences never show raw entity, assertion, span or action ids, or epoch ms,
+    even when a quoted source names people by id ("person:priya commented on ...")."""
+    g = fx.g
+    make_span(g, "sp_cmt", "person:priya commented on 2026-02-16: the Ledger cutover rehearsal is booked.", 1)
+    store.add_mentions(g, [{"span_id": "sp_cmt", "entity_id": "system:ledger", "start": 46, "end": 52,
+                            "method": "exact", "hedged": False}])
+    store.add_authored_by(g, [{"span_id": "sp_cmt", "person_id": "person:eve"}])
+    agent = Agent(g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    seen = []
+    for q in ("Who owns Ledger?", "Who knows about Ledger?", "What breaks if Ledger goes down, and who do I tell?",
+              "Why did ADR-002 replace ADR-001?", "Is anything pending for RDS-42?", "Who owned Ledger then?"):
+        a = answer_of(run(agent, s, q, as_of=4 if q.endswith("then?") else None))["assembled"]
+        for text in [a["lead"]] + [l["text"] for l in a["lines"]]:
+            assert not RAW.search(text), (q, text)
+            seen.append(text)
+    assert any("Priya Raman commented" in x for x in seen)

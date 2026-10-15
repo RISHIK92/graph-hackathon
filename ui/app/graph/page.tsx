@@ -7,7 +7,8 @@ import GraphCanvas, { NODE_STYLE, type CanvasEdge, type GraphHandle } from "@/co
 import { PageHeader } from "@/components/PageHeader";
 import { Button, Chip, Empty, ErrorState, Popover } from "@/components/ui";
 import { qs } from "@/lib/api";
-import { ENTITY_LABELS, fmtDate, KIND_LABEL, plural, SOURCE_KINDS } from "@/lib/format";
+import { ENTITY_LABELS, fmtDate, plural, SOURCE_KINDS } from "@/lib/format";
+import { KIND_LABEL } from "@/lib/labels";
 import { useApi, useStore } from "@/lib/store";
 import type { GraphData } from "@/lib/types";
 

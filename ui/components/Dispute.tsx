@@ -3,7 +3,7 @@
 import { Flag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { get, qs } from "@/lib/api";
-import { predicateLabel } from "@/lib/format";
+import { predicateLabel } from "@/lib/labels";
 import { useStore } from "@/lib/store";
 import type { ConfirmPreview, Fact, Pack, SpanItem } from "@/lib/types";
 import { FactRow } from "./Chips";

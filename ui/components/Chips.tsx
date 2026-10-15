@@ -2,7 +2,8 @@
 
 import { Clock, ExternalLink, FileText, Flag, GitBranch, History, Key, MoreHorizontal, Quote, Zap } from "lucide-react";
 import { createContext, useContext, useState } from "react";
-import { eligibilityLabel, factStatus, fmtInterval, KIND_LABEL, spansFor } from "@/lib/format";
+import { factStatus, fmtInterval, spansFor } from "@/lib/format";
+import { displayText, eligibilityLabel, KIND_LABEL, sourceSuffix } from "@/lib/labels";
 import { useOpenMode, useStore } from "@/lib/store";
 import type { Fact, Pack, Path, SpanItem } from "@/lib/types";
 import { Chip, Popover, Status } from "./ui";
@@ -41,8 +42,7 @@ export function CitationChip({ span, spanId, label = "graph", path, timeline }: 
   const id = span?.span_id || spanId;
   if (!id) return <Chip dashed title="The verifier could not resolve this citation">Unresolved</Chip>;
   const kind = span?.kind ? KIND_LABEL[span.kind] || span.kind : "Source";
-  const suffix = label === "text_only" ? " · text only" : label === "graph" ? "" : " · unverified";
-  const old = span && !span.live ? " · old revision" : "";
+  const old = !!span && !span.live;
   return (
     <Chip
       icon={Quote}
@@ -56,7 +56,7 @@ export function CitationChip({ span, spanId, label = "graph", path, timeline }: 
         }, mode)
       }
     >
-      {kind}{suffix}{old}
+      {kind}{sourceSuffix(label, !old)}
     </Chip>
   );
 }
@@ -102,7 +102,7 @@ export function FactRow({ fact, spans, label = "graph", path, showInterval = tru
     >
       <div className="stmt">
         {negated && <span className="neg">Not:</span>}
-        <span>{text}</span>
+        <span>{displayText(text)}</span>
         {disputed && (
           <Chip tone="warning" icon={Flag} title="This fact has an open dispute">Disputed</Chip>
         )}

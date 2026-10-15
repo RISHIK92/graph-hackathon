@@ -3,7 +3,8 @@
 import { ArrowUpRight, Flag, MessageSquare, Quote } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { qs } from "@/lib/api";
-import { fmtDate, KIND_LABEL, labelOf, predicateLabel } from "@/lib/format";
+import { fmtDate, labelOf } from "@/lib/format";
+import { KIND_LABEL, predicateLabel } from "@/lib/labels";
 import { useApi, useOpenMode, useStore } from "@/lib/store";
 import type { EntityPanel as EntityPanelData, Pack, Path } from "@/lib/types";
 import { FactRow, PackContext } from "./Chips";

@@ -8,7 +8,8 @@ import { ConfirmControl, UndoControl } from "@/components/ConfirmControl";
 import { PageHeader } from "@/components/PageHeader";
 import { Button, Chip, Empty, ErrorState, Notice, SkeletonRows, Status, Tabs } from "@/components/ui";
 import { qs } from "@/lib/api";
-import { actionKindLabel, fmtDateTime, plural } from "@/lib/format";
+import { fmtDateTime, plural } from "@/lib/format";
+import { actionKindLabel } from "@/lib/labels";
 import { useApi, useStore } from "@/lib/store";
 import type { PendingData, UndoPreview } from "@/lib/types";
 

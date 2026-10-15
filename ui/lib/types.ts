@@ -252,7 +252,7 @@ export interface QueryLog {
 
 export interface Trace {
   turn_id: string;
-  tool_calls: { name: string; args: Record<string, unknown>; pack_id: string; queries: QueryLog[] }[];
+  tool_calls: { name: string; args: Record<string, unknown>; pack_id: string; queries: QueryLog[]; sentence?: string }[];
   verification: { kept: number; dropped: unknown[]; rewritten: unknown[] } | null;
   packs?: Record<string, Pack>;
 }

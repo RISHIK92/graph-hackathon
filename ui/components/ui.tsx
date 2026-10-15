@@ -2,7 +2,8 @@
 
 import { AlertCircle, AlertTriangle, CheckCircle2, ChevronRight, Flag, Info, Loader2, X, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { STATUS_LABEL, statusTone } from "@/lib/format";
+import { statusTone } from "@/lib/format";
+import { STATUS_LABEL } from "@/lib/labels";
 import { useOpenMode, useStore } from "@/lib/store";
 
 // buttons

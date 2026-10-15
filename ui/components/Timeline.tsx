@@ -1,6 +1,7 @@
 "use client";
 
-import { approvedText, chainLabel, factStatus, fmtDate, statusTone } from "@/lib/format";
+import { approvedText, factStatus, fmtDate, statusTone } from "@/lib/format";
+import { chainLabel } from "@/lib/labels";
 import { useOpenMode, useStore } from "@/lib/store";
 import type { Pack } from "@/lib/types";
 import { ActionChip, FactRow } from "./Chips";

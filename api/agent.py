@@ -126,7 +126,8 @@ class Agent:
                 yield {"event": "error", "stage": "tool", "message": f"{name}: {e}"}
                 continue
             qs = ctx.queries[q0:]
-            trace["tool_calls"].append({"name": name, "args": args, "pack_id": pack["pack_id"], "queries": qs})
+            trace["tool_calls"].append({"name": name, "args": args, "pack_id": pack["pack_id"], "queries": qs,
+                                        "sentence": step_sentence(name, args, pack, self._entity_name)})
             labels = sorted({it["label"] for it in pack["items"]})
             yield {"event": "tool_result", "name": name, "pack_id": pack["pack_id"], "items": len(pack["items"]),
                    "labels": labels, "queries": qs}
@@ -165,7 +166,9 @@ class Agent:
         if not check_lead(plan, lead):   # a first sentence that misses the question is dropped, not shown
             trace["verification"]["lead_rejected"] = lead
             lead = ""
-        final["assembled"]["lead"] = lead
+        final["assembled"]["lead"] = self._display(lead)
+        for line in final["assembled"]["lines"]:   # quotes stay verbatim on the claim; the shown line uses names
+            line["text"] = self._display(line["text"])
         if ver["abstained"]:
             final["nearest"] = [it.get("path") for p in packs.values() for it in p["items"] if it.get("path")][:3]
             final["missing"] = gap or missing(plan, text)
@@ -284,6 +287,14 @@ class Agent:
         if len(calls) <= 1 or intent == "other":
             calls.append(("search_spans", {"query": text, "present_tense": intent != "history"}))
         return calls
+
+    def _display(self, text: str) -> str:
+        """M17: raw ids in shown text ("person:priya commented ...") read as names."""
+        return _RAW_ID.sub(lambda m: self._entity_name(m.group(0)), text)
+
+    def _entity_name(self, eid: str) -> str:
+        r = self.g.q("entity_name", {"id": eid}) if eid else []
+        return r[0]["n"] if r else eid
 
     def _settlers(self, s: Session, aid: str) -> list[str]:
         el = Actions(self.g, self.clock).confirm_preview(s.acting_as or "", assertion_id=aid)["eligible"]
@@ -469,6 +480,46 @@ def normalise_claims(claims: list, packs: dict[str, dict]) -> list[dict]:
                     else sp["text"][:200]
         out.append(c)
     return out
+
+
+_RAW_ID = re.compile(r"\b(?:system|person|team|project|decision|ticket):[a-z0-9][a-z0-9-]*")
+
+
+def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
+    """One "how I answered" step in words (M17): "Looked up who owns Ledger → Payments (catalogue)"."""
+    x = entity_name(args.get("entity_id") or args.get("from_id") or args.get("decision_id") or "")
+    facts = [f for it in pack["items"] for f in it["facts"]]
+    spans = {s["span_id"]: s for it in pack["items"] for s in it["spans"]}
+    if name == "link_entities":
+        return f"Found {_names_list(args.get('mentions') or ['nothing'])} in the graph"
+    if name == "get_owner":
+        own = next((f for f in facts if f["predicate"] == "OWNS" and f["status"] == "current"), None)
+        if not own:
+            return f"Looked up who owns {x} → nobody recorded"
+        sp = next((s for it in pack["items"] for s in it["spans"] if own["assertion_id"] in s.get("cites", [])), None)
+        kind = _KIND.get(sp["kind"], sp["kind"]) if sp else ""
+        return f"Looked up who owns {x} → {own['statement'].split(' owns ', 1)[0]}" + (f" ({kind})" if kind else "")
+    if name == "get_history":
+        return f"Read the history of {x} ({str(args.get('predicate', '')).lower().replace('_', ' ')}) → {len(facts)} facts"
+    if name == "trace_decision":
+        return f"Traced the decision about {x}, what it replaced and why" if x else "Traced the decision and why"
+    if name == "find_experts":
+        return f"Ranked who knows about {x} by what they wrote, decided and lead"
+    if name == "find_paths":
+        if args.get("to_id"):
+            return f"Looked for connections between {x} and {entity_name(args['to_id'])}"
+        return f"Followed what depends on {x} and who owns each"
+    if name == "search_spans":
+        return f"Searched the documents for “{args.get('query', '')}” → {len(spans)} passages"
+    if name in ("count_related", "rank_by_count"):
+        return f"Counted from the graph{' about ' + x if x else ''}"
+    if name == "recall_session":
+        return "Read the earlier questions in this chat"
+    if name == "explain_action":
+        return "Read what the action relied on, then and now"
+    if name == "query_graph":
+        return "Wrote and ran a graph query (unverified)"
+    return name.replace("_", " ").capitalize()
 
 
 REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first verified draft stands

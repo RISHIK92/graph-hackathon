@@ -3,7 +3,8 @@
 import { ChevronLeft, ChevronRight, Flag, PanelRightClose, Quote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { qs } from "@/lib/api";
-import { actionKindLabel, edgeVerb, labelOf } from "@/lib/format";
+import { labelOf } from "@/lib/format";
+import { actionKindLabel, edgeVerb } from "@/lib/labels";
 import { InInspector, useApi, useNames, useStore, type InspectorView } from "@/lib/store";
 import type { ActionView, Fact, SpanItem } from "@/lib/types";
 import { ActionRecord, useAction } from "./ActionRecord";

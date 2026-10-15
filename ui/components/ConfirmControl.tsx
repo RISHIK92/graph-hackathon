@@ -3,7 +3,7 @@
 import { Check, GitBranch, Undo2, UserRound } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { get, qs, send } from "@/lib/api";
-import { eligibilityLabel } from "@/lib/format";
+import { eligibilityLabel } from "@/lib/labels";
 import { useNames, useOpenMode, useStore } from "@/lib/store";
 import type { ConfirmPreview, Eligible, PathStep, Refusal, UndoPreview, WriteResult } from "@/lib/types";
 import { EligibilityBadge, PackContext } from "./Chips";
