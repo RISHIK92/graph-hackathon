@@ -924,12 +924,15 @@ def _ranked(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: (-round(r["score"], 9), r["name"]))
 
 
-def critical_systems(ctx: Ctx, as_of: int | None = None, k: int = 5) -> dict:
+def critical_systems(ctx: Ctx, as_of: int | None = None, k: int = 5, focus_id: str | None = None) -> dict:
+    """focus_id: only that system's rank (item 20, the "#n most depended-on" note in impact answers)."""
     sx = _snap(ctx, as_of)
     how = f"Ranked by how many systems depend on it, directly or indirectly, {_when(ctx)} (PageRank over dependencies)"
-    pb = PackBuilder(ctx, "critical_systems", {"as_of": ctx.as_of, "k": k, "method": how})
+    pb = PackBuilder(ctx, "critical_systems", {"as_of": ctx.as_of, "k": k, "focus_id": focus_id, "method": how})
     ranked = _ranked(sx.q("snap_pagerank", {}))
-    for i, r in enumerate(ranked[:k], start=1):
+    for i, r in enumerate(ranked if focus_id else ranked[:k], start=1):
+        if focus_id and r["id"] != focus_id:
+            continue
         deps = sx.q("snap_dependents", {"id": r["id"]})
         aids = [a for d in deps for a in run_aids(ctx, d["aid"])]
         it = fact_item(ctx, pb, aids, None, 1.0 / i, "graph", f"#{i} most depended-on", extra_disputes=False) if aids else None
@@ -1048,9 +1051,10 @@ register(Tool("rank_by_count", "read", rank_by_count,
                  ["label", "predicate", "member_label"]),
               "Rank the entities of a label by how many related entities they have, e.g. teams by primary "
               "members. For 'which X has the most Y' questions."))
-register(Tool("critical_systems", "read", critical_systems, _s({"as_of": INT, "k": INT}, []),
+register(Tool("critical_systems", "read", critical_systems, _s({"as_of": INT, "k": INT, "focus_id": STR}, []),
               "The most depended-on systems, directly or indirectly, at as_of (PageRank over dependencies on a "
-              "snapshot of the graph at that date). A ranking with the dependency facts behind it, not a fact."))
+              "snapshot of the graph at that date). A ranking with the dependency facts behind it, not a fact. "
+              "focus_id returns only that system's rank."))
 register(Tool("connection_between", "read", connection_between,
               _s({"from_id": STR, "to_id": STR, "as_of": INT}, ["from_id", "to_id"]),
               "Up to three shortest connections (at most 4 hops, either direction) between two entities at as_of, "

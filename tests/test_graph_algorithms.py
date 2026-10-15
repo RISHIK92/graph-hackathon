@@ -170,3 +170,20 @@ def test_gaps_flag_systems_whose_owning_team_has_no_lead_even_if_a_member_leads_
     systems = next(it["aggregate"] for it in pack["items"] if "system" in it["aggregate"]["text"])
     assert "Orphan" in {m["name"] for m in systems["members"]}
     assert systems["text"].startswith("1 system with no owner who has a lead now: Orphan")
+
+
+def test_impact_answers_say_how_depended_on_the_system_is(world):
+    """Item 20: an impact answer ranks the asked system with critical_systems on the as-of snapshot, cited."""
+    _counting_world(world)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ev = run(agent, s, "What breaks if Checkout goes down?")
+    assert "critical_systems" in [e["name"] for e in ev if e["event"] == "tool_call"]
+    lead = answer_of(ev)["assembled"]["lead"]
+    assert "Checkout is the #2 most depended-on system now." in lead, lead
+    lead = answer_of(run(agent, s, "What breaks if Ledger goes down?"))["assembled"]["lead"]
+    assert lead.startswith("2 systems would be affected if Ledger goes down: Checkout and Storefront. "
+                           "Ledger is the #1 most depended-on system now."), lead
+    pack = run_tool(Ctx(world["g"], now=world["clock"]()), "critical_systems", {"focus_id": "system:checkout"})
+    ranked = [it["ranking"] for it in pack["items"] if it.get("ranking")]
+    assert [(r["rank"], r["name"]) for r in ranked] == [(2, "Checkout")] and pack["items"][0]["facts"]

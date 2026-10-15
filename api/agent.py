@@ -276,6 +276,8 @@ class Agent:
                 calls.append(("get_history", {"entity_id": key, "predicate": pred}))
         elif intent == "impact" and tgt:
             calls.append(("find_paths", {"from_id": tgt}))
+            if tgt.startswith("system:"):
+                calls.append(("critical_systems", {"focus_id": tgt}))
         elif intent == "path" and len(ents) >= 2:   # shortest connections on the snapshot graph (item 17)
             calls.append(("connection_between", {"from_id": ents[0], "to_id": ents[1]}))
         elif intent == "memory" and not s.anonymous:
@@ -984,8 +986,12 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: di
         asked = next((m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")), "")
         if not deps:
             return ""
+        cited = {a for c in kept for a in c.get("assertion_ids") or []}
+        rank = next((it["ranking"] for p in (packs or {}).values() if p["tool"] == "critical_systems"
+                     for it in p["items"] if it.get("ranking") and {f["assertion_id"] for f in it["facts"]} & cited), None)
         return (f"{len(deps)} system{'s' if len(deps) > 1 else ''} would be affected"
                 + (f" if {asked} goes down" if asked else "") + f": {_names_list(deps)}."
+                + (f" {rank['name']} is the #{rank['rank']} most depended-on system {rank['when']}." if rank else "")
                 + (f" Tell {_names_list(tell)}." if tell else ""))
     if intent == "expertise":
         ex = sorted((c for c in kept if c.get("expert")), key=lambda c: -c["expert"]["score"])

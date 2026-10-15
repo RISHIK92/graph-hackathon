@@ -99,10 +99,10 @@ def rank_by_count(label: str, predicate: str, member_label: str, direction: str 
                                    "direction": direction, "primary": primary})
 
 
-def critical_systems(as_of: int | None = None, k: int = 5) -> str:
+def critical_systems(as_of: int | None = None, k: int = 5, focus_id: str | None = None) -> str:
     """The most depended-on systems, directly or indirectly (PageRank over dependencies at as_of). A ranking
-    with the dependency facts behind it, never a raw score."""
-    return _pack("critical_systems", {"as_of": as_of, "k": k})
+    with the dependency facts behind it, never a raw score. focus_id returns only that system's rank."""
+    return _pack("critical_systems", {"as_of": as_of, "k": k, "focus_id": focus_id})
 
 
 def connection_between(from_id: str, to_id: str, as_of: int | None = None) -> str:

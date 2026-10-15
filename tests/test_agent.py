@@ -618,7 +618,8 @@ def test_first_sentence_answers_impact_expertise_and_decisions(fx):  # noqa: F81
     fa = Agent(fx.g, Clock(fx.now + 10))
     fs = fa.create_session("judge", "person:eve")
     assert _lead(fa, fs, "What breaks if Ledger goes down, and who do I tell?") == (
-        "2 systems would be affected if Ledger goes down: Checkout and Storefront. Tell Priya Raman.")
+        "2 systems would be affected if Ledger goes down: Checkout and Storefront. "
+        "Ledger is the #1 most depended-on system now. Tell Priya Raman.")
     exp = _lead(fa, fs, "Who knows about Ledger?")
     assert exp.startswith("Ask ") and " first. " in exp and "item about Ledger" in exp, exp
     assert _lead(fa, fs, "Why did ADR-002 replace ADR-001?").startswith("Move Ledger to Postgres (ADR-002")
