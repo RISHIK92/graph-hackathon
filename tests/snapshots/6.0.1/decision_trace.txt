@@ -3,7 +3,7 @@ Aggregate
         Aggregate
             Apply
                 Aggregate
-                    Apply
+                    Optional Conditional Traverse | (d)-[db:DECIDED_BY]->(who:Entity)
                         Aggregate
                             Apply
                                 Filter
@@ -11,10 +11,6 @@ Aggregate
                                 Optional
                                     Conditional Variable Length Traverse | (d)-[anon_0:REPLACES*0..5]->(old)
                                         Argument
-                        Optional
-                            Conditional Traverse | (d)-[db:DECIDED_BY]->(who:Entity)
-                                Filter
-                                    Argument
                 Optional
                     Filter
                         Edge By Index Scan | (x)-[af:AFFECTS]->(d)

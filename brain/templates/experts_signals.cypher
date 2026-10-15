@@ -16,6 +16,8 @@ WITH x, authored, direct, collect({person:p3.id, kind:'LEADS', ref:l.aid, ts:l.v
 OPTIONAL MATCH (x)<-[ab:ABOUT]-(k:Ticket)-[asg:ASSIGNED_TO]->(p4:Person)
 WHERE ab.valid_to > $V AND asg.valid_from <= $V AND asg.valid_to > $V
 WITH x, authored, direct, leads, collect({person:p4.id, kind:'ASSIGNED_TO', ref:asg.aid, ts:asg.valid_from}) AS tickets
+// Filter inside collect(), as in decision_trace: 6.0.1 places a WHERE here below the traverse.
 OPTIONAL MATCH (x)<-[af:AFFECTS]-(d:Decision)-[db:DECIDED_BY]->(p5:Person)
-WHERE af.valid_to > $V AND db.valid_to > $V
-RETURN authored, direct, leads, tickets, collect({person:p5.id, kind:'DECIDED_BY', ref:db.aid, ts:db.valid_from}) AS decided
+RETURN authored, direct, leads, tickets,
+       collect(CASE WHEN af.valid_to > $V AND db.valid_to > $V
+               THEN {person:p5.id, kind:'DECIDED_BY', ref:db.aid, ts:db.valid_from} END) AS decided

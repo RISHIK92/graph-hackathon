@@ -4,7 +4,7 @@ Results
             Aggregate
                 Apply
                     Aggregate
-                        Apply
+                        Optional Conditional Traverse | (d)-[db:DECIDED_BY]->(who:Entity)
                             Aggregate
                                 Apply
                                     Node By Index Scan | (d:Decision)
@@ -12,10 +12,6 @@ Results
                                         Conditional Traverse | (old:Decision)->(old:Decision)
                                             Conditional Variable Length Traverse | (d)-[anon_0:REPLACES*0..5]->(old)
                                                 Argument
-                            Optional
-                                Filter
-                                    Edge By Index Scan | [db:DECIDED_BY]
-                                        Argument
                     Optional
                         Filter
                             Edge By Index Scan | [af:AFFECTS]

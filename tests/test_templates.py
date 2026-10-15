@@ -38,13 +38,6 @@ INDEX_OPS = ("Node By Index Scan", "Edge By Index Scan", "Node By Fulltext Index
 
 # (template, version, check) -> reason. Observed Oct 2026 on the fixture below; see the module docstring.
 KNOWN_FAILURES: dict[tuple[str, str, str], str] = {
-    ("decision_trace", "6.0.1", "golden"):
-        "6.0.1 planner: OPTIONAL MATCH (d)-[db:DECIDED_BY]->(who:Entity) WHERE <db filter> after an aggregating "
-        "WITH places the Filter below the Conditional Traverse, so `deciders` is [{null}]. 4.22.0 is correct. "
-        "Fix shape (verified on both): OPTIONAL MATCH ... WITH d, replaced, db, who WHERE db.valid_from <= $V ...",
-    ("experts_signals", "6.0.1", "golden"):
-        "6.0.1 planner: same Filter-below-Traverse shape on (d)-[db:DECIDED_BY]->(p5:Person) after the "
-        "previous aggregating WITH, so `decided` is [{null}]. 4.22.0 is correct.",
     ("span_details", "6.0.1", "index"):
         "6.0.1 plans UNWIND $sids ... MATCH (s:Span {id:sid}) as a Conditional Traverse straight off the Unwind "
         "with no Node By Index Scan on Span.id (rows are still correct). 4.22.0 uses the index.",

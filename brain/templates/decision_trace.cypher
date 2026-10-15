@@ -6,8 +6,11 @@
 MATCH (d:Decision {id:$d})
 OPTIONAL MATCH chain = (d)-[:REPLACES*0..5]->(old:Decision)
 WITH d, collect(DISTINCT old.id) AS replaced
-OPTIONAL MATCH (d)-[db:DECIDED_BY]->(who:Entity) WHERE db.valid_from <= $V AND db.valid_to > $V
-WITH d, replaced, collect(DISTINCT {id:who.id, name:who.name, aid:db.aid}) AS deciders
+// The DECIDED_BY filter sits inside collect(): as an OPTIONAL MATCH ... WHERE after an aggregating WITH,
+// 6.0.1 places the Filter below the Conditional Traverse and `deciders` comes back [{null}].
+OPTIONAL MATCH (d)-[db:DECIDED_BY]->(who:Entity)
+WITH d, replaced, collect(DISTINCT CASE WHEN db.valid_from <= $V AND db.valid_to > $V
+                                   THEN {id:who.id, name:who.name, aid:db.aid} END) AS deciders
 OPTIONAL MATCH (d)-[af:AFFECTS]->(x:Entity) WHERE af.valid_from <= $V AND af.valid_to > $V
 WITH d, replaced, deciders, collect(DISTINCT {id:x.id, name:x.name, aid:af.aid}) AS affects
 OPTIONAL MATCH (d)-[m:MOTIVATED_BY]->(s:Span) WHERE m.recorded_at <= $T AND m.removed_at > $T

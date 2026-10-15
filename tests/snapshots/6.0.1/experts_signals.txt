@@ -33,7 +33,5 @@ Aggregate
                                     Argument
         Optional
             Conditional Traverse | (d)-[af:AFFECTS]->(x)
-                Filter
-                    Conditional Traverse | (d)-[db:DECIDED_BY]->(p5:Person)
-                        Filter
-                            Argument
+                Conditional Traverse | (d)-[db:DECIDED_BY]->(p5:Person)
+                    Argument
