@@ -54,7 +54,7 @@ export function EntitySummary({ data, id, full }: { data: EntityPanelData; id: s
       <div className="stack-6">
         {disputes.length > 0 && (
           <section className="inspector-section">
-            <div className="section-title"><Flag className="icon-sm text-error" /><span className="t-heading">Open disputes</span><Chip tone="error">{disputes.length}</Chip></div>
+            <div className="section-title"><Flag className="icon-sm text-warning" /><span className="t-heading">Open disputes</span><Chip tone="warning">{disputes.length}</Chip></div>
             {disputes.map((g, i) => <DisputeBlock key={i} g={g} />)}
           </section>
         )}
