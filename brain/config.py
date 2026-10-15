@@ -48,6 +48,7 @@ class Settings:
     mcp_actor: str = field(default_factory=lambda: _get("BRAIN_MCP_ACTOR"))
     public_write_token: str = field(default_factory=lambda: _get("PUBLIC_WRITE_TOKEN", "change-me"))
     admin_token: str = field(default_factory=lambda: _get("ADMIN_TOKEN", "change-me-admin"))
+    pending_webhook: str = field(default_factory=lambda: _get("BRAIN_PENDING_WEBHOOK"))
     # 07 §1 defaults; overridable for bulk ingestion on a loaded server
     timeout_default: int = field(default_factory=lambda: int(_get("BRAIN_TIMEOUT_DEFAULT", "2000")))
     timeout_max: int = field(default_factory=lambda: int(_get("BRAIN_TIMEOUT_MAX", "10000")))

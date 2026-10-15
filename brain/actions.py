@@ -6,12 +6,15 @@ auditable.
 """
 from __future__ import annotations
 
+import threading
 import uuid
 from dataclasses import dataclass, field
 
+import httpx
+
 from . import chain as chainmod
 from . import ids, registry
-from .config import MAX
+from .config import MAX, settings
 from .db import Graph, GuardFailed, WriteMismatch
 from .write_path import Candidate, Plan, ValidationError, WritePath, load_chain, now_ms, payload, validate
 
@@ -272,6 +275,23 @@ class Actions:
         except (GuardFailed, WriteMismatch) as e:
             self._record(actor, kind, "aborted", f"{kind} aborted: {type(e).__name__}", {"error": str(e)}, targets)
             raise
+
+    def _notify_pending(self, plan: Plan, proposals: list[str]) -> None:
+        """Optional hook point: POST new proposals to BRAIN_PENDING_WEBHOOK, off the request path. A failed
+        delivery never fails the action; the Inbox stays the record."""
+        if not settings.pending_webhook:
+            return
+        ac = plan.action
+        body = {"event": "proposal_created", "action_id": ac["id"], "kind": ac["kind"], "actor": ac["actor"],
+                "summary": ac["summary"], "proposals": proposals, "targets": plan.targets}
+
+        def post() -> None:
+            try:
+                httpx.post(settings.pending_webhook, json=body, timeout=5)
+            except Exception:  # noqa: BLE001
+                pass
+
+        threading.Thread(target=post, daemon=True).start()
 
     # eligibility
     def eligibility(self, targets: list[dict], draft: dict | None = None, now: int | None = None) -> dict:
@@ -630,6 +650,7 @@ class Actions:
         plan.targets = [ticket_id]
         plan.session_id = actor.session_source_id
         self._run(wp, plan, actor, "route_to_owner", [ticket_id])
+        self._notify_pending(plan, [out["assertion_id"]])
         return {"action_id": acid, "proposal": out["assertion_id"], "target": target}
 
     # draft_adr_supersession (A16, A24, A55)
@@ -678,6 +699,7 @@ class Actions:
         plan.targets = [decision_id]
         plan.session_id = actor.session_source_id
         self._run(wp, plan, actor, "draft_adr_supersession", [decision_id])
+        self._notify_pending(plan, plan.produced_assertions)
         return {"action_id": acid, "decision": new_id, "proposals": plan.produced_assertions}
 
     # flag_stale_docs (A45, A75)

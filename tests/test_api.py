@@ -320,3 +320,14 @@ def test_admin_upload_requires_admin_token_and_a_known_format(api_client):
     r = client.post("/admin/upload?filename=runbook.md", content=body, headers=admin)
     assert r.status_code == 200 and r.json()["sources"]
     assert client.post("/admin/upload?filename=deck.pdf", content=b"%PDF", headers=admin).status_code == 400
+
+
+def test_pending_count_matches_inbox(api_client):
+    """The nav badge reads one number: what this person can settle now (the Inbox's awaiting list)."""
+    client, world = api_client
+    assert client.get("/people/person:priya/pending/count").json() == {"awaiting": 0}
+    Actions(world["g"], world["clock"]).route_to_owner(Actor("person:eve"), "ticket:rds-42")
+    full = client.get("/people/person:priya/pending").json()
+    assert len(full["awaiting"]) == 1
+    assert client.get("/people/person:priya/pending/count").json() == {"awaiting": 1}
+    assert client.get("/people/person:bob/pending/count").json() == {"awaiting": 0}

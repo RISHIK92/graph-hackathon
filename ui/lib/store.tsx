@@ -106,6 +106,7 @@ export function useOpenMode(): "replace" | "push" {
 const ACTING_KEY = "brain.actingAs";
 const THEME_KEY = "brain.theme";
 const SIDEBAR_KEY = "brain.sidebar";
+const PENDING_POLL_MS = 30_000;
 
 function applyTheme(t: Theme) {
   try {
@@ -185,14 +186,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const refreshPending = useCallback(() => {
     if (!actingAs) return;
-    get<{ awaiting: unknown[]; mine: unknown[] }>(`/people/${encodeURIComponent(actingAs)}/pending`)
-      .then((p) => setPendingCount(p.awaiting.length + p.mine.length))
+    get<{ awaiting: number }>(`/people/${encodeURIComponent(actingAs)}/pending/count`)
+      .then((p) => setPendingCount(p.awaiting))
       .catch(() => setPendingCount(0));
   }, [actingAs]);
 
   useEffect(() => {
     refreshPending();
   }, [refreshPending, version]);
+
+  // Proposals from other people and sessions arrive without a local write, so poll for them.
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (!document.hidden) refreshPending();
+    }, PENDING_POLL_MS);
+    return () => clearInterval(t);
+  }, [refreshPending]);
 
   const setToken = useCallback((t: string) => {
     saveToken(t.trim());

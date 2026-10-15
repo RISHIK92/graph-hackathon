@@ -227,3 +227,32 @@ def test_fx_r1_s15_confirm_against_live_confirmation(world):
     clock.tick()
     with pytest.raises(Refused, match="undo that confirmation first"):
         acts.confirm_fact(actor("person:priya"), assertion_id=d)
+
+
+def test_pending_webhook_posts_new_proposals(world, monkeypatch):
+    """Optional hook point (BRAIN_PENDING_WEBHOOK): a created proposal is POSTed; off by default, errors swallowed."""
+    import dataclasses
+    import threading
+
+    from brain import actions as actions_mod
+    got, done = [], threading.Event()
+
+    def post(url, json, timeout):
+        got.append((url, json))
+        done.set()
+        raise OSError("receiver down")
+
+    monkeypatch.setattr(actions_mod.httpx, "post", post)
+    acts = Actions(world["g"], world["clock"])
+    acts.route_to_owner(actor("person:eve"), ticket_id="ticket:rds-42")
+    assert not done.wait(0.2) and not got
+    monkeypatch.setattr(actions_mod, "settings", dataclasses.replace(actions_mod.settings,
+                                                                     pending_webhook="http://hook.test/p"))
+    world["clock"].tick()
+    r = acts.route_to_owner(actor("person:eve"), ticket_id="ticket:rds-42")
+    assert done.wait(2)
+    url, body = got[0]
+    assert url == "http://hook.test/p"
+    assert body["event"] == "proposal_created" and body["action_id"] == r["action_id"]
+    assert body["proposals"] == [r["proposal"]] and body["kind"] == "route_to_owner" and body["actor"] == "person:eve"
+    assert body["summary"]

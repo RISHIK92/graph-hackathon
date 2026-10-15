@@ -472,17 +472,12 @@ def undo(aid: str, body: Click, c: Caller = Depends(caller)) -> dict:
     return _write(lambda: Actions(G).undo_action(actor, aid))
 
 
-@app.get("/people/{pid}/pending")
-def pending(pid: str) -> dict:
-    acts = Actions(G)
-    props = G.q("pending_proposals")
-    awaiting, mine = [], []
+def _awaiting(acts: Actions, pid: str, props: list[dict]) -> list[dict]:
+    awaiting = []
     for p in props:
         pv = acts.confirm_preview(pid, action_id=p["action_id"])
         if pv["admissible"] and pv["actor_eligible"]:
             awaiting.append({**p, "fallback": pv["fallback"], "type": "proposal"})
-        if p["actor"] == pid:
-            mine.append(p)
     for run_id, ds in _open_dispute_runs().items():
         for d in ds:
             pv = acts.confirm_preview(pid, assertion_id=d)
@@ -490,10 +485,25 @@ def pending(pid: str) -> dict:
                 st = G.q("statement", {"id": d})
                 awaiting.append({"assertion_id": d, "summary": st[0]["s"] if st else d, "fallback": pv["fallback"],
                                  "type": "dispute"})
+    return awaiting
+
+
+@app.get("/people/{pid}/pending")
+def pending(pid: str) -> dict:
+    acts = Actions(G)
+    props = G.q("pending_proposals")
+    awaiting = _awaiting(acts, pid, props)
+    mine = [p for p in props if p["actor"] == pid]
     log = G.q("action_log", {"p": pid})
     for a in log:
         a["undo"] = acts.undo_preview(pid, a["id"])
     return {"awaiting": awaiting, "mine": mine, "log": log}
+
+
+@app.get("/people/{pid}/pending/count")
+def pending_count(pid: str) -> dict:
+    """How many proposals and disputes this person can settle now (the Inbox nav badge)."""
+    return {"awaiting": len(_awaiting(Actions(G), pid, G.q("pending_proposals")))}
 
 
 # admin, health
