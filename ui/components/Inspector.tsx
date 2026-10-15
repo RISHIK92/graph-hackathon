@@ -54,7 +54,7 @@ export default function Inspector() {
   const crumbs = stack.slice(0, -1);
   return (
     <InInspector.Provider value={true}>
-    <aside className="inspector" role="complementary" aria-label="Inspector" ref={panel}>
+    <aside className={`inspector ${s.inspectorPinned ? "" : "overlay"}`} role="complementary" aria-label="Inspector" ref={panel}>
       <div className="inspector-header">
         <div className="inspector-crumb">
           {crumbs.length ? (

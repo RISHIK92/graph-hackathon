@@ -18,14 +18,14 @@ export function approvedText(c: NonNullable<Fact["confirmed_by"]>): string {
   return `Approved${c.by ? ` by ${c.by}` : ""}${c.at ? `, ${fmtDate(c.at)}` : ""}.`;
 }
 
-/** "12 Mar 2026, 15:07 UTC" */
+/** "12 Mar 2026, 15:07" in the viewer's time (m3: one format; a day stays the UTC date of valid time). */
 export function fmtDateTime(ms: number | null | undefined): string {
   if (!ms) return "?";
   if (ms >= MAX_MS) return "now";
   const d = new Date(ms);
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${fmtDate(ms)}, ${hh}:${mm} UTC`;
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${hh}:${mm}`;
 }
 
 export function fmtInterval(from: number | null | undefined, to: number | null | undefined): string {

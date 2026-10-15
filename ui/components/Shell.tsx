@@ -63,7 +63,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   const past = !!s.asOf;
   return (
-    <div className={`app ${hasInspector ? "has-inspector" : ""} ${s.sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+    <div className={`app ${hasInspector && s.inspectorPinned ? "has-inspector" : ""} ${s.sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <nav className="sidebar" aria-label="Primary">
         <div className="sidebar-brand">
           <span className="mark" aria-hidden><GitBranch /></span>
@@ -95,7 +95,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <header className="ctxbar">
           <button className="search-btn" onClick={() => s.setPaletteOpen(true)} aria-label="Search and commands">
             <Search className="icon-sm" />
-            <span>Search entities, questions, people…</span>
+            <span>Search</span>
             <kbd>⌘K</kbd>
           </button>
           <span className="grow" />
