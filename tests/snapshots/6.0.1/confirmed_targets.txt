@@ -1,0 +1,5 @@
+Distinct
+    Project
+        Filter
+            Conditional Traverse | (anon_0)<-[e:EVIDENCED_BY]-(a:Assertion)
+                Node By Label Scan | (anon_0:Span)

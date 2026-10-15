@@ -1,0 +1,5 @@
+Results
+    Project
+        Filter
+            Edge By Index Scan | [l:LEADS]
+                Node By Index Scan | (t:Entity)

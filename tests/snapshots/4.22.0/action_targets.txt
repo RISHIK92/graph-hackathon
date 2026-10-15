@@ -1,0 +1,4 @@
+Results
+    Project
+        Conditional Traverse | (ac)->(e:Entity)
+            Node By Index Scan | (ac:Action)

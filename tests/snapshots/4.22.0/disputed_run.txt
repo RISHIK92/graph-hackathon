@@ -1,0 +1,5 @@
+Results
+    Project
+        Filter
+            Conditional Traverse | (a)-[d:DISPUTES]->(m:Assertion)
+                Node By Index Scan | (a:Assertion)

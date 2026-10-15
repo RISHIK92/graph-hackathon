@@ -1,0 +1,5 @@
+Project
+    Filter
+        Filter
+            Edge By Index Scan | (p)-[l:LEADS]->(t:Team)
+                Node By Label Scan | (p:Person)

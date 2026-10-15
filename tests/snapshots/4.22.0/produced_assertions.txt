@@ -1,0 +1,4 @@
+Results
+    Project
+        Conditional Traverse | (ac)->(x:Assertion)
+            Node By Index Scan | (ac:Action)

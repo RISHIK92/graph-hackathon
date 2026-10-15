@@ -1,0 +1,15 @@
+Results
+    Distinct
+        Project
+            Filter
+                Conditional Traverse | (m)-[ce:EVIDENCED_BY]->(anon_0:Span)
+                    Node By Index Scan | (m:Assertion)
+                        Project
+                            Filter
+                                Conditional Traverse | (a)-[sp:SUPERSEDES]->(old:Assertion)
+                                    Filter
+                                        Conditional Traverse | (s)-[e:EVIDENCED_BY]->(a:Assertion)
+                                            Filter
+                                                Conditional Traverse | (src)-[h:HAS_SPAN]->(s:Span)
+                                                    Filter
+                                                        Node By Index Scan | (src:Source)

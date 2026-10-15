@@ -1,0 +1,4 @@
+Results
+    Project
+        Conditional Traverse | (ac)->(x:Source)
+            Node By Index Scan | (ac:Action)

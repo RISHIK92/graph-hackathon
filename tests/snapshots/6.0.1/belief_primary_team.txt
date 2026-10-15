@@ -1,0 +1,6 @@
+Project
+    Filter
+        Filter
+            Edge By Index Scan | (p)-[r:MEMBER_OF]->(t:Team)
+                Filter
+                    Node By Index Scan | (p:Person)

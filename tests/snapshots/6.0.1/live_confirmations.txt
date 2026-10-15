@@ -1,0 +1,5 @@
+Project
+    Filter
+        Conditional Traverse | (m)-[e:EVIDENCED_BY]->(s:Span)
+            Filter
+                Node By Index Scan | (m:Assertion)

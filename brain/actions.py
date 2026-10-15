@@ -48,39 +48,29 @@ class Belief:
     def __init__(self, g: Graph, now: int):
         self.g, self.now = g, now
 
-    def _edges(self, q: str, params: dict) -> list[dict]:
-        return self.g.ro(q, {**params, "now": self.now}, template="eligibility")
+    def _edges(self, name: str, params: dict) -> list[dict]:
+        return self.g.q(name, {**params, "now": self.now})
 
     def lead_of(self, team: str) -> list[dict]:
-        return self._edges("MATCH (p:Person)-[l:LEADS]->(t:Entity {id:$t}) WHERE l.valid_from <= $now AND "
-                           "l.valid_to > $now AND l.authority >= 2 RETURN p.id AS person, p.name AS name, l.aid AS aid",
-                           {"t": team})
+        return self._edges("belief_lead_of", {"t": team})
 
     def owners_of(self, x: str) -> list[dict]:
-        return self._edges("MATCH (o:Entity)-[r:OWNS]->(x:Entity {id:$x}) WHERE r.valid_from <= $now AND "
-                           "r.valid_to > $now AND r.authority >= 2 RETURN o.id AS owner, o.name AS name, r.aid AS aid",
-                           {"x": x})
+        return self._edges("belief_owners_of", {"x": x})
 
     def parent_of(self, x: str) -> list[dict]:
-        return self._edges("MATCH (x:Entity {id:$x})-[r:PART_OF]->(p:Entity) WHERE r.valid_from <= $now AND "
-                           "r.valid_to > $now AND r.authority >= 2 RETURN p.id AS parent, r.aid AS aid", {"x": x})
+        return self._edges("belief_parent_of", {"x": x})
 
     def primary_team(self, p: str) -> list[dict]:
-        return self._edges("MATCH (p:Person {id:$p})-[r:MEMBER_OF]->(t:Team) WHERE r.primary = true AND "
-                           "r.valid_from <= $now AND r.valid_to > $now AND r.authority >= 2 "
-                           "RETURN t.id AS team, r.aid AS aid", {"p": p})
+        return self._edges("belief_primary_team", {"p": p})
 
     def out_edges(self, rel: str, x: str) -> list[dict]:
-        return self._edges(f"MATCH (x:Entity {{id:$x}})-[r:{rel}]->(y:Entity) WHERE r.valid_from <= $now AND "
-                           "r.valid_to > $now AND r.authority >= 2 RETURN y.id AS id, y.name AS name, r.aid AS aid",
-                           {"x": x})
+        return self._edges("belief_out_edges", {"x": x, "rel": rel})
 
     def all_leads(self) -> list[dict]:
-        return self._edges("MATCH (p:Person)-[l:LEADS]->(t:Team) WHERE l.valid_from <= $now AND l.valid_to > $now "
-                           "AND l.authority >= 2 RETURN p.id AS person, p.name AS name, t.id AS team, l.aid AS aid", {})
+        return self._edges("belief_all_leads", {})
 
     def name(self, eid: str) -> str:
-        r = self.g.ro("MATCH (e:Entity {id:$id}) RETURN e.name AS n", {"id": eid}, template="entity_name")
+        r = self.g.q("entity_name", {"id": eid})
         return r[0]["n"] if r else eid
 
 
@@ -220,26 +210,20 @@ class Actions:
 
     # helpers
     def _names(self) -> dict[str, str]:
-        rows = self.g.ro("MATCH (e:Entity) RETURN e.id AS id, e.name AS n", template="entity_names", timeout=10000)
+        rows = self.g.q("entity_names", timeout=10000)
         return {r["id"]: r["n"] for r in rows}
 
     def _assertion(self, aid: str) -> dict | None:
-        r = self.g.ro("MATCH (a:Assertion {id:$id}) RETURN a.id AS id, a.predicate AS predicate, "
-                      "a.qualifier AS qualifier, a.subject_id AS subject_id, a.object_id AS object_id, "
-                      "a.object_value AS object_value, a.negated AS negated, a.valid_from AS valid_from, "
-                      "a.status AS status, a.run_id AS run_id, a.chain_id AS chain_id, a.statement AS statement, "
-                      "a.retracted_at AS retracted_at", {"id": aid}, template="assertion")
+        r = self.g.q("assertion", {"id": aid})
         return r[0] if r else None
 
     def _action(self, aid: str) -> dict | None:
-        r = self.g.ro("MATCH (ac:Action {id:$id}) RETURN ac", {"id": aid}, template="action")
+        r = self.g.q("action", {"id": aid})
         return r[0]["ac"] if r else None
 
     def _produced(self, action_id: str) -> tuple[list[str], list[str]]:
-        a = self.g.ro("MATCH (:Action {id:$id})-[:PRODUCED]->(x:Assertion) RETURN x.id AS id", {"id": action_id},
-                      template="produced_assertions")
-        s = self.g.ro("MATCH (:Action {id:$id})-[:PRODUCED]->(x:Source) RETURN x.id AS id", {"id": action_id},
-                      template="produced_sources")
+        a = self.g.q("produced_assertions", {"id": action_id})
+        s = self.g.q("produced_sources", {"id": action_id})
         return [r["id"] for r in a], [r["id"] for r in s]
 
     def _action_props(self, actor: Actor, kind: str, now: int, summary: str, n: int = 0, **extra) -> dict:
@@ -327,9 +311,7 @@ class Actions:
 
     # admissibility (02 §8 step 1: one definition, re-checked by the guard via status) --
     def _live_confirmations(self, run_id: str, now: int) -> list[dict]:
-        return self.g.ro("MATCH (m:Assertion {run_id:$run})-[e:EVIDENCED_BY]->(s:Span) WHERE e.form = 'confirmation' "
-                         "AND e.recorded_at <= $now AND e.removed_at > $now RETURN m.id AS member, s.ts AS ts, "
-                         "e.action_id AS action_id", {"run": run_id, "now": now}, template="live_confirmations")
+        return self.g.q("live_confirmations", {"run": run_id, "now": now})
 
     def _open_disputes(self, a: dict, now: int) -> list[str]:
         snap = load_chain(self.g, a["chain_id"], a["predicate"], a.get("qualifier") or "", "")
@@ -347,9 +329,7 @@ class Actions:
         """None when admissible, else the refusal reason."""
         st = a["status"]
         if st == "proposed":
-            conf = self.g.ro("MATCH (c:Assertion)-[:CONFIRMS]->(p:Assertion {id:$id}) WHERE c.retracted_at > $now "
-                             "OPTIONAL MATCH (ac:Action)-[:PRODUCED]->(c) RETURN c.id AS c, ac.id AS ac",
-                             {"id": a["id"], "now": now}, template="already_confirmed")
+            conf = self.g.q("already_confirmed", {"id": a["id"], "now": now})
             if conf:
                 return f"already confirmed by {self._confirmer_name(conf[0]['ac'])} (action {conf[0]['ac']})"
             pred = registry.get(a["predicate"], a.get("qualifier") or "")
@@ -361,16 +341,14 @@ class Actions:
                     return f"collides with fact {r.id}; confirm {r.id} instead"
             return None
         if st == "retracted":
-            w = self.g.ro("MATCH (ac:Action)-[:PRODUCED]->(p:Assertion {id:$id}) RETURN ac.id AS ac, ac.status AS s",
-                          {"id": a["id"]}, template="withdrawn_by")
+            w = self.g.q("withdrawn_by", {"id": a["id"]})
             if w and w[0]["s"] == "undone":
                 return f"withdrawn by the undo of Action {w[0]['ac']}"
             return "retracted"
         if st == "superseded":
             return "superseded: confirm the later fact instead"
         if st == "disputed":
-            tgt = self.g.ro("MATCH (a:Assertion {id:$id})-[d:DISPUTES]->(m:Assertion) WHERE d.removed_at = $max "
-                            "RETURN m.run_id AS run", {"id": a["id"], "max": MAX}, template="disputed_run")
+            tgt = self.g.q("disputed_run", {"id": a["id"], "max": MAX})
             if tgt:
                 live = self._live_confirmations(tgt[0]["run"], now)
                 if live:
@@ -519,8 +497,7 @@ class Actions:
         """For the guard: one member per run that is current with authority >= 2 (A57)."""
         out = []
         for rid in run_ids:
-            rows = self.g.ro("MATCH (a:Assertion {run_id:$r}) WHERE a.status = 'current' RETURN a.id AS id, "
-                             "a.authority AS au ORDER BY au DESC LIMIT 1", {"r": rid}, template="strongest_member")
+            rows = self.g.q("strongest_member", {"r": rid})
             if rows and rows[0]["au"] >= 2:
                 out.append(rows[0]["id"])
             elif rows:
@@ -549,15 +526,13 @@ class Actions:
         return {"allowed": allowed, "undoers": undoers, "reason": None if allowed else "not eligible to undo"}
 
     def _confirmed_targets(self, action_id: str) -> list[dict]:
-        rows = self.g.ro("MATCH (a:Assertion)-[e:EVIDENCED_BY]->(:Span) WHERE e.action_id = $ac "
-                         "RETURN DISTINCT a.id AS id", {"ac": action_id}, template="confirmed_targets")
+        rows = self.g.q("confirmed_targets", {"ac": action_id})
         out = []
         for r in rows:
             a = self._assertion(r["id"])
             if a and a["status"] != "retracted":
                 out.append(a)
-        conf = self.g.ro("MATCH (:Action {id:$ac})-[:PRODUCED]->(n:Assertion)-[:CONFIRMS]->(p:Assertion) "
-                         "RETURN p.id AS id", {"ac": action_id}, template="confirmed_proposals")
+        conf = self.g.q("confirmed_proposals", {"ac": action_id})
         for r in conf:
             a = self._assertion(r["id"])
             if a:
@@ -570,8 +545,7 @@ class Actions:
         if not ac:
             raise Refused("no such action")
         prev = self.undo_preview(actor.person_id, action_id)
-        targets = [r["id"] for r in self.g.ro("MATCH (:Action {id:$id})-[:TARGETS]->(e:Entity) RETURN e.id AS id",
-                                              {"id": action_id}, template="action_targets")]
+        targets = [r["id"] for r in self.g.q("action_targets", {"id": action_id})]
         if not prev["allowed"]:
             reason = prev.get("reason") or "not eligible to undo"
             rid = self._record(actor, "undo_action", "refused", reason, {"undoers": prev["undoers"]}, targets)
@@ -586,20 +560,16 @@ class Actions:
                 wp.load_for_assertion(plan, aid)
                 wp.retract(plan, aid)
         # evidence this action added to existing assertions (dedup learn_fact, confirmations, A62)
-        added = self.g.ro("MATCH (a:Assertion)-[e:EVIDENCED_BY]->(s:Span) WHERE e.action_id = $ac AND e.removed_at = $max "
-                          "RETURN a.id AS aid, s.id AS sid", {"ac": action_id, "max": MAX}, template="action_evidence")
+        added = self.g.q("action_evidence", {"ac": action_id, "max": MAX})
         for r in added:
             wp.load_for_assertion(plan, r["aid"])
             wp.remove_evidence(plan, r["aid"], span_id=r["sid"], action_id=action_id,
                                retract_if_empty=r["aid"] not in plan.retract)
         for sid in prod_s:   # tombstone drafts and confirmation sources
             plan.extra_updates.append({"label": "Source", "id": sid, "props": {"status": "deleted"}})
-        confirmed_any = bool(self.g.ro(
-            "MATCH (:Action {id:$id})-[:PRODUCED]->(p:Assertion)<-[:CONFIRMS]-(c:Assertion) WHERE c.retracted_at > $now "
-            "RETURN c.id AS c LIMIT 1", {"id": action_id, "now": now}, template="any_confirmed"))
+        confirmed_any = bool(self.g.q("any_confirmed", {"id": action_id, "now": now}))
         if ac["kind"] == "draft_adr_supersession" and not confirmed_any:
-            dec = self.g.ro("MATCH (d:Decision)-[m:MOTIVATED_BY]->() WHERE m.action_id = $id RETURN DISTINCT d.id AS d",
-                            {"id": action_id}, template="draft_decision")
+            dec = self.g.q("draft_decision", {"id": action_id})
             for d in dec:
                 plan.motivated_remove.append({"decision": d["d"], "action_id": action_id})
         plan.extra_updates.append({"label": "Action", "id": action_id, "props": {"status": "undone", "undone_at": now}})
@@ -667,18 +637,13 @@ class Actions:
         now = self.clock()
         b = Belief(self.g, now)
         names = self._names()
-        status = self.g.ro("MATCH (d:Decision {id:$d}) RETURN d.status AS s, d.status_aid AS aid, d.name AS n",
-                           {"d": decision_id}, template="decision_status")
+        status = self.g.q("decision_status", {"d": decision_id})
         if not status:
             raise Refused(f"no decision {decision_id}")
         affects = b.out_edges("AFFECTS", decision_id)
-        rationale = self.g.ro("MATCH (d:Decision {id:$d})-[m:MOTIVATED_BY]->(s:Span) WHERE m.removed_at = $max "
-                              "AND s.kind <> 'draft' RETURN s.id AS id", {"d": decision_id, "max": MAX},
-                              template="rationale_spans")
+        rationale = self.g.q("rationale_spans", {"d": decision_id, "max": MAX})
         based_runs = [a["aid"] for a in affects] + ([status[0]["aid"]] if status[0]["aid"] else [])
-        ev = self.g.ro("UNWIND $runs AS r MATCH (a:Assertion {run_id:r})-[e:EVIDENCED_BY]->(s:Span) "
-                       "WHERE e.authority >= 1 AND e.removed_at = $max AND s.kind <> 'draft' RETURN DISTINCT s.id AS id",
-                       {"runs": based_runs, "max": MAX}, template="based_on_spans")
+        ev = self.g.q("based_on_spans", {"runs": based_runs, "max": MAX})
         real = sorted({r["id"] for r in rationale} | {r["id"] for r in ev})
         if not real:
             raise Refused("a draft needs at least one real rationale span (A55)")
@@ -719,24 +684,8 @@ class Actions:
     def stale_detection(self, entity_id: str | None = None) -> list[dict]:
         """Read-only detection: latest-revision spans still stating a fact whose run is no longer valid,
         or superseding a run with live confirmation evidence ("overrides a confirmation")."""
-        q = ("MATCH (src:Source)-[h:HAS_SPAN]->(s:Span)<-[e:EVIDENCED_BY]-(a:Assertion) "
-             "WHERE src.is_latest = true AND src.kind <> 'confirmation' AND src.kind <> 'draft' "
-             "AND h.removed_at = $max AND e.removed_at = $max AND e.authority >= 1 "
-             "AND (a.status = 'superseded' OR a.status = 'retracted') AND a.valid_to > src.updated_at "
-             + ("AND (a.subject_id = $e OR a.object_id = $e) " if entity_id else "") +
-             "RETURN DISTINCT s.id AS span, src.id AS source, src.doc_key AS doc_key, src.title AS title, "
-             "a.id AS aid, a.statement AS statement, a.subject_id AS s, a.object_id AS o, a.predicate AS p, "
-             "a.valid_to AS valid_to, a.chain_id AS chain, 'stale' AS why")
-        rows = self.g.ro(q, {"max": MAX, "e": entity_id or ""}, template="stale_detection", timeout=10000)
-        q2 = ("MATCH (src:Source)-[h:HAS_SPAN]->(s:Span)<-[e:EVIDENCED_BY]-(a:Assertion)-[sp:SUPERSEDES]->(old:Assertion) "
-              "WHERE src.is_latest = true AND h.removed_at = $max AND e.removed_at = $max AND sp.removed_at = $max "
-              "AND src.kind <> 'confirmation' AND src.kind <> 'draft' "
-              "WITH s, src, a, old MATCH (m:Assertion {run_id: old.run_id})-[ce:EVIDENCED_BY]->(:Span) "
-              "WHERE ce.form = 'confirmation' AND ce.removed_at > a.recorded_at "
-              "RETURN DISTINCT s.id AS span, src.id AS source, src.doc_key AS doc_key, src.title AS title, "
-              "a.id AS aid, a.statement AS statement, a.subject_id AS s, a.object_id AS o, a.predicate AS p, "
-              "a.valid_to AS valid_to, a.chain_id AS chain, 'overrides a confirmation' AS why")
-        rows += self.g.ro(q2, {"max": MAX}, template="stale_override", timeout=10000)
+        rows = self.g.q("stale_detection", {"max": MAX, "e": entity_id or ""}, timeout=10000)
+        rows += self.g.q("stale_override", {"max": MAX}, timeout=10000)
         return rows
 
     def flag_stale_docs(self, actor: Actor, entity_id: str | None = None) -> dict:
@@ -751,8 +700,7 @@ class Actions:
         acid = props["id"]
         texts, based = [], []
         for f in found[:20]:
-            cur = self.g.ro("MATCH (a:Assertion {chain_id:$c}) WHERE a.status = 'current' RETURN a.id AS id, "
-                            "a.statement AS st LIMIT 1", {"c": f["chain"]}, template="current_in_chain")
+            cur = self.g.q("current_in_chain", {"c": f["chain"]})
             fix = cur[0]["st"] if cur else "no current fact"
             texts.append(f"In '{f['title']}': \"{f['statement']}\" is {f['why']}. Suggested correction: {fix}.")
             if cur:
@@ -768,15 +716,12 @@ class Actions:
     # learn_fact (A9, A54, A62)
     def learn_fact(self, actor: Actor, turn_span_id: str, extracted: dict, session_source_id: str) -> dict:
         now = self.clock()
-        sp = self.g.ro("MATCH (src:Source {id:$src})-[:HAS_SPAN]->(s:Span {id:$id}) RETURN s.text AS text, "
-                       "s.author_role AS role, s.ts AS ts", {"id": turn_span_id, "src": session_source_id},
-                       template="turn_span")
+        sp = self.g.q("turn_span", {"id": turn_span_id, "src": session_source_id})
         if not sp or sp[0]["role"] != "user":
             raise Refused("learn_fact needs a user-authored span from the current session")
         text = sp[0]["text"]
         ents = {r["id"]: {"name": r["n"], "aliases": r["a"] or []} for r in
-                self.g.ro("MATCH (e:Entity) WHERE e.id IN $ids RETURN e.id AS id, e.name AS n, e.aliases AS a",
-                          {"ids": [extracted["subject_id"], extracted.get("object_id", "")]}, template="learn_ents")}
+                self.g.q("learn_ents", {"ids": [extracted["subject_id"], extracted.get("object_id", "")]})}
         names = self._names()
         wp = WritePath(self.g, self.clock, names)
         plan = wp.new_plan(now)

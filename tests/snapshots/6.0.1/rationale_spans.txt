@@ -1,0 +1,5 @@
+Project
+    Filter
+        Conditional Traverse | (d)-[m:MOTIVATED_BY]->(s:Span)
+            Filter
+                Node By Index Scan | (d:Decision)

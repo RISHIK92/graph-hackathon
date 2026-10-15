@@ -18,7 +18,7 @@ from __future__ import annotations
 import difflib
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
@@ -30,7 +30,7 @@ from brain.db import Graph, with_params
 from brain.registry import PROJECTION_TYPES
 from brain.write_path import Candidate, WritePath
 
-from .conftest import PORTS, make_span, seed_basic
+from .conftest import PORTS, Clock, make_span, seed_basic
 
 SNAP_DIR = Path(__file__).parent / "snapshots"
 ENTITY_LABELS = {"Entity", "Person", "Team", "Project", "System", "Decision", "Ticket"}
@@ -59,6 +59,7 @@ class Fixture:
     version: str
     ids: dict[str, str]
     now: int
+    memo: dict = field(default_factory=dict)
 
     def vec(self, text: str) -> list[float]:
         return providers.embed([text])[0]
@@ -124,15 +125,82 @@ def fx(g, clock) -> Fixture:
     return Fixture(g, version, ids, clock())
 
 
+# Some templates read state the base fixture lacks; their params build it first (per test, so other
+# goldens are unaffected). Writes land after f.now, so reads that need them use the returned time.
+
+def _confirm_routing(f) -> dict:
+    """Priya confirms Eve's routing proposal (RDS-42 -> Priya)."""
+    if "routing" in f.memo:
+        return f.memo["routing"]
+    clock = Clock(f.now + 1)
+    r = Actions(f.g, clock).confirm_fact(Actor("person:priya", client="test"), action_id=f.ids["action"])
+    f.ids["confirm"], f.ids["confirmed"] = r["action_id"], r["produced"][0]
+    f.memo["routing"] = {"action_id": r["action_id"], "produced": r["produced"][0], "t": clock.tick()}
+    return f.memo["routing"]
+
+
+def _override(f) -> int:
+    """Priya confirms Payments' ownership, then a later structured span says Platform owns Ledger again."""
+    clock = Clock(f.now + 1)
+    f.ids["own_confirm"] = Actions(f.g, clock).confirm_fact(Actor("person:priya", client="test"),
+                                                            assertion_id=f.ids["own"])["action_id"]
+    make_span(f.g, "sp_over", "Platform owns Ledger", clock.tick())
+    wp = WritePath(f.g, clock)
+    plan = wp.new_plan(clock.tick())
+    f.ids["over"] = wp.add_candidate(plan, Candidate("OWNS", "team:platform", "system:ledger", valid_from=8,
+                                                     span_id="sp_over", quote_end=20, form="structured",
+                                                     source_id="src:test"))["assertion_id"]
+    wp.execute(plan)
+    return clock()
+
+
+def _membership(f) -> int:
+    """Priya's primary MEMBER_OF Payments (the base fixture has no membership)."""
+    clock = Clock(f.now + 1)
+    make_span(f.g, "sp_mem", "Priya is in Payments", clock())
+    wp = WritePath(f.g, clock)
+    plan = wp.new_plan(clock.tick())
+    f.ids["member"] = wp.add_candidate(plan, Candidate("MEMBER_OF", "person:priya", "team:payments", qualifier="primary",
+                                                       valid_from=1, span_id="sp_mem", quote_end=20,
+                                                       form="structured", source_id="src:test"))["assertion_id"]
+    wp.execute(plan)
+    return clock.tick()
+
+
+def _draft_adr(f) -> str:
+    """Priya drafts a supersession of ADR-002."""
+    r = Actions(f.g, Clock(f.now + 1)).draft_adr_supersession(Actor("person:priya", client="test"),
+                                                             "decision:adr-002", "Move to Aurora")
+    f.ids["draft_decision"] = r["decision"]
+    return r["action_id"]
+
+
 # parameters and golden rows per template
 
 PARAMS = {
+    "action": lambda f: {"id": f.ids["action"]},
     "action_draft": lambda f: {"id": f.ids["action"]},
+    "action_evidence": lambda f: {"ac": _confirm_routing(f)["action_id"], "max": MAX},
     "action_log": lambda f: {"p": "person:eve"},
     "action_read": lambda f: {"id": f.ids["action"]},
+    "action_targets": lambda f: {"id": f.ids["action"]},
+    "already_confirmed": lambda f: {"id": f.ids["proposal"], "now": _confirm_routing(f)["t"]},
+    "any_confirmed": lambda f: {"id": f.ids["action"], "now": _confirm_routing(f)["t"]},
     "any_person": lambda f: {},
+    "assertion": lambda f: {"id": f.ids["own"]},
     "assertions_by_id": lambda f: {"ids": [f.ids["own"], f.ids["chat"]]},
+    "based_on_spans": lambda f: {"runs": [f.ids["affects"], f.ids["status"]], "max": MAX},
+    "belief_all_leads": lambda f: {"now": f.now},
+    "belief_lead_of": lambda f: {"t": "team:payments", "now": f.now},
+    "belief_out_edges": lambda f: {"x": "decision:adr-002", "rel": "AFFECTS", "now": f.now},
+    "belief_owners_of": lambda f: {"x": "system:ledger", "now": f.now},
+    "belief_parent_of": lambda f: {"x": "system:ledger", "now": f.now},
+    "belief_primary_team": lambda f: {"p": "person:priya", "now": _membership(f)},
     "chains_for_entity": lambda f: {"e": "system:ledger", "p": "OWNS"},
+    "confirmed_proposals": lambda f: {"ac": _confirm_routing(f)["action_id"]},
+    "confirmed_targets": lambda f: {"ac": _confirm_routing(f)["action_id"]},
+    "current_in_chain": lambda f: {"c": "ch_OWNS:system:ledger"},
+    "decision_status": lambda f: {"d": "decision:adr-002"},
     "decision_trace": lambda f: {"d": "decision:adr-002", "V": f.now, "T": f.now},
     "decisions_affecting": lambda f: {"x": "system:ledger", "V": f.now},
     "demo_identity": lambda f: {},
@@ -144,8 +212,12 @@ PARAMS = {
     "directory_tickets": lambda f: {"V": f.now},
     "dispute_chains": lambda f: {"max": MAX},
     "dispute_edge": lambda f: {"id": f.ids["chat"]},
+    "disputed_run": lambda f: {"id": f.ids["chat"], "max": MAX},
+    "draft_decision": lambda f: {"id": _draft_adr(f)},
     "draft_status": lambda f: {"id": f.g.q("action_draft", {"id": f.ids["action"]})[0]["id"]},
     "entity": lambda f: {"id": "system:ledger"},
+    "entity_name": lambda f: {"id": "system:ledger"},
+    "entity_names": lambda f: {},
     "entity_sources": lambda f: {"id": "system:ledger"},
     "evidence_fragment": lambda f: {"aids": [f.ids["own"], f.ids["proposal"]], "T": f.now},
     "experts_signals": lambda f: {"x": "system:ledger", "V": f.now},
@@ -156,9 +228,11 @@ PARAMS = {
     "graph_ticks": lambda f: {},
     "impact_dependents": lambda f: {"x": "system:ledger", "V": f.now},
     "lead_at": lambda f: {"t": "team:payments", "V": f.now},
+    "learn_ents": lambda f: {"ids": ["team:payments", "system:ledger"]},
     "link_exact": lambda f: {"q": "ledger-service"},
     "link_fulltext": lambda f: {"q": "ledger"},
     "link_vector": lambda f: {"k": 3, "vec": f.vec("Ledger")},
+    "live_confirmations": lambda f: {"run": _confirm_routing(f)["produced"], "now": f.now + 5},
     "names": lambda f: {"ids": ["ledger", "person:priya", "nope"]},
     "neighbourhood": lambda f: {"ids": ["system:checkout"], "V": f.now, "h": 1},
     "nodes_by_id": lambda f: {"ids": ["system:ledger", "team:payments"]},
@@ -172,8 +246,11 @@ PARAMS = {
     "past_belief_run": lambda f: {"chain": "ch_OWNS:system:ledger", "T": f.now, "V": f.now},
     "pending_proposals": lambda f: {},
     "people": lambda f: {"V": f.now},
+    "produced_assertions": lambda f: {"id": f.ids["action"]},
+    "produced_sources": lambda f: {"id": f.ids["action"]},
     "proposal_links": lambda f: {"ids": [f.ids["proposal"]], "now": f.now},
     "proposals_about": lambda f: {"e": "ticket:rds-42"},
+    "rationale_spans": lambda f: {"d": "decision:adr-002", "max": MAX},
     "replaced_by": lambda f: {"d": "decision:adr-001", "V": f.now},
     "run_members": lambda f: {"run": f.ids["own"]},
     "search_fulltext": lambda f: {"q": "ledger"},
@@ -182,7 +259,12 @@ PARAMS = {
     "source_view": lambda f: {"id": "src:test"},
     "span_details": lambda f: {"sids": ["sp_own", "turn1"], "T": f.now},
     "span_view": lambda f: {"id": "sp_own", "max": MAX},
+    "stale_detection": lambda f: {"max": MAX, "e": "team:platform"},
+    "stale_override": lambda f: (_override(f), {"max": MAX})[1],
     "statement": lambda f: {"id": f.ids["own"]},
+    "strongest_member": lambda f: {"r": f.ids["own"]},
+    "turn_span": lambda f: {"id": "turn1", "src": "sess1"},
+    "withdrawn_by": lambda f: {"id": f.ids["proposal"]},
 }
 
 
@@ -532,6 +614,139 @@ def g_span_view(f, rows):
 
 def g_statement(f, rows):
     assert rows == [{"s": "Payments owns Ledger"}]
+
+
+def g_action(f, rows):
+    assert len(rows) == 1
+    ac = rows[0]["ac"]
+    assert (ac["id"], ac["kind"], ac["actor"], ac["status"]) == (f.ids["action"], "route_to_owner", "person:eve", "done")
+
+
+def g_action_evidence(f, rows):
+    assert [r["aid"] for r in rows] == [f.ids["confirmed"]] and rows[0]["sid"].startswith("sp_")
+
+
+def g_action_targets(f, rows):
+    assert rows == [{"id": "ticket:rds-42"}]
+
+
+def g_already_confirmed(f, rows):
+    assert rows == [{"c": f.ids["confirmed"], "ac": f.ids["confirm"]}]
+
+
+def g_any_confirmed(f, rows):
+    assert rows == [{"c": f.ids["confirmed"]}]
+
+
+def g_assertion(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert (r["id"], r["predicate"], r["subject_id"], r["object_id"]) == (f.ids["own"], "OWNS", "team:payments", "system:ledger")
+    assert (r["status"], r["run_id"], r["chain_id"], r["valid_from"], r["retracted_at"]) == (
+        "current", f.ids["own"], "ch_OWNS:system:ledger", 5, MAX)
+
+
+def g_based_on_spans(f, rows):
+    assert rows == [{"id": "sp_adr"}]
+
+
+def g_belief_all_leads(f, rows):
+    assert rows == [{"person": "person:priya", "name": "Priya Raman", "team": "team:payments", "aid": f.ids["lead"]}]
+
+
+def g_belief_lead_of(f, rows):
+    assert rows == [{"person": "person:priya", "name": "Priya Raman", "aid": f.ids["lead"]}]
+
+
+def g_belief_out_edges(f, rows):
+    assert rows == [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["affects"]}]
+
+
+def g_belief_owners_of(f, rows):
+    assert rows == [{"owner": "team:payments", "name": "Payments", "aid": f.ids["own"]}]   # not Infra's rank-1 chat
+
+
+def g_belief_parent_of(f, rows):
+    assert rows == [{"parent": "project:commerce", "aid": f.ids["part"]}]
+
+
+def g_belief_primary_team(f, rows):
+    assert rows == [{"team": "team:payments", "aid": f.ids["member"]}]
+
+
+def g_confirmed_proposals(f, rows):
+    assert rows == [{"id": f.ids["proposal"]}]
+
+
+def g_confirmed_targets(f, rows):
+    assert rows == [{"id": f.ids["confirmed"]}]
+
+
+def g_current_in_chain(f, rows):
+    assert rows == [{"id": f.ids["own"], "st": "Payments owns Ledger"}]
+
+
+def g_decision_status(f, rows):
+    assert rows == [{"s": "accepted", "aid": f.ids["status"], "n": "ADR-002"}]
+
+
+def g_disputed_run(f, rows):
+    assert rows == [{"run": f.ids["own"]}]
+
+
+def g_draft_decision(f, rows):
+    assert rows == [{"d": f.ids["draft_decision"]}]
+
+
+def g_entity_name(f, rows):
+    assert rows == [{"n": "Ledger"}]
+
+
+def g_entity_names(f, rows):
+    r = {x["id"]: x["n"] for x in rows}
+    assert len(r) == 13 and r["person:priya"] == "Priya Raman"
+
+
+def g_learn_ents(f, rows):
+    assert sorted(rows, key=lambda r: r["id"]) == [
+        {"id": "system:ledger", "n": "Ledger", "a": ["ledger", "ledger-service"]},
+        {"id": "team:payments", "n": "Payments", "a": ["payments"]}]
+
+
+def g_live_confirmations(f, rows):
+    assert [(r["member"], r["action_id"]) for r in rows] == [(f.ids["confirmed"], f.ids["confirm"])]
+
+
+def g_produced_assertions(f, rows):
+    assert rows == [{"id": f.ids["proposal"]}]
+
+
+def g_produced_sources(f, rows):
+    assert len(rows) == 1 and rows[0]["id"].startswith("src_draft_")
+
+
+def g_rationale_spans(f, rows):
+    assert rows == [{"id": "sp_adr"}]
+
+
+def g_stale_detection(f, rows):
+    assert [(r["span"], r["aid"], r["why"], r["valid_to"]) for r in rows] == [("sp_own_old", f.ids["own_old"], "stale", 5)]
+
+
+def g_stale_override(f, rows):
+    assert [(r["span"], r["aid"], r["why"]) for r in rows] == [("sp_over", f.ids["over"], "overrides a confirmation")]
+
+
+def g_strongest_member(f, rows):
+    assert rows == [{"id": f.ids["own"], "au": 4}]
+
+
+def g_turn_span(f, rows):
+    assert rows == [{"text": "who owns ledger?", "role": "user", "ts": 7}]
+
+
+def g_withdrawn_by(f, rows):
+    assert rows == [{"ac": f.ids["action"], "s": "done"}]
 
 
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}

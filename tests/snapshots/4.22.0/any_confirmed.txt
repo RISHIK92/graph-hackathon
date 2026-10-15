@@ -1,0 +1,6 @@
+Results
+    Limit
+        Project
+            Filter
+                Conditional Traverse | (ac)->(c:Assertion)
+                    Node By Index Scan | (ac:Action)

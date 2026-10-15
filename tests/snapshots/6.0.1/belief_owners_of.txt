@@ -1,0 +1,6 @@
+Project
+    Filter
+        Filter
+            Edge By Index Scan | (x)-[r:OWNS]->(o:Entity)
+                Filter
+                    Node By Index Scan | (x:Entity)

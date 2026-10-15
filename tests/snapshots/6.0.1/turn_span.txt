@@ -1,0 +1,5 @@
+Project
+    Filter
+        Conditional Traverse | (src)->(s:Span)
+            Filter
+                Node By Index Scan | (src:Source)

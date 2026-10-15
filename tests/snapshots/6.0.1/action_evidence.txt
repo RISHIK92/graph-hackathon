@@ -1,0 +1,4 @@
+Project
+    Filter
+        Conditional Traverse | (s)<-[e:EVIDENCED_BY]-(a:Assertion)
+            Node By Label Scan | (s:Span)

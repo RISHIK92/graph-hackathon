@@ -1,0 +1,5 @@
+Project
+    Filter
+        Conditional Traverse | (x)-[r]->(y:Entity)
+            Filter
+                Node By Index Scan | (x:Entity)

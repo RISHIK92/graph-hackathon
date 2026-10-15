@@ -1,0 +1,5 @@
+Distinct
+    Project
+        Filter
+            Conditional Traverse | (d)-[m:MOTIVATED_BY]->(anon_0)
+                Node By Label Scan | (d:Decision)
