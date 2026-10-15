@@ -20,7 +20,7 @@ from brain.db import Graph
 from brain.tools import Ctx, run_tool
 from ingest.extract import AliasIndex, pattern_extract
 
-from .verifier import assemble, verify
+from .verifier import assemble, index_packs, verify
 from brain.ids import now_ms
 
 INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "aggregate", "fact", "memory",
@@ -154,6 +154,8 @@ class Agent:
         final = {"claims": ver["kept"], "abstained": ver["abstained"],
                  "assembled": assemble(ver["kept"], ctx.packs, answer.get("explanation", "")),
                  "packs": {pid: packs[pid] for pid in packs}}
+        final["assembled"]["lead"] = lead_sentence(plan["intent"], ver["kept"], packs, ctx.as_of, lambda a: self._settlers(s, a),
+                                                   self._now_statement)
         if ver["abstained"]:
             final["nearest"] = [it.get("path") for p in packs.values() for it in p["items"] if it.get("path")][:3]
             final["missing"] = gap or missing(plan, text)
@@ -272,6 +274,15 @@ class Agent:
         if len(calls) <= 1 or intent == "other":
             calls.append(("search_spans", {"query": text, "present_tense": intent != "history"}))
         return calls
+
+    def _settlers(self, s: Session, aid: str) -> list[str]:
+        el = Actions(self.g, self.clock).confirm_preview(s.acting_as or "", assertion_id=aid)["eligible"]
+        return list(dict.fromkeys(e["name"] for e in el if e.get("name")))
+
+    def _now_statement(self, aid: str) -> str:
+        a = self.g.q("assertion", {"id": aid})
+        cur = self.g.q("current_in_chain", {"c": a[0]["chain_id"]}) if a else []
+        return cur[0]["st"] if cur else ""
 
     # draft
     def draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None = None) -> dict:
@@ -479,7 +490,7 @@ def heuristic_plan(text: str) -> dict:
         intent = "decision_trace"
     elif re.search(r"connected|path between|related to", t):
         intent = "path"
-    elif re.search(r"\b(owns?|owners?|responsible|assigned|handle)\b", t):
+    elif re.search(r"\b(owns?|owned|owners?|responsible|assigned|handle)\b", t):
         intent = "ownership"
     elif re.search(r"earlier|last time|what did i|remember", t):
         intent = "memory"
@@ -639,6 +650,60 @@ def relevant_claims(plan: dict, claims: list[dict]) -> list[dict]:
     if not keep:
         return claims
     return [c for c in claims if c.get("label") != "graph" or (c.get("fact") or {}).get("predicate") in keep]
+
+
+_PRESENT = {"OWNS": " owns ", "LEADS": " leads ", "ASSIGNED_TO": " is assigned to ", "MEMBER_OF": " is a member of ",
+            "DEPENDS_ON": " depends on ", "PART_OF": " is part of "}
+_PAST = {"OWNS": " owned ", "LEADS": " led ", "ASSIGNED_TO": " was assigned to ", "MEMBER_OF": " was a member of ",
+         "DEPENDS_ON": " depended on ", "PART_OF": " was part of "}
+_KIND = {"catalog": "catalogue", "meeting": "meeting note", "adr": "ADR", "chat_session": "chat"}
+
+
+def lead_sentence(intent: str, kept: list[dict], packs: dict[str, dict], as_of: int | None, settlers,
+                  now_statement) -> str:
+    """The fixed first sentence for disputes and past belief (item 18 fix 5; the item 16 M4/M11 wording),
+    built from verified claims only. Other answers have none ("")."""
+    ix = index_packs(packs)
+
+    def kind(aid: str) -> str:
+        k = next((ix.spans[s]["kind"] for s in sorted(ix.fact_spans.get(aid, ())) if s in ix.spans), "")
+        return _KIND.get(k, k)
+    for c in kept:
+        f = ix.facts.get((c.get("assertion_ids") or [""])[0])
+        if c.get("label") != "graph" or not f or f["status"] != "current" or not f.get("open_disputes"):
+            continue
+        ch = ix.facts.get(f["open_disputes"][0])
+        if not ch:
+            continue
+        ck = kind(ch["assertion_id"])
+        who = settlers(ch["assertion_id"])
+        return (f"Recorded: {f['statement']} ({kind(f['assertion_id'])}); disputed by a "
+                f"{ck + ' message' if ck == 'chat' else ck + ' source'} saying “{ch['statement']}”. "
+                + (f"{' or '.join(who)} can settle it." if who else "No one with authority can settle it yet."))
+    acts = sorted((a for p in packs.values() for it in p["items"] for a in it.get("actions") or []
+                   if intent == "history" and a.get("recorded_at") and a.get("summary")),
+                  key=lambda a: a.get("kind") != "route_to_owner")
+    at = acts[0]["recorded_at"] if acts else as_of   # "why did you route X?" is about the action's own time
+    if at is None:
+        return ""
+    # An action's explanation speaks about the facts it relied on; it says so even when nothing changed.
+    relied = set(acts[0].get("based_on") or []) if acts else set()
+    for c in kept:
+        f = ix.facts.get((c.get("assertion_ids") or [""])[0])
+        p = (f or {}).get("predicate")
+        if c.get("label") != "graph" or p not in _PAST or not f["valid_from"] <= at < f["valid_to"] \
+                or (f["valid_to"] == MAX and not relied) or (relied and f["assertion_id"] not in relied):
+            continue
+        old = f["statement"].split(_PRESENT[p], 1)
+        out = f["statement"].replace(_PRESENT[p], _PAST[p], 1) + f" on {_day(at)}"
+        new = now_statement(f["assertion_id"]).split(_PRESENT[p], 1)
+        if len(old) == 2 and len(new) == 2 and new != old:
+            out += f" (changed to {new[0] if new[0] != old[0] else new[1]} on {_day(f['valid_to'])})"
+        elif relied:
+            out += " (still the case)"
+        head = f"{acts[0]['summary']} on {_day(at)}: " if acts else ""
+        return head + out + "."
+    return ""
 
 
 def _day(ms: int) -> str:

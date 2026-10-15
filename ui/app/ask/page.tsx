@@ -17,7 +17,7 @@ interface Turn {
   at: number;
   asOf: number | null;
   stages: StreamEvent[];
-  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
+  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string; lead?: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
   actions: StreamEvent[];
   turnId?: string;
   done: boolean;
@@ -219,8 +219,10 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes }: { t: Turn; idx:
     return Array.from(out.entries());
   }, [lines, claims, factIndex, pathIndex, plan]);
 
+  const answerLead = t.answer?.assembled.lead;
   const lead = useMemo(() => {
     if (!lines.length) return "";
+    if (answerLead) return answerLead;
     const intent = String(plan?.intent || "");
     if (intent === "impact") {
       const breaks = groups.find(([k]) => k === "What breaks")?.[1].length || 0;
@@ -228,7 +230,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes }: { t: Turn; idx:
       return `${plural(breaks, "dependency", "dependencies")} would be affected${tell.length ? `. Tell ${uniq(tell).join(", ")}` : ""}.`;
     }
     return lines.slice(0, 2).map((l) => l.text.replace(/\.$/, "")).join(". ") + ".";
-  }, [lines, groups, plan]);
+  }, [lines, groups, plan, answerLead]);
 
   return (
     <PackContext.Provider value={{ packs, fromTurn: true }}>

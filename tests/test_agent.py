@@ -396,3 +396,46 @@ def test_claims_are_kept_only_for_what_the_intent_asks():
     assert [x["claim_id"] for x in relevant_claims({"intent": "ownership"}, claims)] == ["c1", "c2", "c5"]
     assert [x["claim_id"] for x in relevant_claims({"intent": "impact"}, claims)] == ["c1", "c2", "c3", "c5"]
     assert relevant_claims({"intent": "fact"}, claims) == claims
+
+
+def test_disputed_answer_leads_with_the_dispute_shape(world):
+    """Item 18 fix 5: "Recorded: T (<kind>); disputed by a chat message saying U. <Who> can settle it." """
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    run(agent, s, "Infra owns Ledger now")
+    world["clock"].tick()
+    ans = answer_of(run(agent, s, "Who owns Ledger?"))
+    assert ans["assembled"]["lead"] == ("Recorded: Payments owns Ledger (wiki); disputed by a chat message saying "
+                                        "“Infra owns Ledger”. Priya Raman can settle it.")
+
+
+def test_past_belief_answer_leads_with_the_change(world):
+    """Item 18 fix 5: "T owned X on <date> (changed to U on <date>)" for an as-of question."""
+    g, wp, clock = world["g"], world["wp"], world["clock"]
+    clock.t = 1780000000000
+    store.upsert_entities(g, [{"id": "system:vault", "name": "Vault", "aliases": []}])
+    make_span(g, "sp_v1", "platform owns vault", 1)
+    make_span(g, "sp_v2", "payments owns vault", 1)
+    _fact(wp, "OWNS", "team:platform", "system:vault", 1767225600000, "sp_v1")
+    _fact(wp, "OWNS", "team:payments", "system:vault", 1772323200000, "sp_v2")
+    clock.tick(10)
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Who owned Vault then?", as_of=1769904000000))
+    assert ans["assembled"]["lead"] == "Platform owned Vault on 1 Feb 2026 (changed to Payments on 1 Mar 2026)."
+    ans = answer_of(run(agent, s, "Who owns Vault?"))
+    assert ans["assembled"]["lead"] == ""
+
+
+def test_action_explanation_leads_with_what_it_relied_on_then(world):
+    """Item 18 fix 5: "Why did you route X?" leads with the action and the relied-on fact as it stood then,
+    and whether it changed since."""
+    g, clock = world["g"], world["clock"]
+    Actions(g, clock).route_to_owner(Actor("person:eve"), ticket_id="ticket:rds-42")
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    lead = answer_of(run(agent, s, "Why did you route RDS-42 to Priya?"))["assembled"]["lead"]
+    assert lead.startswith("Proposed routing RDS-42 to Priya Raman on 1 Jan 1970: Payments owned Ledger on 1 Jan 1970")
+    assert lead.endswith("(still the case).")
+    assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == ""
