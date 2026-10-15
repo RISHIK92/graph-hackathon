@@ -79,7 +79,28 @@ export function RefusalCard({ r }: { r: Refusal }) {
   );
 }
 
-function ResultCard({ res, verb }: { res: WriteResult; verb: string }) {
+/** Undo an action straight from a toast or a success card (M7): one click, no preview step; the guard decides. */
+export function useUndoNow() {
+  const { session, actingAs, noteWrite, personName, toast } = useStore();
+  return async (actionId: string, what?: string): Promise<boolean> => {
+    if (!session) return false;
+    try {
+      const r = await send<WriteResult>("POST", `/actions/${encodeURIComponent(actionId)}/undo`, { session_id: session.id, request_id: crypto.randomUUID() });
+      if (r.refusal) {
+        toast({ tone: "error", title: "Undo refused", body: r.refusal.reason });
+        return false;
+      }
+      noteWrite(`${personName(actingAs)} undid ${what || "an action"}`);
+      toast({ tone: "success", title: "Undone", body: what });
+      return true;
+    } catch (e) {
+      toast({ tone: "error", title: "Undo failed", body: String((e as Error).message || e) });
+      return false;
+    }
+  };
+}
+
+function ResultCard({ res, verb, onUndo, onDismiss }: { res: WriteResult; verb: string; onUndo?: () => void; onDismiss?: () => void }) {
   const { openAction } = useStore();
   const ac = res.pack?.items?.[0]?.actions?.[0];
   return (
@@ -90,6 +111,8 @@ function ResultCard({ res, verb }: { res: WriteResult; verb: string }) {
         <>
           {ac?.eligibility && <EligibilityBadge e={ac.eligibility} />}
           {res.action_id && <Button size="sm" variant="link" onClick={() => openAction(res.action_id as string)}>View action</Button>}
+          {onUndo && <Button size="sm" onClick={onUndo}>Undo</Button>}
+          {onDismiss && <Button size="sm" variant="ghost" onClick={onDismiss}>Dismiss</Button>}
         </>
       }
     />
@@ -110,6 +133,13 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<WriteResult | null>(null);
+  const undoNow = useUndoNow();
+  // The success card stays about 10 s, with Undo beside it, then gives way to the live state (M7)
+  useEffect(() => {
+    if (!result || result.refusal) return;
+    const t = setTimeout(() => setResult(null), 10_000);
+    return () => clearTimeout(t);
+  }, [result]);
   const target = assertionId ? `/assertions/${encodeURIComponent(assertionId)}` : `/actions/${encodeURIComponent(actionId || "")}`;
 
   useEffect(() => {
@@ -122,7 +152,12 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
     return () => { live = false; };
   }, [target, session, actingAs, version]);
 
-  if (result) return result.refusal ? <RefusalCard r={result.refusal} /> : <ResultCard res={result} verb="Confirmed" />;
+  if (result) {
+    if (result.refusal) return <RefusalCard r={result.refusal} />;
+    const undoId = result.action_id;
+    return <ResultCard res={result} verb="Confirmed" onDismiss={() => setResult(null)}
+      onUndo={undoId ? async () => { if (await undoNow(undoId, what)) setResult(null); } : undefined} />;
+  }
   if (err) return <Notice tone="error" title="Could not check who may confirm">{err}</Notice>;
   if (!pv || !session) return <Skeleton w={220} h={28} />;
 
@@ -134,7 +169,8 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
       setOpen(false);
       if (!r.refusal) {
         noteWrite(`${personName(actingAs)} confirmed ${what || "a fact"}`);
-        toast({ tone: "success", title: "Confirmed", body: what, action: r.action_id ? { label: "View action", onClick: () => openAction(r.action_id as string) } : undefined });
+        const undoId = r.action_id;
+        toast({ tone: "success", title: "Confirmed", body: what, action: undoId ? { label: "Undo", onClick: () => { void undoNow(undoId, what).then((ok) => ok && setResult(null)); } } : undefined });
       } else {
         toast({ tone: "error", title: "The write guard refused", body: r.refusal.reason });
       }
