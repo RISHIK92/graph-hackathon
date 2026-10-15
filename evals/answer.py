@@ -407,7 +407,7 @@ METRICS = ["entity_match", "entity_f1", "citation_precision", "citation_recall",
            "action_in_pack", "aggregate_acceptable", "aggregate_correct", "history_judge"]
 CAT_LABELS = {"1": "single-hop", "2": "multi-hop", "3": "ownership", "4": "decision trace", "4-pending": "pending draft",
               "5": "stale fact", "6": "unanswerable", "7": "past belief", "8": "disputed", "9": "session memory",
-              "10": "outside templates"}
+              "10": "outside templates", "11": "graph algorithms"}
 
 
 def _mean_cell(rows: list[dict], m: str) -> str:

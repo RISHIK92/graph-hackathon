@@ -27,7 +27,7 @@ GATE_CATS = {"2": "multi-hop", "3": "ownership", "4": "decision trace", "5": "st
 # `setup_script` / `turns`) need state written on a scratch graph, so they run in the answer layer only.
 CAT_NAMES = {"1": "single-hop", "2": "multi-hop", "3": "ownership", "4": "decision trace", "4-pending": "pending draft",
              "5": "stale fact", "6": "unanswerable", "7": "past belief", "8": "disputed", "9": "session memory",
-             "10": "outside templates"}
+             "10": "outside templates", "11": "graph algorithms"}
 
 
 def sha() -> str:

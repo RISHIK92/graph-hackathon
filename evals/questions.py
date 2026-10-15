@@ -371,6 +371,28 @@ class Generator:
                 agg(f"How many different teams own systems that depend on {n[x]}?", {"number": len(owners)}, [],
                     ["DEPENDS_ON", "OWNS"])
 
+        # Item 17's graph algorithms, with gold from the declarations (the most direct-or-indirect dependents,
+        # teams with no lead), not from the algorithms themselves
+        def dependents(x: str) -> set[str]:
+            seen: set[str] = set()
+            stack = [x]
+            while stack:
+                for d in direct.get(stack.pop(), set()) - seen:
+                    seen.add(d)
+                    stack.append(d)
+            return seen
+        top = sorted(systems, key=lambda x: (-len(dependents(x)), n[x]))[0]
+        algo: list[tuple[str, str, list[str]]] = []
+        if dependents(top):
+            algo.append(("Which systems are most critical, with the most systems depending on them directly or "
+                         "indirectly?", top, ["DEPENDS_ON"]))
+        leaderless = [x["id"] for x in self.world.w["teams"] if not self.cg.state(("LEADS", "", x["id"]), T)]
+        if leaderless:
+            algo.append(("Which teams have no lead right now?", sorted(leaderless)[0], ["LEADS"]))
+        for text, gold, rel in algo:   # category 11: few enough to be asked every run, never sampled away
+            self.out[11].append(self.q(11, text, expected_entities=[gold], groups=[], rel=rel,
+                                       expected_answer={"entity": gold}, acceptable=["correct", "abstain"]))
+
         # Systems belonging to projects
         parts_by_proj: dict[str, set[str]] = defaultdict(set)
         for x in systems:
