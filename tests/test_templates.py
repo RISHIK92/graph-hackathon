@@ -220,6 +220,7 @@ PARAMS = {
     "entity_names": lambda f: {},
     "entity_sources": lambda f: {"id": "system:ledger"},
     "evidence_fragment": lambda f: {"aids": [f.ids["own"], f.ids["proposal"]], "T": f.now},
+    "existing_spans": lambda f: {"ids": ["sp_own", "sp_nope"]},
     "experts_signals": lambda f: {"x": "system:ledger", "V": f.now},
     "graph_edge_kinds": lambda f: {"aids": [f.ids["own"], f.ids["dep1"]], "max": MAX},
     "graph_edges": lambda f: {"V": f.now},
@@ -252,10 +253,12 @@ PARAMS = {
     "proposals_about": lambda f: {"e": "ticket:rds-42"},
     "rationale_spans": lambda f: {"d": "decision:adr-002", "max": MAX},
     "replaced_by": lambda f: {"d": "decision:adr-001", "V": f.now},
+    "revisions": lambda f: {"k": "src:test"},
     "run_members": lambda f: {"run": f.ids["own"]},
     "search_fulltext": lambda f: {"q": "ledger"},
     "search_vector": lambda f: {"k": 4, "vec": f.vec("Payments owns Ledger")},
     "session_spans": lambda f: {"user": "u1"},
+    "source_exists": lambda f: {"id": "src:test"},
     "source_view": lambda f: {"id": "src:test"},
     "span_details": lambda f: {"sids": ["sp_own", "turn1"], "T": f.now},
     "span_view": lambda f: {"id": "sp_own", "max": MAX},
@@ -747,6 +750,18 @@ def g_turn_span(f, rows):
 
 def g_withdrawn_by(f, rows):
     assert rows == [{"ac": f.ids["action"], "s": "done"}]
+
+
+def g_existing_spans(f, rows):
+    assert rows == [{"id": "sp_own", "ts": 1}]
+
+
+def g_revisions(f, rows):
+    assert rows == [{"id": "src:test", "updated_at": 1, "is_latest": True, "ingested_at": 1, "status": "active"}]
+
+
+def g_source_exists(f, rows):
+    assert rows == [{"ingested_at": 1, "is_latest": True}]
 
 
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}

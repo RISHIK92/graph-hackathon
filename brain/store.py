@@ -29,8 +29,7 @@ def upsert_entities(g: Graph, entities: list[dict]) -> None:
 
 
 def source_exists(g: Graph, sid: str) -> dict | None:
-    r = g.ro("MATCH (s:Source {id:$id}) RETURN s.ingested_at AS ingested_at, s.is_latest AS is_latest",
-             {"id": sid}, template="source_exists")
+    r = g.q("source_exists", {"id": sid})
     return r[0] if r else None
 
 
@@ -43,9 +42,7 @@ def set_source(g: Graph, sid: str, props: dict) -> None:
 
 
 def revisions(g: Graph, doc_key: str) -> list[dict]:
-    return g.ro("MATCH (s:Source {doc_key:$k}) RETURN s.id AS id, s.updated_at AS updated_at, "
-                "s.is_latest AS is_latest, s.ingested_at AS ingested_at, s.status AS status",
-                {"k": doc_key}, template="revisions")
+    return g.q("revisions", {"k": doc_key})
 
 
 def link_revision(g: Graph, newer: str, older: str) -> None:
@@ -54,8 +51,7 @@ def link_revision(g: Graph, newer: str, older: str) -> None:
 
 
 def existing_spans(g: Graph, span_ids: list[str]) -> dict[str, dict]:
-    rows = g.ro("UNWIND $ids AS i MATCH (s:Span {id:i}) RETURN s.id AS id, s.ts AS ts",
-                {"ids": span_ids}, template="existing_spans")
+    rows = g.q("existing_spans", {"ids": span_ids})
     return {r["id"]: r for r in rows}
 
 

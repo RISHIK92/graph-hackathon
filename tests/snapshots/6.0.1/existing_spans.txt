@@ -1,0 +1,3 @@
+Project
+    Filter
+        Node By Index Scan | (s:Span)
