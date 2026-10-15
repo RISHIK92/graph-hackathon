@@ -20,6 +20,7 @@ interface Turn {
   answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string; lead?: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
   actions: StreamEvent[];
   turnId?: string;
+  writeSeq: number;
   done: boolean;
   error?: string;
 }
@@ -56,7 +57,7 @@ function Ask() {
     setBusy(true);
     setText("");
     const idx = turns.length;
-    setTurns((t) => [...t, { text: q, at: Date.now(), asOf: s.asOf, stages: [], actions: [], done: false }]);
+    setTurns((t) => [...t, { text: q, at: Date.now(), asOf: s.asOf, stages: [], actions: [], writeSeq: s.lastWrite?.seq || 0, done: false }]);
     const upd = (f: (t: Turn) => Turn) => setTurns((all) => all.map((t, i) => (i === idx ? f(t) : t)));
     const ac = new AbortController();
     abortRef.current = ac;
@@ -110,7 +111,7 @@ function Ask() {
             </div>
           )}
           {turns.map((t, i) => (
-            <TurnView key={i} t={t} idx={i} selected={selected} onSelect={setSelected} priorDisputes={disputeKeysBefore(turns, i)} />
+            <TurnView key={i} t={t} idx={i} selected={selected} onSelect={setSelected} priorDisputes={disputeKeysBefore(turns, i)} onAskAgain={sendQ} />
           ))}
         </div>
       </div>
@@ -168,7 +169,9 @@ function disputeKey(g: ReturnType<typeof collectDisputes>[number]): string {
   return g.recorded?.run_id || g.recorded?.assertion_id || g.challengers[0]?.fact.assertion_id || "";
 }
 
-function TurnView({ t, idx, selected, onSelect, priorDisputes }: { t: Turn; idx: number; selected: string; onSelect: (k: string) => void; priorDisputes: Set<string> }) {
+function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
+  t: Turn; idx: number; selected: string; onSelect: (k: string) => void; priorDisputes: Set<string>; onAskAgain: (q: string) => void;
+}) {
   const s = useStore();
   const packs = useMemo(() => Object.values(t.answer?.packs || {}), [t.answer]);
   const spanIndex = useMemo(() => {
@@ -250,6 +253,11 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes }: { t: Turn; idx:
 
         {t.error && <Notice tone={t.error === "Stopped." ? "info" : "error"} title={t.error === "Stopped." ? "Stopped" : "The turn failed"}>{t.error !== "Stopped." ? t.error : null}</Notice>}
 
+        {t.answer && t.done && s.lastWrite && s.lastWrite.seq > t.writeSeq && (
+          <Notice tone="info" title="Updated since this answer" actions={<Button size="sm" onClick={() => onAskAgain(t.text)}>Ask again</Button>}>
+            {s.lastWrite.text}.
+          </Notice>
+        )}
         {t.answer && (
           <div className="answer">
             {t.answer.abstained ? (

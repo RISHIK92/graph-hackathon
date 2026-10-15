@@ -63,6 +63,9 @@ interface Store {
   setAsOf: (v: number | null) => void;
   version: number;
   bump: () => void;
+  /** The latest confirm or undo, so answers asked before it can say they're out of date (M1). */
+  lastWrite: { seq: number; text: string } | null;
+  noteWrite: (text: string) => void;
   pendingCount: number;
   debug: boolean;
   nextResetAt: number | null;
@@ -144,6 +147,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const pendingNames = useRef<Set<string>>(new Set());
 
   const bump = useCallback(() => setVersion((v) => v + 1), []);
+  const [lastWrite, setLastWrite] = useState<{ seq: number; text: string } | null>(null);
+  const noteWrite = useCallback((text: string) => {
+    setLastWrite((w) => ({ seq: (w?.seq || 0) + 1, text }));
+    bump();
+  }, [bump]);
 
   // first load: token, debug flag, theme, people, health
   useEffect(() => {
@@ -275,8 +283,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(
     () => ({
       ready, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
-      people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, pendingCount, debug, nextResetAt,
-      theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
+      people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, pendingCount, debug,
+      nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
       openEntity: (id, name, mode = "replace") => openInspector({ kind: "entity", id, name }, mode),
       openAction: (id, mode = "replace") => openInspector({ kind: "action", id }, mode),
@@ -284,7 +292,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toasts, toast, dismissToast, names, resolveNames,
     }),
     [ready, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
-      pendingCount, debug, nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen,
+      lastWrite, noteWrite, pendingCount, debug, nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],
   );

@@ -104,7 +104,7 @@ function ResultCard({ res, verb }: { res: WriteResult; verb: string }) {
 export function ConfirmControl({ assertionId, actionId, label = "Confirm", what, compact, hideWho }: {
   assertionId?: string; actionId?: string; label?: string; what?: string; compact?: boolean; hideWho?: boolean;
 }) {
-  const { session, actingAs, version, bump, toast, openAction, setSessionSheetOpen } = useStore();
+  const { session, actingAs, version, noteWrite, personName, toast, openAction, setSessionSheetOpen } = useStore();
   const [pv, setPv] = useState<ConfirmPreview | null>(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -133,7 +133,7 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
       setResult(r);
       setOpen(false);
       if (!r.refusal) {
-        bump();
+        noteWrite(`${personName(actingAs)} confirmed ${what || "a fact"}`);
         toast({ tone: "success", title: "Confirmed", body: what, action: r.action_id ? { label: "View action", onClick: () => openAction(r.action_id as string) } : undefined });
       } else {
         toast({ tone: "error", title: "The write guard refused", body: r.refusal.reason });
@@ -221,7 +221,7 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
 export function UndoControl({ actionId, preview, requestId, onDone, what }: {
   actionId: string; preview: UndoPreview; requestId: string; onDone?: () => void; what?: string;
 }) {
-  const { session, bump, toast, openAction, setSessionSheetOpen } = useStore();
+  const { session, actingAs, noteWrite, personName, toast, openAction, setSessionSheetOpen } = useStore();
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<WriteResult | null>(null);
@@ -241,7 +241,7 @@ export function UndoControl({ actionId, preview, requestId, onDone, what }: {
       setResult(r);
       setOpen(false);
       if (!r.refusal) {
-        bump();
+        noteWrite(`${personName(actingAs)} undid ${what || "an action"}`);
         onDone?.();
         toast({ tone: "success", title: "Undone", body: what, action: r.action_id ? { label: "View undo action", onClick: () => openAction(r.action_id as string) } : undefined });
       } else {
