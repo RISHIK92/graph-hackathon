@@ -44,12 +44,13 @@ export function fmtAge(ms: number | null | undefined): string {
 
 /** The display status of a fact (04 §2.2). */
 export type DisplayStatus =
-  | "current" | "historical" | "disputed" | "overruled" | "proposed" | "confirmed" | "withdrawn" | "retracted" | "unknown";
+  | "current" | "current_then" | "historical" | "disputed" | "overruled" | "proposed" | "confirmed" | "withdrawn" | "retracted" | "unknown";
 
-export function factStatus(f: Fact): DisplayStatus {
+/** With an As-of date, a since-replaced fact that held on that date is "Current then", not "Historical" (M11). */
+export function factStatus(f: Fact, asOf?: number | null): DisplayStatus {
   switch (f.status) {
     case "current": return "current";
-    case "superseded": return "historical";
+    case "superseded": return asOf && f.valid_from <= asOf && asOf < f.valid_to ? "current_then" : "historical";
     case "disputed": return f.overruled_by ? "overruled" : "disputed";
     case "proposed": return f.confirmed_by ? "confirmed" : "proposed";
     case "retracted": return f.action_id ? "withdrawn" : "retracted";
@@ -59,7 +60,7 @@ export function factStatus(f: Fact): DisplayStatus {
 }
 
 export const STATUS_LABEL: Record<string, string> = {
-  current: "Current", historical: "Historical", disputed: "Disputed", overruled: "Overruled", proposed: "Proposed",
+  current: "Current", current_then: "Current then", historical: "Historical", disputed: "Disputed", overruled: "Overruled", proposed: "Proposed",
   confirmed: "Confirmed", withdrawn: "Withdrawn", retracted: "Retracted", unknown: "Unknown at date",
   done: "Done", refused: "Refused", undone: "Undone", superseded: "Superseded", accepted: "Accepted", rejected: "Rejected", open: "Open", closed: "Closed",
 };
@@ -67,7 +68,7 @@ export const STATUS_LABEL: Record<string, string> = {
 /** Status → semantic encoding (DESIGN.md §3.2). Colour never alone: dot shape + word. */
 export function statusTone(st: string): { tone: "success" | "error" | "accent" | "neutral" | "warning"; dot: string; strike?: boolean } {
   switch (st) {
-    case "current": case "confirmed": case "done": case "accepted": return { tone: "success", dot: "dot success" };
+    case "current": case "current_then": case "confirmed": case "done": case "accepted": return { tone: "success", dot: "dot success" };
     case "disputed": case "refused": return { tone: "error", dot: "dot error" };
     case "proposed": return { tone: "accent", dot: "dot accent" };
     case "overruled": case "withdrawn": case "retracted": case "undone": return { tone: "neutral", dot: "dot", strike: true };

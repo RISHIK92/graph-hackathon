@@ -78,14 +78,15 @@ function statementParts(f: Fact): { negated: boolean; text: string } {
  * The atom of the product (DESIGN.md §3.6): fixed columns, never flex-wrap.
  * statement | status | interval | citations | overflow
  */
-export function FactRow({ fact, spans, label = "graph", path, showInterval = true, selected, onSelect, extra }: {
+export function FactRow({ fact, spans, label = "graph", path, showInterval = true, selected, onSelect, extra, asOf }: {
   fact: Fact; spans?: SpanItem[]; label?: string; path?: Path | null; showInterval?: boolean;
-  selected?: boolean; onSelect?: () => void; extra?: React.ReactNode;
+  selected?: boolean; onSelect?: () => void; extra?: React.ReactNode; asOf?: number | null;
 }) {
+  const store = useStore();
   const { openEvidence, openAction } = useStore();
   const mode = useOpenMode();
   const pc = useContext(PackContext);
-  const st = factStatus(fact);
+  const st = factStatus(fact, asOf === undefined ? store.asOf : asOf);
   const mine = spansFor(spans, fact.assertion_id);
   const tl = timelineKey(fact);
   const { negated, text } = statementParts(fact);

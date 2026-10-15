@@ -199,7 +199,11 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
   const me = s.people.find((p) => p.id === t.actor);
 
   // group lines by intent (DESIGN.md §4.2)
-  const lines = useMemo(() => (t.answer?.assembled.lines || []).map((l) => ({ ...l, text: l.text.replace(/\s*\(disputed\)/gi, "") })), [t.answer]);
+  // The chip carries the status; in an As-of turn it also tells "Current then" from "Historical" (M11).
+  const lines = useMemo(() => (t.answer?.assembled.lines || []).map((l) => {
+    const text = l.text.replace(/\s*\(disputed\)/gi, "");
+    return { ...l, text: t.asOf ? text.replace(/\s*\(historical\)/gi, "") : text };
+  }), [t.answer, t.asOf]);
   const groups = useMemo(() => {
     const intent = String(plan?.intent || "");
     const rows = lines.map((l) => {
@@ -299,6 +303,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
                             spans={spans}
                             label={c?.label}
                             path={path}
+                            asOf={t.asOf}
                             showInterval={!!f}
                             selected={selected === key}
                             onSelect={() => {
