@@ -249,7 +249,7 @@ kbd { font-family: var(--font); font-size: var(--fs-micro); line-height: 16px; p
 .notice .title { font-weight: 600; }
 
 /* ---- toasts ---------------------------------------------------------------------------- */
-.toast-stack { position: fixed; right: var(--s-6); bottom: var(--s-6); z-index: 100; display: flex; flex-direction: column; gap: var(--s-2); width: 360px; max-width: calc(100vw - 48px); }
+.toast-stack { position: fixed; right: var(--s-6); bottom: 104px; z-index: 100; display: flex; flex-direction: column; gap: var(--s-2); width: 360px; max-width: calc(100vw - 48px); }
 .toast { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-3) var(--s-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-3); box-shadow: var(--shadow-2); animation: toast-in var(--t-panel); }
 .toast svg.lead { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 2px; }
 .toast.success svg.lead { color: var(--success-700); }

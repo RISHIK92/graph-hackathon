@@ -9,7 +9,7 @@ import { collectDisputes, DisputeLine } from "@/components/Dispute";
 import { Button, Chip, Notice, Placeholder } from "@/components/ui";
 import { streamTurn, type StreamEvent } from "@/lib/api";
 import { fmtDate, fmtDateTime, initials, plural } from "@/lib/format";
-import { displayText, intentLabel, predicateLabel } from "@/lib/labels";
+import { actionKindLabel, displayText, intentLabel, predicateLabel } from "@/lib/labels";
 import { type Turn, useStore } from "@/lib/store";
 import type { Claim, Fact, Pack, Path, Refusal, SpanItem } from "@/lib/types";
 
@@ -383,7 +383,7 @@ function StatusLine({ t, plan, toolCalls, verification }: { t: Turn; plan?: Stre
   return (
     <div className="statusline">
       <span className="t-strong">{intentLabel(String(plan?.intent || ""))}</span>
-      {plan?.wants_action && plan.wants_action !== "none" ? <Chip tone="accent" icon={Zap}>Action</Chip> : null}
+      {plan?.wants_action && plan.wants_action !== "none" ? <Chip tone="accent" icon={Zap}>{actionKindLabel(String(plan.wants_action))}</Chip> : null}
       {kept !== undefined && <><span className="sep">·</span><span>checked {plural(kept, "fact")} against {plural(sources, "source")}</span></>}
       {dropped !== undefined && dropped > 0 && <><span className="sep">·</span><span className="text-warning">{dropped} dropped</span></>}
       {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" onClick={() => s.openInspector({ kind: "trace", turnId: t.turnId! })}>How I answered</Button>}

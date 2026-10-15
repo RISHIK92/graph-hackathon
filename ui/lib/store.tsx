@@ -110,6 +110,7 @@ interface Store {
   toasts: Toast[];
   toast: (t: Omit<Toast, "id">) => void;
   dismissToast: (id: number) => void;
+  holdToasts: (on: boolean) => void;
   // names
   names: NameMap;
   resolveNames: (ids: string[]) => void;
@@ -130,8 +131,10 @@ const PENDING_POLL_MS = 30_000;
 
 function applyTheme(t: Theme) {
   try {
-    // Light is the default; dark is applied only on explicit choice (DESIGN.md §3.2).
-    if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    // Light is the default; dark on explicit choice, or with "system" when the OS prefers it (n2).
+    if (t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
     else document.documentElement.removeAttribute("data-theme");
   } catch {
     /* ssr */
@@ -161,6 +164,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [names, setNames] = useState<NameMap>({});
   const sessionRef = useRef<Session | null>(null);
   const toastId = useRef(0);
+  const toastHover = useRef(false);
   const pendingNames = useRef<Set<string>>(new Set());
 
   const bump = useCallback(() => setVersion((v) => v + 1), []);
@@ -280,8 +284,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const toast = useCallback((t: Omit<Toast, "id">) => {
     const id = ++toastId.current;
     setToasts((cur) => [...cur.slice(-2), { ...t, id }]);
-    const ttl = t.ttl ?? (t.action ? 8000 : 5000);
-    window.setTimeout(() => setToasts((cur) => cur.filter((x) => x.id !== id)), ttl);
+    // m6: long enough to click (7 s, 9 s with an action), and never while the pointer is over the toasts
+    const expire = () => {
+      if (toastHover.current) window.setTimeout(expire, 1500);
+      else setToasts((cur) => cur.filter((x) => x.id !== id));
+    };
+    window.setTimeout(expire, t.ttl ?? (t.action ? 9000 : 7000));
   }, []);
   const dismissToast = useCallback((id: number) => setToasts((cur) => cur.filter((x) => x.id !== id)), []);
 
@@ -307,7 +315,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       openEntity: (id, name, mode = "replace") => openInspector({ kind: "entity", id, name }, mode),
       openAction: (id, mode = "replace") => openInspector({ kind: "action", id }, mode),
       openEvidence: (t, mode = "replace") => (t ? openInspector({ kind: "evidence", target: t }, mode) : closeInspector()),
-      toasts, toast, dismissToast, names, resolveNames,
+      toasts, toast, dismissToast, holdToasts: (on: boolean) => { toastHover.current = on; }, names, resolveNames,
     }),
     [ready, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
       lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen,

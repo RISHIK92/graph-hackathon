@@ -99,10 +99,10 @@ export function Notice({ tone = "info", title, children, actions }: {
 }
 
 export function Toasts() {
-  const { toasts, dismissToast } = useStore();
+  const { toasts, dismissToast, holdToasts } = useStore();
   if (!toasts.length) return null;
   return (
-    <div className="toast-stack" aria-live="polite">
+    <div className="toast-stack" aria-live="polite" onMouseEnter={() => holdToasts(true)} onMouseLeave={() => holdToasts(false)}>
       {toasts.map((t) => {
         const Icon = TONE_ICON[t.tone];
         return (

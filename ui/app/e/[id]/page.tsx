@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { disputesOf, EntityActions, EntityDisputes, EntityHistory, EntitySources, EntitySummary, useEntity } from "@/components/EntityPanel";
 import { PageHeader } from "@/components/PageHeader";
 import { Button, Chip, Empty, ErrorState, Skeleton, Tabs } from "@/components/ui";
@@ -25,6 +25,7 @@ function EntityInner() {
   const { data, error, reload } = useEntity(id);
   const disputes = disputesOf(data, id).length;
   const notFound = error && /404|not found/i.test(error);
+  useEffect(() => { if (data?.name) document.title = `${data.name} · Company Brain`; }, [data?.name]);
 
   return (
     <div className="page">

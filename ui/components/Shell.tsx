@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { dateInputValue, fmtDate, fmtDateTime, fromDateInput, initials } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { API_URL } from "@/lib/api";
@@ -28,6 +28,17 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const s = useStore();
   const hasInspector = s.inspector.length > 0;
   const [helpOpen, setHelpOpen] = useState(false);
+  const { inspectorPinned, closeInspector, pendingCount } = s;
+  const pinned = useRef(inspectorPinned);
+  useEffect(() => { pinned.current = inspectorPinned; }, [inspectorPinned]);
+  // n5: an unpinned side panel belongs to the page it was opened on
+  useEffect(() => { if (!pinned.current) closeInspector(); }, [path, closeInspector]);
+  // m14: the tab says where you are, and how much waits in the Inbox
+  useEffect(() => {
+    const page = NAV.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path === "/" ? "Overview" : "");
+    const inbox = pendingCount > 0 ? ` (${pendingCount})` : "";
+    if (page) document.title = `${page === "Inbox" ? `Inbox${inbox}` : page} · Company Brain`;
+  }, [path, pendingCount]);
 
   // keyboard: ⌘K palette, [ sidebar, g+key jumps, / search
   useEffect(() => {
@@ -65,7 +76,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <Link key={n.href} href={n.href} className={`nav-item ${active ? "active" : ""}`} title={n.label} aria-current={active ? "page" : undefined}>
               <Icon className="icon" />
               <span>{n.label}</span>
-              {n.href === "/inbox" && s.pendingCount > 0 && !s.session?.anonymous ? <span className="nav-badge"><CountBadge n={s.pendingCount} accent /></span> : <kbd className="nav-kbd">g {n.key}</kbd>}
+              {n.href === "/inbox" && s.pendingCount > 0 ? <span className="nav-badge"><CountBadge n={s.pendingCount} accent /></span> : <kbd className="nav-kbd">g {n.key}</kbd>}
             </Link>
           );
         })}
@@ -189,7 +200,8 @@ function ActingMenu() {
           )}
           <div className="divider" />
           <div style={{ padding: "4px 6px" }}>
-            <div className="input-wrap"><Search /><input className="input sm" placeholder="Switch person…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus /></div>
+            <div className="input-wrap"><Search /><input className="input sm" placeholder="Switch person…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus
+              onKeyDown={async (e) => { if (e.key === "Enter" && list[0]) { e.preventDefault(); close(); await s.setActingAs(list[0].id); s.toast({ tone: "info", title: `Now acting as ${list[0].name}` }); } }} /></div>
           </div>
           <div style={{ maxHeight: 280, overflow: "auto" }} role="menu">
             {list.map((p) => (
@@ -253,7 +265,7 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
                 s.toast({ tone: "error", title: "That token wasn't accepted", body: "Check it and try again." });
               }
             }}>
-              <input className="input" type="password" placeholder="Paste token" value={tok} onChange={(e) => setTok(e.target.value)} autoComplete="off" />
+              <input className="input" type="password" placeholder="Paste token" value={tok} onChange={(e) => setTok(e.target.value)} autoComplete="off" autoFocus />
               <Button type="submit" size="sm" disabled={!tok.trim()}>Use</Button>
             </form>
           )}
@@ -270,7 +282,7 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
           </div>
         </Field>
         <Field label="Theme" help="Light is the default. Dark is applied only when chosen here.">
-          <Segmented options={[{ id: "light", label: "Light" }, { id: "dark", label: "Dark" }]} value={s.theme === "dark" ? "dark" : "light"} onChange={(v) => s.setTheme(v)} />
+          <Segmented options={[{ id: "light", label: "Light" }, { id: "dark", label: "Dark" }, { id: "system", label: "System" }]} value={s.theme} onChange={(v) => s.setTheme(v)} />
         </Field>
       </div>
       <div className="t-small text-3">Debug panels (raw packs, verifier report) show when the page URL has <code>?debug=1</code>.</div>
