@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { dateInputValue, fmtDate, fmtDateTime, fromDateInput, initials } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { API_URL } from "@/lib/api";
 import { CodingAgentHelp } from "./CodingAgentHelp";
 import { CommandPalette } from "./CommandPalette";
 import Inspector from "./Inspector";
@@ -208,6 +209,18 @@ function ActingMenu() {
 }
 
 /** Session sheet: mode, token, acting person, as-of, theme, debug, reset (DESIGN.md §4.1). */
+async function tokenAccepted(token: string, actingAs: string): Promise<boolean> {
+  try {
+    const r = await fetch(`${API_URL}/sessions`, {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ acting_as: actingAs }),
+    });
+    return r.ok && !(await r.json()).anonymous;
+  } catch {
+    return false;
+  }
+}
+
 function SessionSheet({ onHelp }: { onHelp: () => void }) {
   const s = useStore();
   const [tok, setTok] = useState("");
@@ -226,7 +239,19 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
           {s.token ? (
             <div className="row"><Chip tone="success" icon={KeyRound}>Token set</Chip><Button size="sm" onClick={() => { s.setToken(""); setTok(""); }}>Remove</Button></div>
           ) : (
-            <form className="row" onSubmit={(e) => { e.preventDefault(); if (tok.trim()) { s.setToken(tok); s.toast({ tone: "success", title: "Token saved", body: "Writes will be enabled when the session reconnects." }); } }}>
+            <form className="row" onSubmit={async (e) => {
+              e.preventDefault();
+              const t = tok.trim();
+              if (!t) return;
+              // M8: check the token now, with a session of its own, instead of saving whatever was pasted
+              const ok = await tokenAccepted(t, s.actingAs);
+              if (ok) {
+                s.setToken(t);
+                s.toast({ tone: "success", title: "Writes enabled", body: "Confirm, undo and actions are now recorded as the acting person." });
+              } else {
+                s.toast({ tone: "error", title: "That token wasn't accepted", body: "Check it and try again." });
+              }
+            }}>
               <input className="input" type="password" placeholder="Paste token" value={tok} onChange={(e) => setTok(e.target.value)} autoComplete="off" />
               <Button type="submit" size="sm" disabled={!tok.trim()}>Use</Button>
             </form>
