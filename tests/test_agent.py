@@ -467,3 +467,25 @@ def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
     assert calls == [None, agent_mod.REDRAFT_TIMEOUT_S] and agent_mod.REDRAFT_TIMEOUT_S <= 5
     assert not ans["abstained"] and any("Payments owns Ledger" in l["text"] for l in ans["assembled"]["lines"])
     assert agent.turn_log[ans["turn_id"]]["verification"]["redraft"] == "timed out; kept the first verified draft"
+
+
+def test_llm_draft_cannot_answer_about_an_unknown_name(world, monkeypatch):
+    """A question naming nothing the graph knows abstains in live mode too: the LLM may not answer it from
+    a passage about something else (found in the item 18 live run: "Who owns Orbit Relay?")."""
+    from api import agent as agent_mod
+
+    def llm(self, text, plan, packs, errors=None, timeout=None):
+        sp = next(s for p in packs.values() for it in p["items"] for s in it["spans"])
+        return {"claims": [{"claim_id": "c1", "text": sp["text"], "tense": "historical", "span_ids": [sp["span_id"]],
+                            "assertion_ids": [], "action_ids": [], "label": "text_only", "quote": sp["text"]}],
+                "explanation": "Orbit Relay is not mentioned."}
+
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    monkeypatch.setattr(Agent, "_llm_draft", llm)
+    make_span(world["g"], "sp_relay", "Email Relay has owner: team:risk", 1)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ev = run(agent, s, "Who owns Orbit Relay?")
+    assert any(e["event"] == "tool_result" and e["items"] for e in ev if e.get("name") == "search_spans")
+    assert answer_of(ev)["abstained"]

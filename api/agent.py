@@ -297,7 +297,11 @@ class Agent:
         base = {**deterministic_draft(plan, packs, text), "drafted": "deterministic"}
         # Recall quotes the session's turns, a count is the tool's own V10-checked sentence, and a decision
         # trace has a fixed shape (the cited "because" first): no LLM rewrite.
-        if not providers.llm_available() or plan["intent"] == "memory" or \
+        names_nothing = plan["intent"] not in ("other", "memory") and plan.get("mentions") is not None \
+            and not any(m.get("entity_id") for m in plan["mentions"])
+        # A question naming nothing the graph knows abstains in live mode too (the deterministic rule); the
+        # LLM must not answer it from a passage about something else.
+        if names_nothing or not providers.llm_available() or plan["intent"] == "memory" or \
                 any(it["label"] == "aggregate" or it.get("rationale") for p in packs.values() for it in p["items"]):
             return base
         try:
