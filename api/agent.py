@@ -26,7 +26,7 @@ from .verifier import assemble, check_lead, index_packs, verify
 from brain.ids import now_ms
 
 INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "aggregate", "fact", "memory",
-           "summary", "action", "other"]
+           "summary", "dependency", "stale_docs", "action", "other"]
 
 
 @dataclass
@@ -115,7 +115,7 @@ class Agent:
 
         # tool phase: read tools only (A54 §8 i). A question about an attribute the graph doesn't model
         # gets no tools: any fact the tools found about the entity would verify but not answer it.
-        gap = unmodelled(plan, text)
+        gap = unmodelled(plan, text) or stale_docs_refusal(plan)
         calls = [] if gap else self.tool_calls(plan, text, ctx, s)
         for name, args in calls[:6]:
             q0 = len(ctx.queries)
@@ -244,6 +244,8 @@ class Agent:
             return calls
         if intent == "summary" and tgt:
             return calls + _summary_calls(tgt)
+        if intent == "dependency" and tgt:
+            return calls + [("get_history", {"entity_id": tgt, "predicate": "DEPENDS_ON", "current_only": True})]
         if intent == "ownership" and tgt:
             if tgt.startswith("ticket:"):
                 calls.append(("get_history", {"entity_id": tgt, "predicate": "ASSIGNED_TO"}))
@@ -554,7 +556,8 @@ def heuristic_plan(text: str) -> dict:
     elif not t.endswith("?") and not re.match(r"(who|what|why|how|which|when|is|are|does|did|has|have)\b", t) \
             and re.search(r"\bdraft\b.*\badr\b|supersed(e|ing) adr", t):
         want = "draft_adr_supersession"   # an imperative; "is there a draft ...?" is a question about proposals
-    elif re.search(r"flag .*stale|stale doc", t):
+    elif re.search(r"flag .*stale|stale doc", t) and not t.endswith("?") \
+            and not re.match(r"(who|what|why|how|which|when|is|are|does|did|has|have)\b", t):
         want = "flag_stale_docs"
     elif re.search(r"^(confirm|approve)\b", t):
         want = "confirm_fact"
@@ -574,6 +577,10 @@ def heuristic_plan(text: str) -> dict:
         intent = "aggregate"
     elif re.search(r"what breaks|goes down|outage|impact|who do i tell|who should i tell|blast radius", t):
         intent = "impact"
+    elif re.search(r"\bdepends? on\b|\bdependenc(y|ies)\b", t) and not re.search(r"\b(own|owns|owner|owners|lead|leads|manages?|tell)\b", t):
+        intent = "dependency"   # M12: what X depends on, or what depends on X
+    elif re.search(r"\b(stale|outdated|out of date)\b", t):
+        intent = "stale_docs"   # M12: answered with a pointer to the flag-stale-docs action, not the owner
     elif re.search(r"who should i (ask|talk to) about [a-z][a-z0-9]+-\d+", t):
         intent = "ownership"     # a ticket: its assignee, then the owner of what it is about
     elif re.search(r"who (knows|should i ask)|expert", t):
@@ -632,6 +639,16 @@ def unmodelled(plan: dict, text: str) -> list[str]:
     if not rest or any(w.lower() in _VOCAB for w in rest):
         return []
     return [f"The graph has no facts about “{' '.join(rest)}” for {known[0]['text']}. {_RECORDS}"]
+
+
+def stale_docs_refusal(plan: dict) -> list[str]:
+    """M12: outdated documents are found by the flag-stale-docs action; say how to ask for it."""
+    if plan["intent"] != "stale_docs":
+        return []
+    x = next((m["text"] for m in plan["mentions"] if m["entity_id"]), "Ledger")
+    return [f"I can't list outdated documents as a question. Ask me to \"flag stale docs about {x}\" and I'll find "
+            f"the passages that still state a fact that has since changed. I can also answer who owns {x}, why it "
+            f"was decided, who knows about it and what breaks if it goes down."]
 
 
 def missing(plan: dict, text: str) -> list[str]:
@@ -743,6 +760,7 @@ def _content(t: str) -> set[str]:
 # not in the prose. Intents not listed keep every claim.
 _INTENT_PREDS = {"ownership": {"OWNS", "LEADS", "ASSIGNED_TO", "PART_OF", "MEMBER_OF"},
                  "summary": {"OWNS", "LEADS", "DEPENDS_ON", "PART_OF", "HAS_STATUS", "MEMBER_OF", "ASSIGNED_TO"},
+                 "dependency": {"DEPENDS_ON"},
                  "impact": {"DEPENDS_ON", "OWNS", "LEADS", "PART_OF"}}
 
 
@@ -804,7 +822,7 @@ def lead_sentence(plan: dict, kept: list[dict], packs: dict[str, dict], as_of: i
                   key=lambda a: a.get("kind") != "route_to_owner")
     at = acts[0]["recorded_at"] if acts else as_of   # "why did you route X?" is about the action's own time
     past = _past_lead(kept, ix, at, acts, now_statement) if at is not None else ""
-    return past or _intent_lead(plan, kept, ix)
+    return past or _intent_lead(plan, kept, ix, question)
 
 
 def _past_lead(kept: list[dict], ix, at: int, acts: list[dict], now_statement) -> str:
@@ -855,7 +873,7 @@ def _summary_lead(plan: dict, graph: list, current: list, leads: dict) -> str:
     return f"{x}: " + "; ".join(parts) + "." if parts else ""
 
 
-def _intent_lead(plan: dict, kept: list[dict], ix) -> str:
+def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "") -> str:
     """M4: the first sentence answers the asked intent from verified claims; "" when no shape fits."""
     intent = plan.get("intent", "")
     graph = [(c, ix.facts[c["assertion_ids"][0]]) for c in kept
@@ -876,6 +894,17 @@ def _intent_lead(plan: dict, kept: list[dict], ix) -> str:
         return first["statement"] + "." + (f" {lead['statement']}." if lead else "")
     if intent == "summary":
         return _summary_lead(plan, graph, current, leads)
+    if intent == "dependency":
+        x = next((m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")), "")
+        deps = [f["statement"].split(" depends on ", 1) for _, f in current if f["predicate"] == "DEPENDS_ON"]
+        out = [o for s_, o in deps if s_ == x]
+        inc = [s_ for s_, o in deps if o == x]
+        asks_out = bool(re.search(rf"\b{re.escape(x.lower())} depends?\b", question.lower()))
+        if asks_out and out:
+            return f"{x} depends on {_names_list(out)}."
+        if inc:
+            return f"{_names_list(inc)} depend{'s' if len(inc) == 1 else ''} on {x}."
+        return f"{x} depends on {_names_list(out)}." if out else ""
     if intent == "impact":
         deps = list(dict.fromkeys(f["statement"].split(" depends on ", 1)[0] for _, f in graph if f["predicate"] == "DEPENDS_ON"))
         tell = list(dict.fromkeys(f["statement"].split(" leads ", 1)[0] for f in leads.values()))

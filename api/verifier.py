@@ -174,7 +174,7 @@ def _check(c: dict, ix: Index, rewritten: list) -> tuple[str, str] | None:
 
 # What a first sentence must say to answer each intent (M4); intents not listed only need the asked entity.
 _LEAD_WORDS = {"ownership": (" owns ", " owned ", " leads ", " led ", " is assigned to ", " is a member of ", " is part of "),
-               "expertise": ("Ask ",), "impact": ("would be affected",),
+               "expertise": ("Ask ",), "impact": ("would be affected",), "dependency": ("depend",),
                "decision_trace": ("because", " is ", "pending", "proposal"), "history": (" on ",),
                "action": ("Route ", "Recorded", " owns ")}
 

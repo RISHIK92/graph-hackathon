@@ -690,3 +690,17 @@ def test_front_matter_is_never_quoted(world):
     s = agent.create_session("judge", "person:eve")
     lines = answer_of(run(agent, s, "ledger cutover plan"))["assembled"]["lines"]
     assert not any("---" in l["text"] or "number:" in l["text"] for l in lines), lines
+
+
+def test_dependency_questions_and_stale_doc_refusal(world):
+    """M12: "What does X depend on?" and "Which systems depend on X?" read DEPENDS_ON, not the owner; a
+    stale-docs question gets a helpful refusal naming what to ask instead."""
+    _counting_world(world)
+    for q in ("What does Storefront depend on?", "Which systems depend on Ledger?"):
+        assert heuristic_plan(q)["intent"] == "dependency", q
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    assert _lead(agent, s, "What does Storefront depend on?") == "Storefront depends on Checkout and Ledger."
+    assert _lead(agent, s, "Which systems depend on Ledger?") == "Checkout and Storefront depend on Ledger."
+    ans = answer_of(run(agent, s, "Which docs about Ledger are stale?"))
+    assert ans["abstained"] and "flag stale docs about Ledger" in " ".join(ans["missing"])
