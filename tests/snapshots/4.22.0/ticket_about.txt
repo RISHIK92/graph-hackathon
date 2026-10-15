@@ -1,0 +1,4 @@
+Results
+    Project
+        Edge By Index Scan | [a:ABOUT]
+            Node By Index Scan | (k:Ticket)

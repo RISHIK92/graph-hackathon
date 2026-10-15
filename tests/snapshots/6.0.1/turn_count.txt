@@ -1,0 +1,4 @@
+Aggregate
+    Conditional Traverse | (src)->(x:Span)
+        Filter
+            Node By Index Scan | (src:Source)

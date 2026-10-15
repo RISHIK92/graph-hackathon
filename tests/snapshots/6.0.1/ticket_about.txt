@@ -1,0 +1,5 @@
+Project
+    Filter
+        Edge By Index Scan | (k)-[a:ABOUT]->(x)
+            Filter
+                Node By Index Scan | (k:Ticket)

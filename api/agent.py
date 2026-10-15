@@ -54,8 +54,7 @@ class Agent:
         return Session(sid, user_id, acting_as)
 
     def load_session(self, sid: str) -> Session | None:
-        r = self.g.ro("MATCH (s:Source {id:$id}) RETURN s.user_id AS u, s.acting_as AS a", {"id": sid},
-                      template="session")
+        r = self.g.q("session", {"id": sid})
         return Session(sid, r[0]["u"], r[0]["a"] or "") if r else None
 
     def set_acting_as(self, s: Session, person_id: str) -> None:
@@ -66,15 +65,13 @@ class Agent:
     @property
     def index(self) -> AliasIndex:
         if self._index is None:
-            rows = self.g.ro("MATCH (e:Entity) RETURN e.id AS id, e.name AS name, e.aliases AS aliases",
-                             template="all_entities", timeout=10000)
+            rows = self.g.q("all_entities", timeout=10000)
             self._index = AliasIndex(rows)
         return self._index
 
     def _store_turn(self, s: Session, text: str, role: str) -> str:
         now = self.clock()
-        n = self.g.ro("MATCH (:Source {id:$s})-[:HAS_SPAN]->(x:Span) RETURN count(x) AS n", {"s": s.id},
-                      template="turn_count")[0]["n"]
+        n = self.g.q("turn_count", {"s": s.id})[0]["n"]
         sp = ids.span_id(f"chat_session:brain:{s.id}", f"{n}:{text}", 0)
         vec = providers.embed([text])[0] if role == "user" else None
         store.upsert_spans(self.g, s.id, [{
@@ -212,8 +209,7 @@ class Agent:
         if intent == "ownership" and tgt:
             if tgt.startswith("ticket:"):
                 calls.append(("get_history", {"entity_id": tgt, "predicate": "ASSIGNED_TO"}))
-                about = self.g.ro("MATCH (:Ticket {id:$t})-[a:ABOUT]->(x) WHERE a.valid_to = $m RETURN x.id AS x",
-                                  {"t": tgt, "m": MAX}, template="ticket_about")
+                about = self.g.q("ticket_about", {"t": tgt, "m": MAX})
                 if about:
                     calls.append(("get_owner", {"entity_id": about[0]["x"]}))
             else:
@@ -226,8 +222,7 @@ class Agent:
         elif intent == "history" and tgt:
             if tgt.startswith("ticket:"):
                 calls.append(("get_history", {"entity_id": tgt, "predicate": "ASSIGNED_TO"}))
-                about = self.g.ro("MATCH (:Ticket {id:$t})-[a:ABOUT]->(x) WHERE a.valid_to = $m RETURN x.id AS x",
-                                  {"t": tgt, "m": MAX}, template="ticket_about")
+                about = self.g.q("ticket_about", {"t": tgt, "m": MAX})
                 if about:
                     calls.append(("get_owner", {"entity_id": about[0]["x"]}))
             else:
@@ -242,8 +237,7 @@ class Agent:
             calls.append(("recall_session", {"user_id": s.user_id, "query": text}))
         elif intent == "action" and tgt:
             if tgt.startswith("ticket:"):
-                about = self.g.ro("MATCH (:Ticket {id:$t})-[a:ABOUT]->(x) WHERE a.valid_to = $m RETURN x.id AS x",
-                                  {"t": tgt, "m": MAX}, template="ticket_about")
+                about = self.g.q("ticket_about", {"t": tgt, "m": MAX})
                 if about:
                     calls.append(("get_owner", {"entity_id": about[0]["x"]}))
             elif tgt.startswith("system:") or tgt.startswith("project:"):

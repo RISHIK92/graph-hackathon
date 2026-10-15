@@ -273,6 +273,7 @@ PARAMS = {
     "run_members": lambda f: {"run": f.ids["own"]},
     "search_fulltext": lambda f: {"q": "ledger"},
     "search_vector": lambda f: {"k": 4, "vec": f.vec("Payments owns Ledger")},
+    "session": lambda f: {"id": "sess1"},
     "session_spans": lambda f: {"user": "u1"},
     "source_exists": lambda f: {"id": "src:test"},
     "source_view": lambda f: {"id": "src:test"},
@@ -283,6 +284,8 @@ PARAMS = {
     "stated_by_latest": lambda f: {"s": "src:test"},
     "statement": lambda f: {"id": f.ids["own"]},
     "strongest_member": lambda f: {"r": f.ids["own"]},
+    "ticket_about": lambda f: {"t": "ticket:rds-42", "m": MAX},
+    "turn_count": lambda f: {"s": "sess1"},
     "turn_span": lambda f: {"id": "turn1", "src": "sess1"},
     "unsupported": lambda f: (f.g.write("MATCH (a:Assertion {id:$id})-[e:EVIDENCED_BY]->() SET e.removed_at = 1",
                                         {"id": f.ids["dep2"]}), {"max": MAX})[1],
@@ -865,6 +868,18 @@ def g_recent_actions(f, rows):
 
 def g_replaces_out(f, rows):
     assert rows == [{"o": "decision:adr-001", "aid": f.ids["replaces"]}]
+
+
+def g_session(f, rows):
+    assert rows == [{"u": "u1", "a": None}]
+
+
+def g_ticket_about(f, rows):
+    assert rows == [{"x": "system:ledger"}]
+
+
+def g_turn_count(f, rows):
+    assert rows == [{"n": 2}]
 
 
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}
