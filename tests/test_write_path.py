@@ -1,5 +1,6 @@
 import pytest
 
+from brain import registry, templates
 from brain.config import MAX
 from brain.db import GuardFailed, WriteMismatch
 from brain.write_path import Candidate, ValidationError, WritePath, build_query, validate
@@ -152,3 +153,13 @@ def test_build_query_counts_empty_plan(g, clock):
     wp = WritePath(g, clock)
     q, p, expect = build_query(wp.new_plan())
     assert expect == {"nodes": 0, "rels": 0}
+
+
+def test_read_compiled_before_first_edge_sees_later_edges(g, clock):
+    """F23: on 4.22.0 a pattern comprehension cached before its relationship type existed stayed empty."""
+    seed_basic(g)
+    args = {"chain": registry.chain_id("OWNS", "", "", "system:ledger"), "T": 10**6, "V": 5}
+    assert g.ro(templates.body("past_belief_run"), args) == []
+    make_span(g, "s1", "Payments owns Ledger", 5)
+    apply(WritePath(g, clock), owns("team:payments", "s1", 5, "chat"))
+    assert [r["subject_id"] for r in g.ro(templates.body("past_belief_run"), args)] == ["team:payments"]

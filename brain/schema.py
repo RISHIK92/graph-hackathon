@@ -18,6 +18,11 @@ RANGE_INDEXES = [
     ("Entity", "aliases"),
 ]
 
+REL_TYPES = sorted(set(PROJECTION_TYPES) | {
+    "HAS_SPAN", "NEXT", "REVISES", "MENTIONS", "AUTHORED_BY", "HAS_SOURCE", "OF_CHAIN", "SUBJECT", "OBJECT",
+    "EVIDENCED_BY", "SUPERSEDES", "CONTINUES", "DISPUTES", "CONFIRMS", "MOTIVATED_BY", "BASED_ON", "PRODUCED",
+    "TARGETS", "IN_SESSION"})
+
 
 def _try(g: Graph, q: str) -> None:
     try:
@@ -48,6 +53,10 @@ def create(g: Graph) -> None:
                 raise
     wait_constraints(g)
     g.write("MERGE (:GuardFail {id:'sentinel'})", template="schema")
+    # 4.22.0 caches a pattern comprehension compiled before its relationship type exists as always
+    # empty, even after edges of that type appear (practice finding F23). Register every type up front.
+    g.write("CREATE (a) " + " ".join(f"CREATE (a)-[:{t}]->(a)" for t in REL_TYPES) +
+            " WITH a DETACH DELETE a", template="schema")
 
 
 def wait_constraints(g: Graph, timeout_s: float = 60) -> None:
