@@ -1,6 +1,9 @@
 """Whole-pipeline invariants on the seed-1 render (06 §1): I4 shuffled ingestion within each phase,
 I3 re-ingestion writes nothing, and a Source interrupted after stage 8 is finished on retry (A58)."""
+import io
+import json
 import uuid
+import zipfile
 
 import pytest
 
@@ -9,6 +12,8 @@ from brain.config import MAX, ROOT
 from brain.db import Graph
 from ingest.connectors import read_render
 from ingest.pipeline import Ingestor
+
+from .conftest import seed_basic
 
 RENDER = ROOT / "world" / "seeds" / "1" / "render"
 
@@ -86,3 +91,29 @@ def test_interrupted_source_is_finished_on_retry(docs, clean):
         assert integrity.check(g, deep=True)["ok"]
     finally:
         g.delete()
+
+
+def test_upload_markdown_and_slack_export(g):
+    seed_basic(g)
+    ing = Ingestor(g)
+    ing.ingest_upload("Ledger notes.md", b"# Ledger notes\n\nPayments owns Ledger.\n\nIt runs on Postgres.")
+    assert g.ro("MATCH (s:Source {doc_key:'wiki:upload:ledger-notes'}) RETURN s.title AS t, s.kind AS k") == \
+        [{"t": "Ledger notes", "k": "wiki"}]
+    texts = {r["t"] for r in g.ro("MATCH (:Source {doc_key:'wiki:upload:ledger-notes'})-[:HAS_SPAN]->(sp:Span) "
+                                  "RETURN sp.text AS t")}
+    assert {"Payments owns Ledger.", "It runs on Postgres."} <= texts
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("users.json", json.dumps([{"id": "U1", "real_name": "Priya Raman"}, {"id": "U2", "name": "x"}]))
+        z.writestr("channels.json", json.dumps([{"name": "general"}]))
+        z.writestr("general/2026-01-02.json", json.dumps([
+            {"type": "message", "user": "U1", "text": "<@U2> Infra owns Ledger now", "ts": "1767312000.000100"},
+            {"type": "message", "subtype": "channel_join", "user": "U2", "text": "joined", "ts": "1767312001.0"},
+            {"type": "message", "user": "U2", "text": "ok", "ts": "1767312002.0"}]))
+    Ingestor(g).ingest_upload("export.zip", buf.getvalue())
+    rows = g.ro("MATCH (s:Source)-[:HAS_SPAN]->(sp:Span) WHERE s.doc_key STARTS WITH 'chat:slack:general/' "
+                "RETURN sp.text AS t, sp.author_id AS a ORDER BY sp.ts")
+    assert rows == [{"t": "@x Infra owns Ledger now", "a": "person:priya"}, {"t": "ok", "a": ""}]
+    with pytest.raises(ValueError):
+        Ingestor(g).ingest_upload("slides.pdf", b"%PDF")

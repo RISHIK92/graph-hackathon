@@ -310,3 +310,13 @@ def test_assertion_confirm_endpoint(api_client):
                          json={"session_id": sid_priya, "request_id": "req-conf-a"})
     assert r_conf.status_code == 200
     assert r_conf.json()["action_id"].startswith("ac_")
+
+
+def test_admin_upload_requires_admin_token_and_a_known_format(api_client):
+    client, world = api_client
+    body = b"# Runbook\n\nPayments owns Ledger."
+    assert client.post("/admin/upload?filename=runbook.md", content=body).status_code == 401
+    admin = {"Authorization": f"Bearer {settings.admin_token}"}
+    r = client.post("/admin/upload?filename=runbook.md", content=body, headers=admin)
+    assert r.status_code == 200 and r.json()["sources"]
+    assert client.post("/admin/upload?filename=deck.pdf", content=b"%PDF", headers=admin).status_code == 400

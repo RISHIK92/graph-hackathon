@@ -6,6 +6,7 @@ import os
 import threading
 import time
 import uuid
+import zipfile
 from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
+from starlette.concurrency import run_in_threadpool
 
 from brain import integrity, schema
 from brain.actions import Actions, Actor, Refused
@@ -498,6 +500,26 @@ def pending(pid: str) -> dict:
 
 class IngestBody(BaseModel):
     render_dir: str
+
+
+UPLOAD_MAX = 20 * 1024 * 1024
+
+
+@app.post("/admin/upload")
+async def admin_upload(filename: str, request: Request, c: Caller = Depends(caller)) -> dict:
+    """Ingest one uploaded file (the raw request body): Markdown or plain text as a wiki page, or a Slack
+    export (a channel .json or the whole .zip) as chat messages, through the same connectors and pipeline."""
+    need_admin(c)
+    data = await request.body()
+    if len(data) > UPLOAD_MAX:
+        raise HTTPException(413, "upload over 20 MB")
+    from ingest.pipeline import Ingestor
+    try:
+        rep = await run_in_threadpool(Ingestor(G).ingest_upload, filename, data)
+    except (ValueError, UnicodeDecodeError, KeyError, zipfile.BadZipFile) as e:
+        raise HTTPException(400, f"can't read {filename}: {e}")
+    AGENT._index = None
+    return {"counts": rep.counts(), "sources": rep.sources, "skipped": rep.skipped}
 
 
 @app.post("/admin/ingest")

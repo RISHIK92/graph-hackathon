@@ -46,6 +46,9 @@ def main() -> None:
     r.add_argument("--graph", default=settings.graph)
     i = sub.add_parser("integrity")
     i.add_argument("--deep", action="store_true")
+    u = sub.add_parser("ingest", help="ingest an uploaded file: .md/.txt, Slack .json or export .zip")
+    u.add_argument("--file", required=True)
+    u.add_argument("--graph", default=settings.graph)
     sub.add_parser("health")
     p = sub.add_parser("probes")
     p.add_argument("--ports", default="6391,6392")
@@ -54,6 +57,11 @@ def main() -> None:
         print(json.dumps(reset_seed(Graph(name=a.graph), a.seed), indent=2, default=str))
     elif a.cmd == "integrity":
         print(json.dumps(integrity.check(Graph(), deep=a.deep), indent=2))
+    elif a.cmd == "ingest":
+        from ingest.pipeline import Ingestor
+        path = Path(a.file)
+        rep = Ingestor(Graph(name=a.graph)).ingest_upload(path.name, path.read_bytes())
+        print(json.dumps({"counts": rep.counts(), "sources": rep.sources, "skipped": rep.skipped}, indent=2))
     elif a.cmd == "health":
         print(json.dumps(schema.health(Graph(), settings.pin), indent=2))
     elif a.cmd == "probes":

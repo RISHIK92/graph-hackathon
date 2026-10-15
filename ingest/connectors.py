@@ -6,8 +6,10 @@ candidates of each unit. Prose units are left for extraction.
 """
 from __future__ import annotations
 
+import io
 import json
 import re
+import zipfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -382,4 +384,58 @@ def read_render(render_dir: Path) -> list[SourceDoc]:
     return docs
 
 
-__all__ = ["SourceDoc", "Unit", "StructuredFact", "read_render", "iso_ms", "MAX"]
+
+# Uploads: Markdown / plain text as a wiki page, a Slack export as chat messages (same shapes as the world's)
+
+def _slug(s: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-") or "upload"
+
+
+def _slack(channel: str, msgs: list[dict], users: dict[str, str]) -> list[SourceDoc]:
+    """One chat SourceDoc per message; joins, bot and edit events (any subtype) are skipped. author_id is
+    the Slack display name here: the pipeline resolves it to a Person id."""
+    docs = []
+    for m in msgs:
+        if m.get("type") != "message" or m.get("subtype") or not (m.get("text") or "").strip():
+            continue
+        ts = int(float(m["ts"]) * 1000)
+        text = re.sub(r"<@(\w+)>", lambda x: "@" + users.get(x.group(1), x.group(1)), m["text"])
+        author = users.get(m.get("user", "")) or (m.get("user_profile") or {}).get("real_name", "")
+        meta = {"doc_key": f"chat:slack:{channel}/{ts}", "kind": "chat", "system": "slack",
+                "external_id": f"{channel}/{ts}", "title": f"#{channel} message", "uri": "",
+                "created_at": ts, "updated_at": ts, "author_id": author}
+        docs.append(chat_message({"channel": channel, "ts": ts, "author": author, "text": text}, meta))
+    return docs
+
+
+def upload_docs(name: str, data: bytes, now: int) -> list[SourceDoc]:
+    """`.md`/`.markdown`/`.txt` -> one wiki page; a Slack channel export `.json` (a message list) or a
+    whole export `.zip` (`<channel>/<day>.json` plus `users.json`) -> one chat message each."""
+    low = name.lower()
+    if low.endswith((".md", ".markdown", ".txt")):
+        text = data.decode("utf-8")
+        stem = Path(name).stem
+        h = re.search(r"^#\s+(.+)$", text, re.M)
+        meta = {"doc_key": f"wiki:upload:{_slug(stem)}", "kind": "wiki", "system": "upload", "external_id": _slug(stem),
+                "title": h.group(1).strip() if h else stem, "uri": "", "created_at": now, "updated_at": now,
+                "author_id": ""}
+        doc = _doc(meta, text)
+        doc.units = _paragraph_units(text, now)
+        return [doc]
+    if low.endswith(".json"):
+        p = Path(name)
+        return _slack(_slug(p.parent.name if p.parent.name else p.stem), json.loads(data), {})
+    if low.endswith(".zip"):
+        z = zipfile.ZipFile(io.BytesIO(data))
+        files = [n for n in z.namelist() if n.endswith(".json")]
+        users_file = next((n for n in files if Path(n).name == "users.json"), None)
+        users = {u["id"]: u.get("real_name") or (u.get("profile") or {}).get("real_name") or u.get("name", "")
+                 for u in json.loads(z.read(users_file))} if users_file else {}
+        docs = []
+        for n in sorted(files):
+            if Path(n).parent.name and Path(n).name not in ("users.json", "channels.json", "integration_logs.json"):
+                docs += _slack(_slug(Path(n).parent.name), json.loads(z.read(n)), users)
+        return docs
+    raise ValueError(f"unsupported upload {name!r}: use .md, .markdown, .txt, a Slack .json or an export .zip")
+
+__all__ = ["SourceDoc", "Unit", "StructuredFact", "read_render", "upload_docs", "iso_ms", "MAX"]

@@ -21,7 +21,7 @@ from brain.config import MAX
 from brain.db import Graph
 from brain.write_path import Candidate, ValidationError, WritePath, validate
 
-from .connectors import SourceDoc, Unit, iso_ms, read_render
+from .connectors import SourceDoc, Unit, iso_ms, read_render, upload_docs
 from .extract import AliasIndex, extract, extractor_name
 from brain.ids import now_ms
 
@@ -61,6 +61,20 @@ class Ingestor:
     def ingest_render(self, render_dir: Path, seed: int | None = None) -> Report:
         docs = read_render(Path(render_dir))
         return self.ingest_docs(docs, seed)
+
+    def ingest_upload(self, name: str, data: bytes) -> Report:
+        """An uploaded file (connectors.upload_docs) through the same pipeline. Slack display names become
+        Person ids where a person has that name or alias; other authors are left empty."""
+        docs = upload_docs(name, data, self.clock())
+        self._load_entities()
+        people = {n.lower(): eid for eid, e in self.entities.items() if eid.startswith("person:")
+                  for n in [e["name"], *e["aliases"]] if n}
+        for d in docs:
+            if d.author_id and not d.author_id.startswith("person:"):
+                d.author_id = people.get(d.author_id.lower(), "")
+                for u in d.units:
+                    u.author_id = d.author_id
+        return self.ingest_docs(docs)
 
     def ingest_docs(self, docs: list[SourceDoc], seed: int | None = None) -> Report:
         rnd = random.Random(seed)
