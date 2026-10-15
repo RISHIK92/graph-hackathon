@@ -257,7 +257,12 @@ def run_aids(ctx: Ctx, run_id: str) -> list[str]:
 
 
 def make_path(steps: list[tuple[dict, dict | None]]) -> dict:
+    """Each edge names its stored subject; `dir` says whether the walk follows it (forward: the previous node
+    is the subject) or runs against it, so a path reads "Payments owns Ledger", never "Ledger owns Payments" (M14)."""
     pid = ids.path_id([(n["id"], (e or {}).get("type", ""), (e or {}).get("aid", "")) for n, e in steps])
+    for (prev, _), (_, e) in zip(steps, steps[1:]):
+        if e is not None and "subject" in e:
+            e["dir"] = "forward" if e["subject"] == prev["id"] else "backward"
     return {"path_id": pid, "steps": [{"node": n, "edge": e} for n, e in steps]}
 
 
@@ -334,14 +339,17 @@ def get_owner(ctx: Ctx, entity_id: str, as_of: int | None = None) -> dict:
         aids = run_aids(ctx, o["aid"])
         if via:
             steps.append((_node(ctx, via["via"], via["via_name"]),
-                          {"type": "PART_OF", "aid": via["via_aid"], "valid_from": None, "valid_to": None}))
+                          {"type": "PART_OF", "aid": via["via_aid"], "valid_from": None, "valid_to": None,
+                           "subject": entity_id}))
             aids += run_aids(ctx, via["via_aid"])
         steps.append((_node(ctx, o["owner"], o["name"]),
-                      {"type": "OWNS", "aid": o["aid"], "valid_from": o["vf"], "valid_to": o["vt"]}))
+                      {"type": "OWNS", "aid": o["aid"], "valid_from": o["vf"], "valid_to": o["vt"],
+                       "subject": o["owner"]}))
         if o["owner"].startswith("team:"):
             for ld in ctx.q("lead_at", {"t": o["owner"], "V": V}):
                 steps.append((_node(ctx, ld["lead"], ld["name"]),
-                              {"type": "LEADS", "aid": ld["aid"], "valid_from": ld["vf"], "valid_to": ld["vt"]}))
+                              {"type": "LEADS", "aid": ld["aid"], "valid_from": ld["vf"], "valid_to": ld["vt"],
+                               "subject": ld["lead"]}))
                 aids += run_aids(ctx, ld["aid"])
         fact_item(ctx, pb, aids, make_path(steps), 1.0, label, note)
     return pb.build()
@@ -356,7 +364,7 @@ def _owner_past(ctx: Ctx, pb: PackBuilder, entity_id: str) -> dict:
             owner = run.value_id.rsplit("|", 1)[0]
             path = make_path([(_node(ctx, entity_id), None),
                               (_node(ctx, owner), {"type": "OWNS", "aid": run.run_id, "valid_from": run.valid_from,
-                                                    "valid_to": run.valid_to})])
+                                                    "valid_to": run.valid_to, "subject": owner})])
             fact_item(ctx, pb, list(run.members), path, 1.0, "graph", "past belief")
     return pb.build()
 
@@ -535,7 +543,8 @@ def find_paths(ctx: Ctx, from_id: str, to_id: str | None = None, types: list[str
         w = 1.0
         for n, e in zip(r["ns"][1:], r["es"]):
             steps.append(({"id": n["id"], "labels": [registry.label_of(n["id"])], "name": n["name"]},
-                          {"type": e["type"], "aid": e["aid"], "valid_from": e["vf"], "valid_to": e["vt"]}))
+                          {"type": e["type"], "aid": e["aid"], "valid_from": e["vf"], "valid_to": e["vt"],
+                           "subject": e["from"]}))
             aids += run_aids(ctx, e["aid"])
             w *= weights.get(e["type"], 0.7)
         hops = len(r["es"])
@@ -555,7 +564,8 @@ def _impact(ctx: Ctx, pb: PackBuilder, x: str) -> dict:
         for i, nid in enumerate(node_ids):
             edge = None
             if i > 0:
-                edge = {"type": "DEPENDS_ON", "aid": t["aids"][i - 1], "valid_from": None, "valid_to": None}
+                edge = {"type": "DEPENDS_ON", "aid": t["aids"][i - 1], "valid_from": None, "valid_to": None,
+                        "subject": nid}
                 aids += run_aids(ctx, t["aids"][i - 1])
             steps.append((_node(ctx, nid), edge))
         sid = node_ids[-1]
@@ -563,12 +573,14 @@ def _impact(ctx: Ctx, pb: PackBuilder, x: str) -> dict:
             ctx.q("owner_inherited", {"x": sid, "V": V}) if sid.startswith("system:") else [])
         for o in owners[:1]:
             steps.append((_node(ctx, o["owner"], o["name"]), {"type": "OWNS", "aid": o["aid"],
-                                                               "valid_from": o["vf"], "valid_to": o["vt"]}))
+                                                               "valid_from": o["vf"], "valid_to": o["vt"],
+                                                               "subject": o["owner"]}))
             aids += run_aids(ctx, o["aid"])
             if o["owner"].startswith("team:"):
                 for ld in ctx.q("lead_at", {"t": o["owner"], "V": V})[:1]:
                     steps.append((_node(ctx, ld["lead"], ld["name"]),
-                                  {"type": "LEADS", "aid": ld["aid"], "valid_from": ld["vf"], "valid_to": ld["vt"]}))
+                                  {"type": "LEADS", "aid": ld["aid"], "valid_from": ld["vf"], "valid_to": ld["vt"],
+                                   "subject": ld["lead"]}))
                     aids += run_aids(ctx, ld["aid"])
         if aids:
             fact_item(ctx, pb, aids, make_path(steps), 1.0 / (1 + t["hops"]), "graph",

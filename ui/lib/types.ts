@@ -53,6 +53,9 @@ export interface PathEdge {
   aid: string;
   valid_from: number | null;
   valid_to: number | null;
+  /** The stored subject; "backward" when the walk runs from object to subject (M14). */
+  subject?: string;
+  dir?: "forward" | "backward";
 }
 export interface PathStep {
   node: PathNode;

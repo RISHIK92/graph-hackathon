@@ -573,3 +573,27 @@ def test_expertise_reads_in_plain_language_and_flags_outdated_quotes(fx):  # noq
     assert "quote outdated (wiki, before " in eve
     c = next(c for c in ans["claims"] if c.get("expert") and c["quote"] == "Platform owns Ledger")
     assert c["tense"] == "historical" and c["expert"]["score"] > 0
+
+
+def test_path_edges_carry_the_stored_direction(fx):  # noqa: F811
+    """M14: each path edge says whether the walk follows the stored relationship (subject -> object) or runs
+    against it, so the UI can read "Payments owns Ledger" or "Ledger is owned by Payments", never the reverse."""
+    ctx = Ctx(fx.g, now=fx.now)
+    packs = [run_tool(ctx, "get_owner", {"entity_id": "system:ledger"}),
+             run_tool(ctx, "find_paths", {"from_id": "system:ledger"}),
+             run_tool(ctx, "find_paths", {"from_id": "system:ledger", "to_id": "person:priya", "max_hops": 2})]
+    seen = 0
+    for p in packs:
+        facts = {}
+        for it in p["items"]:
+            for f in it["facts"]:
+                facts.setdefault(f["run_id"], f)
+                facts.setdefault(f["assertion_id"], f)
+        for it in p["items"]:
+            steps = (it.get("path") or {}).get("steps") or []
+            for prev, st in zip(steps, steps[1:]):
+                e, f = st["edge"], facts.get(st["edge"]["aid"])
+                assert e["dir"] in ("forward", "backward") and f, e
+                assert f["subject_id"] == (prev["node"]["id"] if e["dir"] == "forward" else st["node"]["id"]), (e, f)
+                seen += 1
+    assert seen >= 4

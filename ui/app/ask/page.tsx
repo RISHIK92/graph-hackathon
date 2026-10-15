@@ -194,6 +194,11 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
   const cited = useMemo(() => new Set((t.answer?.claims || []).flatMap((c) => c.assertion_ids)), [t.answer]);
   const disputes = useMemo(() => collectDisputes(packs, cited).filter((g) => !priorDisputes.has(disputeKey(g))), [packs, cited, priorDisputes]);
   const plan = t.stages.find((e) => e.event === "plan");
+  // M14: the longest cited path of an ownership, impact or expertise answer, one click from the answer
+  const connectPath = ["ownership", "impact", "expertise"].includes(String(plan?.intent || ""))
+    ? Array.from(claims.values()).map((c) => (c.path_id ? pathIndex.get(c.path_id) : undefined))
+      .filter((p): p is Path => !!p && p.steps.length > 1).sort((a, b) => b.steps.length - a.steps.length)[0]
+    : undefined;
   const toolCalls = t.stages.filter((e) => e.event === "tool_call");
   const verification = t.stages.find((e) => e.event === "verification");
   const me = s.people.find((p) => p.id === t.actor);
@@ -321,6 +326,13 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
                     </div>
                   </div>
                 ))}
+                {connectPath && (
+                  <div>
+                    <Button size="sm" variant="link" icon={GitBranch} onClick={() => s.openEvidence({ tab: "path", path: connectPath, packs, fromTurn: true, title: "How this connects" })}>
+                      Show how this connects
+                    </Button>
+                  </div>
+                )}
                 {t.answer.assembled.explanation && (
                   <div className="answer-foot"><strong>Explanation (not verified):</strong> {t.answer.assembled.explanation}</div>
                 )}

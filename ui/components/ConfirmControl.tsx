@@ -1,18 +1,19 @@
 "use client";
 
 import { Check, GitBranch, Undo2, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { get, qs, send } from "@/lib/api";
 import { eligibilityLabel } from "@/lib/format";
 import { useNames, useOpenMode, useStore } from "@/lib/store";
-import type { ConfirmPreview, Eligible, Refusal, UndoPreview, WriteResult } from "@/lib/types";
-import { EligibilityBadge } from "./Chips";
+import type { ConfirmPreview, Eligible, PathStep, Refusal, UndoPreview, WriteResult } from "@/lib/types";
+import { EligibilityBadge, PackContext } from "./Chips";
 import { Button, Chip, Modal, Notice, Placeholder, Skeleton } from "./ui";
 
 /** "Who can …" list: each with an eligibility rule, a "Why" (opens the Path tab) and a "Switch to" shortcut. */
 export function WhoCan({ people, verb, compact }: { people: Eligible[]; verb: string; compact?: boolean }) {
   const { setActingAs, actingAs, openEvidence, toast } = useStore();
   const mode = useOpenMode();
+  const { packs } = useContext(PackContext);   // the surrounding answer's facts, so each edge cites its evidence (M13)
   const ids = people.flatMap((p) => p.path.split(/\s+/).filter((t) => /^[a-z0-9-]+$/.test(t)));
   const names = useNames(ids);
   if (!people.length) return null;
@@ -27,7 +28,7 @@ export function WhoCan({ people, verb, compact }: { people: Eligible[]; verb: st
           {p.path && (
             <Button
               variant="link" size="sm" icon={GitBranch}
-              onClick={() => openEvidence({ tab: "path", path: pathFromEligibility(p, names), title: `Why ${p.name} may ${verb}` }, mode)}
+              onClick={() => openEvidence({ tab: "path", path: pathFromEligibility(p, names), packs, title: `Why ${p.name} may ${verb}` }, mode)}
             >
               Why
             </Button>
@@ -44,22 +45,29 @@ export function WhoCan({ people, verb, compact }: { people: Eligible[]; verb: st
 }
 
 /** The eligibility path string ("a −LEADS→ b …") as Path steps for the Path tab, with ids resolved to names. */
+/** The eligibility path ("payments −OWNS→ ledger priya −LEADS→ payments") as one connected chain from the
+ * confirmed thing to the person, each edge read in its stored direction (M13, M14). */
 function pathFromEligibility(p: Eligible, names: Record<string, { id?: string; name: string; label: string }>) {
-  const parts = p.path.split(/\s+(?=[a-z0-9-]+ −)/).filter(Boolean);
-  const steps: { node: { id: string; labels: string[]; name: string }; edge: { type: string; aid: string; valid_from: null; valid_to: null } | null }[] = [];
   const node = (bare: string) => {
     const n = names[bare];
     return { id: n?.id || bare, labels: n ? [n.label] : [], name: n?.name || bare };
   };
-  parts.forEach((seg, i) => {
+  const segs = p.path.split(/\s+(?=[a-z0-9-]+ −)/).flatMap((seg, i) => {
     const m = seg.match(/^(\S+)\s+−(\w+)→\s+(\S+)/);
-    if (!m) return;
-    const aid = p.aids?.[i] || "";
-    if (!steps.length || steps[steps.length - 1].node.name !== node(m[1]).name) {
-      steps.push({ node: node(m[1]), edge: null });
-    }
-    steps.push({ node: node(m[3]), edge: { type: m[2], aid, valid_from: null, valid_to: null } });
+    return m ? [{ s: m[1], type: m[2], o: m[3], aid: p.aids?.[i] || "" }] : [];
   });
+  const steps: PathStep[] = [];
+  let at = segs[0]?.o;
+  const left = [...segs];
+  if (at) steps.push({ node: node(at), edge: null });
+  while (at && left.length) {
+    const i = left.findIndex((g) => g.s === at || g.o === at);
+    if (i < 0) break;
+    const g = left.splice(i, 1)[0];
+    const next = g.s === at ? g.o : g.s;
+    steps.push({ node: node(next), edge: { type: g.type, aid: g.aid, valid_from: null, valid_to: null, subject: node(g.s).id, dir: g.s === at ? "forward" : "backward" } });
+    at = next;
+  }
   return { path_id: p.path_id || `elig-${p.person_id}`, steps };
 }
 

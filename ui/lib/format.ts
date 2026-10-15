@@ -138,8 +138,15 @@ export const PREDICATE_LABEL: Record<string, string> = {
 export function predicateLabel(p: string): string {
   return PREDICATE_LABEL[p] || p.toLowerCase().replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
-/** Edge type as a verb phrase for paths: "owns", "depends on". */
-export function edgeVerb(t: string): string {
+const REVERSE_VERB: Record<string, string> = {
+  OWNS: "is owned by", LEADS: "is led by", DEPENDS_ON: "is depended on by", PART_OF: "includes", AFFECTS: "is affected by",
+  MEMBER_OF: "has member", ASSIGNED_TO: "has assigned", ABOUT: "is the subject of", REPLACES: "is replaced by",
+  WORKS_ON: "is worked on by", DECIDED_BY: "decided",
+};
+
+/** Edge type as a verb phrase for paths: "owns", "depends on"; walked backwards, "is owned by" (M14). */
+export function edgeVerb(t: string, dir?: "forward" | "backward"): string {
+  if (dir === "backward" && REVERSE_VERB[t]) return REVERSE_VERB[t];
   const m: Record<string, string> = {
     OWNS: "owns", LEADS: "leads", DEPENDS_ON: "depends on", PART_OF: "is part of", AFFECTS: "affects",
     MEMBER_OF: "is a member of", ASSIGNED_TO: "is assigned to", ABOUT: "is about", REPLACES: "replaces",

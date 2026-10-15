@@ -239,7 +239,7 @@ export function PathSteps({ steps, facts, spans, compact }: { steps: PathStep[];
               <>
                 <div className={`path-edge ${status} ${disputes.length ? "disputed" : ""}`}>
                   <div className="rel">
-                    <b>{edgeVerb(e.type)}</b>
+                    <b>{edgeVerb(e.type, e.dir)}</b>
                     {(e.valid_from !== null || e.valid_to !== null) && <span className="mono">{fmtInterval(e.valid_from, e.valid_to)}</span>}
                     {status === "superseded" && <Chip tone="neutral">Superseded</Chip>}
                     {!compact && (
