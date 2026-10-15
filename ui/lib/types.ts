@@ -217,6 +217,7 @@ export interface GraphData {
   disputed: { run: string; assertion_id: string; source: string; target: string; statement: string }[];
   stale: { source: string; target: string; doc: string; why: string; span: string; statement: string }[];
   ticks: number[];
+  changes?: { t: number; n: number }[];
 }
 
 export interface Claim {

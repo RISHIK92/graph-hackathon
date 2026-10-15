@@ -372,7 +372,7 @@ def graph(as_of: int | None = None, labels: str = "", source_kinds: str = "") ->
     return {"as_of": V, "nodes": nodes, "edges": edges, "disputed": side,
             "stale": [{"source": s["s"], "target": s["o"], "doc": s["title"], "why": s["why"], "span": s["span"],
                        "statement": s["statement"]} for s in stale],
-            "ticks": [r["t"] for r in changes]}
+            "ticks": [r["t"] for r in changes], "changes": changes}
 
 
 @app.get("/graph/neighbourhood")

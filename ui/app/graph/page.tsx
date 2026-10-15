@@ -83,9 +83,10 @@ function GraphInner() {
   // M10: the busiest days on the scrubber get a marker, e.g. "12 changes · 1 Apr 2026" for a reorganisation
   const markers = useMemo(() => {
     const byDay = new Map<number, number>();
-    ticks.forEach((t) => { const d = Math.floor(t / 86400000) * 86400000; byDay.set(d, (byDay.get(d) || 0) + 1); });
-    return [...byDay].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  }, [ticks]);
+    (data?.changes || []).forEach(({ t, n }) => { const d = Math.floor(t / 86400000) * 86400000; byDay.set(d, (byDay.get(d) || 0) + n); });
+    const start = Math.min(...byDay.keys());   // the first day is where the record begins, not an event
+    return [...byDay].filter(([d, n]) => n >= 3 && d !== start).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  }, [data]);
   const cur = preview ?? (s.asOf || hi);
   const toggle = (xs: string[], x: string, set: (v: string[]) => void) => set(xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]);
   const applied = labels.length + kinds.length + (hideTickets ? 0 : 1) + (showDisputed ? 0 : 1) + (showStale ? 0 : 1);

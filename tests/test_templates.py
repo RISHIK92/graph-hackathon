@@ -594,7 +594,8 @@ def g_graph_nodes(f, rows):
 
 
 def g_graph_ticks(f, rows):
-    assert rows == [{"t": 1}, {"t": 3}, {"t": 5}]
+    assert [r["t"] for r in rows] == [1, 3, 5] and all(r["n"] >= 1 for r in rows)
+    assert next(r["n"] for r in rows if r["t"] == 3) == 3   # ADR-002 REPLACES, AFFECTS, DECIDED_BY edges
 
 
 def g_names(f, rows):
