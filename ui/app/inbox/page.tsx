@@ -11,7 +11,7 @@ import { qs } from "@/lib/api";
 import { fmtDateTime, plural } from "@/lib/format";
 import { actionKindLabel } from "@/lib/labels";
 import { useApi, useStore } from "@/lib/store";
-import type { PendingData, UndoPreview } from "@/lib/types";
+import type { Directory, PendingData, UndoPreview } from "@/lib/types";
 
 export default function InboxPage() {
   return <Suspense fallback={null}><InboxInner /></Suspense>;
@@ -24,6 +24,9 @@ function InboxInner() {
   const tab = params.get("tab") || "awaiting";
   const setTab = (t: string) => router.replace(`/inbox${qs({ tab: t === "awaiting" ? "" : t })}`);
   const { data, error, loading, reload } = useApi<PendingData>(s.actingAs ? `/people/${encodeURIComponent(s.actingAs)}/pending` : null);
+  // Every open disagreement, not only the ones this person can settle, from the Directory's own call
+  const dir = useApi<Directory>(tab === "disputes" ? `/directory${qs({ as_of: s.asOf })}` : null);
+  const allDisputes = dir.data ? [...dir.data.systems, ...dir.data.projects, ...dir.data.people, ...dir.data.tickets, ...dir.data.decisions].filter((x) => x.disputed) : [];
   const me = s.personName(s.actingAs);
   const anon = s.session?.anonymous;
   const selected = s.inspector[s.inspector.length - 1];
@@ -39,6 +42,7 @@ function InboxInner() {
           { id: "awaiting", label: "Awaiting you", count: data?.awaiting.length },
           { id: "mine", label: "Your proposals", count: data?.mine.length },
           { id: "activity", label: "Activity", count: data?.log.length },
+          { id: "disputes", label: "All open disputes", count: dir.data ? allDisputes.length : undefined },
         ]} />}
       />
       <div className="page-body">
@@ -98,6 +102,23 @@ function InboxInner() {
           ) : (
             <div className="table-wrap"><Empty icon={Inbox} title="No open proposals">Routing a ticket or drafting an ADR from Ask creates a proposal here.</Empty></div>
           )
+        )}
+        {tab === "disputes" && (
+          dir.error ? <ErrorState message={dir.error} onRetry={dir.reload} /> : !dir.data ? <SkeletonRows n={4} /> : allDisputes.length ? (
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>Disputed</th><th>Settle it from</th></tr></thead>
+                <tbody>
+                  {allDisputes.map((x) => (
+                    <tr key={x.id} className="clickable" onClick={() => s.openEntity(x.id, x.name)}>
+                      <td className="cell-primary"><span className="row" style={{ gap: 8 }}><Flag className="icon-sm text-warning" />{x.name}</span></td>
+                      <td className="t-small text-2">Its panel shows both sides and who can settle it</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : <div className="table-wrap"><Empty icon={Check} title="No open disputes">Every recorded fact is unchallenged.</Empty></div>
         )}
         {data && tab === "activity" && (
           data.log.length ? (

@@ -38,6 +38,7 @@ export function ActionRecord({ id, inPage }: { id: string; inPage?: boolean }) {
   const tn = item?.then_now;
   const changed = (item?.changed_since || []);
   const changedIds = changed.map((c) => c.assertion_id);
+  const suggestion = item?.suggestion;
   const view = tn?.[when];
   const packs: Pack[] = data ? [data.pack] : [];
   const withdrawn = me?.status === "undone";
@@ -100,7 +101,16 @@ export function ActionRecord({ id, inPage }: { id: string; inPage?: boolean }) {
           </div>
           {when === "now" && changed.length > 0 && (
             <Notice tone="warning" title={`${changed.length} relied-on ${changed.length === 1 ? "fact has" : "facts have"} changed since`}>
-              {changed.map((c) => <div key={c.assertion_id} className="t-small">{c.statement}: then <em>{c.then}</em>, now <em>{c.now}</em></div>)}
+              {changed.map((c) => (
+                <div key={c.assertion_id} className="t-small">
+                  {c.statement}: then <em>{c.then}</em>, now <em>{c.now}</em>{c.replaced_by && c.replaced_by !== c.statement ? <> → now <strong>{c.replaced_by}</strong></> : null}
+                </div>
+              ))}
+              {suggestion && (
+                <Button size="sm" variant="link" onClick={() => router.push(`/ask${qs({ q: suggestion.replace(/^Re-route (.+) to .+\?$/, "Route $1 to the owner"), send: "1" })}`)}>
+                  {suggestion}
+                </Button>
+              )}
             </Notice>
           )}
         </div>

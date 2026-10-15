@@ -1,6 +1,7 @@
 "use client";
 
 import { get } from "@/lib/api";
+import { Check } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import type { Trace } from "@/lib/types";
@@ -59,6 +60,13 @@ export function TraceView({ turnId }: { turnId: string }) {
             {v.dropped.length > 0 && <Chip tone="warning">{v.dropped.length} dropped</Chip>}
             {v.rewritten?.length ? <Chip tone="neutral">Rewritten {v.rewritten.length}</Chip> : null}
           </div>
+          {v.checks && Object.keys(v.checks).length > 0 && (
+            <div className="stack t-small">
+              {Object.entries(v.checks).map(([name, n]) => (
+                <span key={name} className="row" style={{ gap: 6 }}><Check className="icon-sm text-success" />{name}{n > 1 ? ` (${n} claims)` : ""}</span>
+              ))}
+            </div>
+          )}
           {debug && v.dropped.length > 0 && <Details summary="Dropped claims"><pre className="code">{JSON.stringify(v.dropped, null, 1)}</pre></Details>}
         </section>
       )}

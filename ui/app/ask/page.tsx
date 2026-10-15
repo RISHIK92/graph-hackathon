@@ -15,7 +15,8 @@ import type { Claim, Fact, Pack, Path, Refusal, SpanItem } from "@/lib/types";
 
 
 const SUGGEST_Q = ["Who owns Ledger?", "Who knows about Ledger?", "Why is Ledger on Aurora?", "What breaks if Ledger goes down, and who do I tell?", "Is anything pending for ADR-007?"];
-const SUGGEST_A = ["Route RDS-42 to the owner", "Infra owns Ledger now"];
+const SUGGEST_A = ["Route RDS-42 to the owner", "Infra owns Ledger now",
+  "Draft an ADR superseding ADR-007: move Ledger to CockroachDB for multi-region writes", "Flag stale docs about Ledger"];
 
 export default function AskPage() {
   return <Suspense fallback={null}><Ask /></Suspense>;

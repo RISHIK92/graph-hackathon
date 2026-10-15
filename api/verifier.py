@@ -85,7 +85,24 @@ def verify(answer: dict, packs: dict[str, dict]) -> dict:
                 kept.remove(c)
                 dropped.append({"claim_id": c["claim_id"], "rule": "V5", "detail": "no claim about the current fact"})
     abstained = not kept or len(dropped) > len(claims) / 2
-    return {"kept": kept, "dropped": dropped, "rewritten": rewritten, "abstained": abstained}
+    return {"kept": kept, "dropped": dropped, "rewritten": rewritten, "abstained": abstained, "checks": _passed(kept)}
+
+
+CHECK_NAMES = {"V1": "Cited in this answer's evidence", "V2": "Matches the stored fact", "V3": "Quote found in a live source",
+               "V4": "True at the date asked", "V7": "Open disputes disclosed", "V8": "Proposals labelled as proposed",
+               "V9": "No draft or agent text cited", "V10": "Count matches the cited facts"}
+
+
+def _passed(kept: list[dict]) -> dict[str, int]:
+    """How many kept claims passed each named check (the trace's verifier report)."""
+    out: dict[str, int] = {}
+    for c in kept:
+        label, proposed = c.get("label", "graph"), c.get("tense") == "proposed"
+        ids = ["V1", "V9"] + (["V10"] if label == "aggregate" else ["V3"] if label != "graph"
+                              else ["V8"] if proposed else ["V2", "V3", "V4", "V7"])
+        for v in ids:
+            out[CHECK_NAMES[v]] = out.get(CHECK_NAMES[v], 0) + 1
+    return out
 
 
 def _check(c: dict, ix: Index, rewritten: list) -> tuple[str, str] | None:

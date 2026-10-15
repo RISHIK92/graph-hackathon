@@ -710,3 +710,14 @@ def test_flag_stale_docs_says_what_it_flagged(fx):  # noqa: F811
     """m23: the flag-stale-docs result names the documents and what they still say."""
     r = Actions(fx.g, Clock(fx.now + 10)).flag_stale_docs(Actor("person:eve"), "system:ledger")
     assert r["summary"].startswith("Flagged 1 outdated passage: src:test says “Platform owns Ledger”"), r["summary"]
+
+
+def test_trace_names_the_checks_each_claim_passed(world):
+    """Missing feature "verifier report detail": the trace says which checks passed, in words."""
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Who owns Ledger?"))
+    checks = agent.turn_log[ans["turn_id"]]["verification"]["checks"]
+    assert {"Cited in this answer's evidence", "Matches the stored fact", "Quote found in a live source",
+            "True at the date asked", "Open disputes disclosed"} <= set(checks)
+    assert all(n == 2 for n in checks.values())

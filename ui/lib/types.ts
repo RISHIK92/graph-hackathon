@@ -96,7 +96,8 @@ export interface PackItem {
     then: { based_on: Fact[]; produced: Fact[] };
     now: { based_on: Fact[]; produced: Fact[] };
   };
-  changed_since?: { assertion_id: string; then: string; now: string; statement: string }[];
+  changed_since?: { assertion_id: string; then: string; now: string; statement: string; replaced_by?: string | null }[];
+  suggestion?: string | null;
   confirms?: { proposal: string; confirmed: string; status: string; action: string | null }[];
   /** A confirmation's outcome (M20). */
   confirmed?: { made_current: Fact[]; replaced: Fact[]; overruled: Fact[] };
@@ -255,7 +256,7 @@ export interface QueryLog {
 export interface Trace {
   turn_id: string;
   tool_calls: { name: string; args: Record<string, unknown>; pack_id: string; queries: QueryLog[]; sentence?: string }[];
-  verification: { kept: number; dropped: unknown[]; rewritten: unknown[] } | null;
+  verification: { kept: number; dropped: unknown[]; rewritten: unknown[]; checks?: Record<string, number> } | null;
   packs?: Record<string, Pack>;
 }
 

@@ -697,6 +697,21 @@ def _confirm_outcome(ctx: Ctx, action_id: str, summary: dict) -> dict:
             "replaced": list(replaced.values()), "overruled": list(overruled.values())}
 
 
+def _next_step(ctx: Ctx, summary: dict, based_now: list[dict], changed: list[dict]) -> str | None:
+    """What to do now that a relied-on fact changed: a routing whose owner changed can be re-routed to the new
+    owner's lead ("Re-route RDS-42 to Bob Okafor?")."""
+    if summary.get("kind") != "route_to_owner":
+        return None
+    gone = {c["assertion_id"] for c in changed}
+    owns = next((f for f in based_now if f["predicate"] == "OWNS" and f["assertion_id"] in gone), None)
+    if not owns:
+        return None
+    owner = ctx.q("owner_at", {"x": owns["object_id"], "V": ctx.now})
+    lead = ctx.q("lead_at", {"t": owner[0]["owner"], "V": ctx.now}) if owner else []
+    m = re.match(r"Proposed routing (.+?) to ", summary.get("summary") or "")
+    return f"Re-route {m.group(1)} to {lead[0]['name']}?" if m and lead else None
+
+
 def explain_action(ctx: Ctx, action_id: str) -> dict:
     pb = PackBuilder(ctx, "explain_action", {"action_id": action_id})
     summary = action_summary(ctx, action_id)
@@ -713,8 +728,10 @@ def explain_action(ctx: Ctx, action_id: str) -> dict:
     for f_then in out["then"]["based_on"]:
         f_now = next((f for f in out["now"]["based_on"] if f["assertion_id"] == f_then["assertion_id"]), None)
         if f_now and f_now["status"] != f_then["status"]:
+            stored = assertions(ctx, [f_then["assertion_id"]]).get(f_then["assertion_id"]) or {}
+            cur = ctx.q("current_in_chain", {"c": stored["chain_id"]}) if stored else []
             changed.append({"assertion_id": f_then["assertion_id"], "then": f_then["status"], "now": f_now["status"],
-                            "statement": f_then["statement"]})
+                            "statement": f_then["statement"], "replaced_by": cur[0]["st"] if cur else None})
     it = fact_item(ctx, pb, summary["based_on"] + summary["produced"], None, 1.0, "graph",
                    f"{summary['kind']} by {summary['actor']['name']}", extra_disputes=False) \
         or pb.item("graph", 1.0, [], None, [])
@@ -723,6 +740,7 @@ def explain_action(ctx: Ctx, action_id: str) -> dict:
         it["confirmed"] = _confirm_outcome(ctx, action_id, summary)
     it["then_now"] = out
     it["changed_since"] = changed
+    it["suggestion"] = _next_step(ctx, summary, out["now"]["based_on"], changed)
     it["confirms"] = confirms
     return pb.build()
 

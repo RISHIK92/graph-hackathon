@@ -156,7 +156,7 @@ class Agent:
             if not bver["abstained"]:
                 answer, ver, drafted = base, bver, "deterministic"
         trace["verification"] = {"kept": len(ver["kept"]), "dropped": ver["dropped"], "rewritten": ver["rewritten"],
-                                 "draft": drafted, "redraft": redraft}
+                                 "draft": drafted, "redraft": redraft, "checks": ver["checks"]}
         yield {"event": "verification", "kept": len(ver["kept"]), "dropped": ver["dropped"],
                "rewritten": ver["rewritten"]}
         final = {"claims": ver["kept"], "abstained": ver["abstained"],

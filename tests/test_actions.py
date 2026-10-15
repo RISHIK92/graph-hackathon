@@ -290,3 +290,22 @@ def test_action_lifecycle_reads_as_sentences(world):
     u = acts.undo_action(actor("person:priya"), c["action_id"])
     summary = g.ro("MATCH (a:Action {id:$id}) RETURN a.summary AS s", {"id": u["action_id"]})[0]["s"]
     assert summary == "Priya Raman undid the confirmation of “Infra owns Ledger”"
+
+
+def test_action_now_view_says_what_replaced_a_relied_fact(world):
+    """Missing feature: the Now view names the replacement and suggests the next step for a routing."""
+    from brain.tools import Ctx, run_tool
+    g, clock = world["g"], world["clock"]
+    acts = Actions(g, clock)
+    r = acts.route_to_owner(actor("person:eve"), ticket_id="ticket:rds-42")
+    clock.tick()
+    make_span(g, "turn3", "Infra owns Ledger", clock(), src="sess1", kind="chat_session", role="user")
+    ch = acts.learn_fact(actor("person:eve"), "turn3", {"predicate": "OWNS", "subject_id": "team:infra",
+                                                       "object_id": "system:ledger"}, "sess1")
+    clock.tick()
+    acts.confirm_fact(actor("person:priya"), assertion_id=ch["assertion_id"])
+    clock.tick()
+    it = run_tool(Ctx(g, now=clock()), "explain_action", {"action_id": r["action_id"]})["items"][0]
+    own = next(c for c in it["changed_since"] if "owns Ledger" in c["statement"])
+    assert own["replaced_by"] == "Infra owns Ledger"
+    assert it["suggestion"] == "Re-route RDS-42 to Bob Okafor?"
