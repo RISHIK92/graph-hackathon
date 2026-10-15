@@ -77,7 +77,8 @@ def fx(g, clock) -> Fixture:
         {"id": "system:checkout", "name": "Checkout", "aliases": [], "tier": 1},
         {"id": "system:storefront", "name": "Storefront", "aliases": [], "tier": 2},
         {"id": "project:commerce", "name": "Commerce", "aliases": []},
-        {"id": "decision:adr-002", "name": "ADR-002", "aliases": [], "title": "Move Ledger to Postgres"},
+        {"id": "decision:adr-002", "name": "ADR-002", "aliases": [], "title": "Move Ledger to Postgres",
+         "decided_at": 3},
     ])
     g.write("UNWIND $rows AS x MATCH (n:Entity {id:x.id}) SET n.embedding = vecf32(x.e)",
             {"rows": [{"id": i, "e": providers.embed([n])[0]} for i, n in
@@ -330,7 +331,7 @@ def g_chains_for_entity(f, rows):
 def g_decision_trace(f, rows):
     assert len(rows) == 1
     r = rows[0]
-    assert (r["id"], r["name"], r["title"]) == ("decision:adr-002", "ADR-002", "Move Ledger to Postgres")
+    assert (r["id"], r["name"], r["title"], r["decided_at"]) == ("decision:adr-002", "ADR-002", "Move Ledger to Postgres", 3)
     assert (r["status"], r["status_aid"]) == ("accepted", f.ids["status"])
     assert set(r["replaced"]) == {"decision:adr-002", "decision:adr-001"}      # *0.. includes d itself
     assert r["affects"] == [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["affects"]}]
@@ -871,7 +872,7 @@ def g_recent_actions(f, rows):
 
 
 def g_replaces_out(f, rows):
-    assert rows == [{"o": "decision:adr-001", "aid": f.ids["replaces"]}]
+    assert rows == [{"o": "decision:adr-001", "name": "ADR-001", "title": None, "aid": f.ids["replaces"]}]
 
 
 def g_session(f, rows):

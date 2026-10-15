@@ -10,6 +10,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Iterator
 
 from brain import ids, providers, registry, store
@@ -292,7 +293,13 @@ class Agent:
         extra = [c for c in base["claims"] if c.get("assertion_ids") and not set(c["assertion_ids"]) & have]
         for i, c in enumerate(extra):
             c["claim_id"] = f"d{i + 1}"
-        return {"claims": llm["claims"] + extra, "explanation": llm.get("explanation", ""), "drafted": "llm"}
+        # The fixed lead (a decision's cited "because") stays first even when the LLM leaves it out (item 18).
+        quoted = {s for c in kept for s in c.get("span_ids", [])}
+        lead = [c for c in base["claims"] if c.get("label") == "text_only" and c.get("context")
+                and not set(c["span_ids"]) & quoted]
+        for i, c in enumerate(lead):
+            c["claim_id"] = f"l{i + 1}"
+        return {"claims": lead + llm["claims"] + extra, "explanation": llm.get("explanation", ""), "drafted": "llm"}
 
     def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None) -> dict:
         slim = []
@@ -625,6 +632,47 @@ def _content(t: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+", t.lower()) if w not in _STOP and len(w) > 2}
 
 
+def _day(ms: int) -> str:
+    d = datetime.fromtimestamp(ms / 1000, timezone.utc)
+    return f"{d.day} {d:%b %Y}"
+
+
+def _decision_claims(packs: dict[str, dict], question: str, claims: list[dict]) -> list[dict] | None:
+    """Decision trace (item 18): lead with why, quoting the asked decision's MOTIVATED_BY spans, then at most
+    three structural facts (what it replaced or what replaced it, who decided). Proposals stay; a question
+    about drafts or pending changes puts them first."""
+    rats = [it for p in packs.values() if p["tool"] == "trace_decision" for it in p["items"] if it.get("rationale")]
+    if not rats:
+        return None
+    q = _content(question)
+    low = question.lower()
+    lead = max(rats, key=lambda it: (bool(re.search(rf"\b{re.escape(it['rationale']['name'].lower())}\b", low)),
+                                     len(q & _content(it["rationale"]["title"])), it["rationale"]["status"] == "accepted"))
+    r, d = lead["rationale"], lead["rationale"]["decision_id"]
+    head = f"{r['title']} ({r['name']}" if r["title"] else f"{r['name']} ("
+    head = (head + (", " if r["title"] else "") + _day(r["decided_at"]) + ")") if r.get("decided_at") else \
+        (head + ")" if r["title"] else r["name"])
+    for o in r["replaces"][:1]:
+        head += f", replacing {o['name']}" + (f" ({o['title']})" if o["title"] else "")
+    why = [{"text": sp["text"][:240], "tense": "current" if sp.get("live") else "historical", "label": "text_only",
+            "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [], "quote": sp["text"][:240],
+            "disputed": False, "context": f"{head}, because" if i == 0 else f"rationale ({sp['section']})"}
+           for i, sp in enumerate([s for s in lead["spans"] if not s.get("proposed")][:3])]
+
+    def about(c: dict, pred: str) -> bool:
+        f = c.get("fact") or {}
+        return c["label"] == "graph" and c["tense"] != "proposed" and f.get("predicate") == pred \
+            and d in (f.get("subject_id"), f.get("object_id"))
+    structural = [c for c in claims if about(c, "REPLACES")][:1]
+    structural += [c for c in claims if about(c, "DECIDED_BY")][:3 - len(structural)]
+    proposed = [c for c in claims if c["tense"] == "proposed"]
+    pending = proposed and re.search(r"pending|\bdrafts?\b|propos|supersed", question.lower())
+    out = proposed + why + structural if pending else why + structural + proposed
+    for i, c in enumerate(out):
+        c["claim_id"] = f"c{i + 1}"
+    return out
+
+
 def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") -> dict:
     """Claims straight from pack items: one per relevant fact, quoting its first live evidence span.
     A question that names nothing the graph knows gets no claims (abstain); a text-only claim must share
@@ -666,7 +714,8 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
     for p in packs.values():
         tool = p["tool"]
         for it in p["items"]:
-            if it["label"] == "text_only" and tool in ("search_spans", "recall_session", "trace_decision") and it["spans"]:
+            if it["label"] == "text_only" and tool in ("search_spans", "recall_session", "trace_decision") and it["spans"] \
+                    and not it.get("rationale"):
                 s = it["spans"][0]
                 if tool not in ("trace_decision", "recall_session") and len(qwords & _content(s["text"])) < min(2, len(qwords)):
                     continue
@@ -694,6 +743,9 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                     add_fact_claim(it, f, "proposed")
                 elif st == "disputed" and tool == "get_history":
                     add_fact_claim(it, f, "current", True)
+    decision = _decision_claims(packs, question, claims)
+    if decision is not None:
+        return {"claims": decision, "explanation": ""}
     # decision rationale (MOTIVATED_BY spans) and expertise signals: quoted, text-only claims
     for p in packs.values():
         for it in p["items"]:

@@ -14,5 +14,6 @@ WITH d, replaced, collect(DISTINCT CASE WHEN db.valid_from <= $V AND db.valid_to
 OPTIONAL MATCH (d)-[af:AFFECTS]->(x:Entity) WHERE af.valid_from <= $V AND af.valid_to > $V
 WITH d, replaced, deciders, collect(DISTINCT {id:x.id, name:x.name, aid:af.aid}) AS affects
 OPTIONAL MATCH (d)-[m:MOTIVATED_BY]->(s:Span) WHERE m.recorded_at <= $T AND m.removed_at > $T
-RETURN d.id AS id, d.name AS name, d.title AS title, d.status AS status, d.status_aid AS status_aid,
+RETURN d.id AS id, d.name AS name, d.title AS title, d.decided_at AS decided_at, d.status AS status,
+       d.status_aid AS status_aid,
        replaced, deciders, affects, collect(DISTINCT {span:s.id, section:m.section, action_id:m.action_id}) AS motivated

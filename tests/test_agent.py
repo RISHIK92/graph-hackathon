@@ -293,3 +293,85 @@ def test_primary_team_is_a_modelled_question(world):
     ans = answer_of(run(agent, s, "What is Priya Raman's primary team today?"))
     assert not ans["abstained"] and not ans.get("missing")
     assert any("Payments" in l["text"] for l in ans["assembled"]["lines"])
+
+
+def _decision_world(world):
+    """ADR-002 "Move Ledger to Aurora" (accepted, decided by Priya, Bob) replaces ADR-001 "Run Ledger on
+    Postgres", affects Ledger; two MOTIVATED_BY rationale spans of its own, separate from the fact evidence."""
+    g, wp = world["g"], world["wp"]
+    store.upsert_entities(g, [
+        {"id": "decision:adr-001", "name": "ADR-001", "aliases": [], "title": "Run Ledger on Postgres", "decided_at": 1},
+        {"id": "decision:adr-002", "name": "ADR-002", "aliases": [], "title": "Move Ledger to Aurora",
+         "decided_at": 1767225600000}, {"id": "system:aurora", "name": "Aurora", "aliases": []}])
+    make_span(g, "sp_adr2", "adr2 front matter", 3)
+    make_span(g, "sp_why", "Postgres could not sustain Ledger write volume during month-end close.", 3)
+    make_span(g, "sp_dec", "We will run Ledger on Aurora with two read replicas.", 3)
+    _fact(wp, "HAS_STATUS", "decision:adr-002", "", 3, "sp_adr2", value="accepted")
+    _fact(wp, "REPLACES", "decision:adr-002", "decision:adr-001", 3, "sp_adr2")
+    _fact(wp, "AFFECTS", "decision:adr-002", "system:ledger", 3, "sp_adr2")
+    _fact(wp, "AFFECTS", "decision:adr-002", "system:aurora", 3, "sp_adr2")
+    _fact(wp, "DECIDED_BY", "decision:adr-002", "person:priya", 3, "sp_adr2")
+    _fact(wp, "DECIDED_BY", "decision:adr-002", "person:bob", 3, "sp_adr2")
+    for sid, sec in (("sp_why", "context"), ("sp_dec", "decision")):
+        store.add_motivated_by(g, "decision:adr-002", sid, sec, world["clock"]())
+    world["clock"].tick(10)
+
+
+def test_decision_trace_pack_carries_the_rationale_item(world):
+    """Item 18 fix 3: the rationale is its own pack item, citing exactly the decision's MOTIVATED_BY spans."""
+    _decision_world(world)
+    pack = run_tool(Ctx(world["g"], now=world["clock"]()), "trace_decision", {"decision_id": "decision:adr-002"})
+    rat = [it for it in pack["items"] if it.get("rationale")]
+    assert len(rat) == 1 and rat[0]["rationale"]["decision_id"] == "decision:adr-002"
+    assert [s["span_id"] for s in rat[0]["spans"]] == ["sp_why", "sp_dec"]
+    assert not any(s.get("section") for it in pack["items"] if not it.get("rationale") for s in it["spans"])
+
+
+def test_decision_answer_leads_with_the_cited_rationale(world):
+    """Item 18 fix 3: the first line answers "why" from the rationale; at most three structural facts follow
+    (what it replaced, who decided), not every edge of the decision."""
+    _decision_world(world)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Why did we move Ledger to Aurora?"))
+    assert not ans["abstained"]
+    lines = [l["text"] for l in ans["assembled"]["lines"]]
+    assert lines[0].startswith("Move Ledger to Aurora (ADR-002, 1 Jan 2026), replacing ADR-001 (Run Ledger on Postgres), because")
+    assert "Postgres could not sustain Ledger write volume" in lines[0]
+    first = next(c for c in ans["claims"] if c["claim_id"] == ans["assembled"]["lines"][0]["claim_id"])
+    assert first["span_ids"] == ["sp_why"]
+    graph_lines = [l for l in lines[1:] if not l.startswith("“") and "“" not in l]
+    assert len(graph_lines) <= 3, lines
+    assert "ADR-002 replaces ADR-001" in lines and not any("affects" in l for l in lines)
+
+
+def test_decision_lead_survives_an_llm_draft_that_drops_the_rationale(world, monkeypatch):
+    """Item 18 fix 3, live mode: an LLM draft that restates only structural facts still answers with the
+    deterministic "because" lead first."""
+    from api import agent as agent_mod
+    _decision_world(world)
+
+    def llm(self, text, plan, packs, errors=None):
+        base = agent_mod.deterministic_draft(plan, packs, text)
+        return {"claims": [c for c in base["claims"] if c["label"] == "graph"], "explanation": ""}
+
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    monkeypatch.setattr(Agent, "_llm_draft", llm)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Why did we move Ledger to Aurora?"))
+    assert ans["assembled"]["lines"][0]["text"].startswith("Move Ledger to Aurora (ADR-002, 1 Jan 2026)")
+
+
+def test_decision_named_in_the_question_leads(world):
+    """The decision a question names leads, even when the trace also walks the one that replaced it."""
+    _decision_world(world)
+    g = world["g"]
+    make_span(g, "sp_old", "Postgres was the shared relational store the team already ran.", 1)
+    store.add_motivated_by(g, "decision:adr-001", "sp_old", "context", world["clock"]())
+    world["clock"].tick()
+    agent = Agent(g, world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "What was the reasoning behind ADR-001?"))
+    assert ans["assembled"]["lines"][0]["text"].startswith("Run Ledger on Postgres (ADR-001, 1 Jan 1970), because")

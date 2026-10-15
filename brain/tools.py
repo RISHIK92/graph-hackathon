@@ -432,10 +432,13 @@ def trace_decision(ctx: Ctx, decision_id: str | None = None, entity_id: str | No
                            "kind": x["kind"], "ts": x["ts"], "char_start": rv.get("cs"), "char_end": rv.get("ce"),
                            "live": any(v["live"] for v in x["revs"]), "cites": [], "form": "prose",
                            "authority": 2, "section": m["section"], "proposed": bool(m["action_id"])})
-            if it:
-                it["spans"] += ms
-            else:
-                pb.item("text_only", 0.8, [], None, ms, note=f"rationale of {d}")
+            if ms:
+                # Its own item: the answer's "because" cites exactly the decision's MOTIVATED_BY spans (item 18).
+                rat = pb.item("text_only", 1.0 if it else 0.8, [], None, ms, note=f"rationale of {d}")
+                rat["rationale"] = {"decision_id": d, "name": r["name"], "title": r["title"] or "",
+                                    "decided_at": r["decided_at"], "status": r["status"] or "",
+                                    "replaces": [{"id": x["o"], "name": x["name"], "title": x["title"] or ""}
+                                                 for x in repl]}
         # pending/confirmed drafts point at the new decision through proposals' SUBJECT/OBJECT
         for p in props:
             for rr in ctx.q("proposal_ends", {"p": p}):

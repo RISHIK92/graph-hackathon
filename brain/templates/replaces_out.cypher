@@ -5,4 +5,4 @@
 // golden: tests/test_templates.py::test_goldens[replaces_out]
 MATCH (d:Decision {id:$d})-[r:REPLACES]->(o:Decision)
 WHERE r.valid_to > $V
-RETURN o.id AS o, r.aid AS aid
+RETURN o.id AS o, o.name AS name, o.title AS title, r.aid AS aid
