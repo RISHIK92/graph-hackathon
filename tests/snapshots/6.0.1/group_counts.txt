@@ -1,0 +1,6 @@
+Sort
+    Project
+        Aggregate
+            Optional Conditional Traverse | (t)-[r]-(n:Entity)
+                Filter
+                    Node By Label Scan | (t:Entity)

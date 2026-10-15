@@ -1,0 +1,7 @@
+Sort
+    Distinct
+        Project
+            Filter
+                Conditional Traverse | (a)-[r]-(n:Entity)
+                    Filter
+                        Node By Index Scan | (a:Entity)

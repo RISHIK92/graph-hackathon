@@ -22,7 +22,8 @@ from ingest.extract import AliasIndex, pattern_extract
 from .verifier import assemble, verify
 from brain.ids import now_ms
 
-INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "fact", "memory", "action", "other"]
+INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "aggregate", "fact", "memory",
+           "action", "other"]
 
 
 @dataclass
@@ -197,6 +198,10 @@ class Agent:
         if plan["mentions"]:
             calls.append(("link_entities", {"mentions": [m["text"] for m in plan["mentions"]]}))
         intent = plan["intent"]
+        if intent == "aggregate":
+            call = aggregate_call(text, plan["mentions"])
+            if call:
+                return calls + [call]
         first = ents[0] if ents else None
         sys_ = [e for e in ents if e.split(":")[0] in ("system", "project")]
         tgt = sys_[0] if sys_ else first
@@ -438,6 +443,8 @@ def heuristic_plan(text: str) -> dict:
         want = "learn_fact"
     if want != "none":
         intent = "action"
+    elif re.search(r"^how many\b|^which \w+ (has|have) the (most|largest|biggest)\b", t):
+        intent = "aggregate"
     elif re.search(r"what breaks|goes down|outage|impact|who do i tell|who should i tell|blast radius", t):
         intent = "impact"
     elif re.search(r"who should i (ask|talk to) about [a-z][a-z0-9]+-\d+", t):
@@ -520,6 +527,82 @@ def missing(plan: dict, text: str) -> list[str]:
     return [f"Nothing in the graph{about} supports an answer: no fact or document passage matched what was asked."]
 
 
+_LABELS = [("architecture decisions", "Decision"), ("decisions", "Decision"), ("adrs", "Decision"),
+           ("systems", "System"), ("services", "System"), ("teams", "Team"), ("people", "Person"),
+           ("persons", "Person"), ("members", "Person"), ("projects", "Project"), ("tickets", "Ticket")]
+_PREDS = [(r"primary members? of|members? of", "MEMBER_OF"), (r"depend", "DEPENDS_ON"),
+          (r"part of|belongs? to", "PART_OF"), (r"\baffect", "AFFECTS"), (r"\bown", "OWNS"),
+          (r"work(s|ing)? on", "WORKS_ON"), (r"\blead", "LEADS"), (r"assigned to", "ASSIGNED_TO")]
+
+
+def _pred(s: str) -> str | None:
+    return next((p for rx, p in _PREDS if re.search(rx, s)), None)
+
+
+def aggregate_call(text: str, mentions: list[dict]) -> tuple[str, dict] | None:
+    """'How many ...' and 'which X has the most Y' questions as one count_related / rank_by_count call.
+    Entities become E0, E1, ... in order; the side of the verb an entity is on gives the direction
+    ('does E0 own' -> out from E0, 'depend on E0' -> in to E0)."""
+    t = text.lower().rstrip("?. ")
+    ents = []
+    for m in sorted((m for m in mentions if m["entity_id"]), key=lambda m: t.find(m["text"].lower())):
+        i = t.find(m["text"].lower())
+        if i >= 0:
+            t = t[:i] + f"e{len(ents)}" + t[i + len(m["text"]):]
+            ents.append(m["entity_id"])
+    m = re.search(r"which (\w+) (?:has|have) the (?:most|largest|biggest) (.+)", t)
+    if m:
+        label = next((lab for w, lab in _LABELS if w.startswith(m.group(1))), None)
+        if label == "Team":
+            return "rank_by_count", {"label": "Team", "predicate": "MEMBER_OF", "member_label": "Person",
+                                     "direction": "in", "primary": True}
+        return None
+    m = re.match(r"how many (?:different )?(.+)", t)
+    if not m or not ents:
+        return None
+    rest = m.group(1)
+    label = next((lab for w, lab in _LABELS if rest.startswith(w)), None)
+    if not label:
+        return None
+    rest = rest[len(next(w for w, lab in _LABELS if rest.startswith(w))):]
+    head, _, tail = rest.partition(" that ")
+    primary = "primary" in head
+
+    def step(clause: str, e: str) -> dict | None:
+        p = _pred(clause)
+        if not p:
+            return None
+        before = clause.split(e)[0]
+        out = bool(re.search(r"\b(does|do|did)\s*$", before.strip()) or re.search(r"\b(does|do|did) " + e, clause))
+        return {"entity_id": ents[int(e[1:])], "predicate": p, "direction": "out" if out else "in",
+                "primary": primary and p == "MEMBER_OF"}
+
+    head_e = re.findall(r"e\d", head)
+    if head_e:
+        base = step(head, head_e[0])
+        if not base:
+            return None
+        args = {"label": label, **base}
+        if tail:
+            tail_e = re.findall(r"e\d", tail)
+            also = step(tail, tail_e[0]) if tail_e else None
+            if not also:
+                return None
+            args["also"] = also
+        return "count_related", args
+    # 'how many teams own systems that depend on e0': the e0 relation picks the middle items, then
+    # each is followed back over the head's relation
+    mid = next((lab for w, lab in _LABELS if w in head), None)
+    tail_e = re.findall(r"e\d", tail)
+    if not mid or not tail_e or not _pred(head):
+        return None
+    base = step(tail, tail_e[0])
+    if not base:
+        return None
+    return "count_related", {"label": mid, **base,
+                             "then": {"predicate": _pred(head), "direction": "in", "label": label}}
+
+
 def _content(t: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+", t.lower()) if w not in _STOP and len(w) > 2}
 
@@ -527,7 +610,13 @@ def _content(t: str) -> set[str]:
 def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") -> dict:
     """Claims straight from pack items: one per relevant fact, quoting its first live evidence span.
     A question that names nothing the graph knows gets no claims (abstain); a text-only claim must share
-    at least two content words with the question."""
+    at least two content words with the question. An aggregate item becomes one claim restating it (V10)."""
+    agg = [{"claim_id": f"c{i + 1}", "text": it["aggregate"]["text"], "tense": "current", "label": "aggregate",
+            "pack_id": pid, "item_id": it["item_id"], "count": it["aggregate"]["count"],
+            "assertion_ids": [f["assertion_id"] for f in it["facts"]], "span_ids": [], "action_ids": []}
+           for i, (pid, it) in enumerate((pid, it) for pid, p in packs.items() for it in p["items"] if it.get("aggregate"))]
+    if agg:
+        return {"claims": agg, "explanation": ""}
     if plan.get("intent") not in ("other", "memory") and plan.get("mentions") is not None \
             and not any(m.get("entity_id") for m in plan["mentions"]):
         return {"claims": [], "explanation": ""}

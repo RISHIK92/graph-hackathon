@@ -35,10 +35,10 @@ def test_mcp_tool_listing_stdio():
     srv = mcp_srv.build(http=False)
     tools = set(srv._tool_manager._tools.keys())
 
-    # All 10 read tools present
+    # All 12 read tools present
     expected_reads = {
         "link_entities", "get_owner", "get_history", "trace_decision",
-        "find_experts", "find_paths", "search_spans", "query_graph",
+        "find_experts", "find_paths", "count_related", "rank_by_count", "search_spans", "query_graph",
         "explain_action", "recall_session",
     }
     assert expected_reads.issubset(tools)
@@ -49,7 +49,7 @@ def test_mcp_tool_listing_stdio():
     # Risky tools present in stdio mode
     assert "confirm_fact" in tools
     assert "undo_action" in tools
-    assert len(tools) == 16
+    assert len(tools) == 18
 
 
 def test_mcp_tool_listing_http_excludes_risky_by_default():
@@ -61,7 +61,7 @@ def test_mcp_tool_listing_http_excludes_risky_by_default():
     assert "undo_action" not in tools
     assert "route_to_owner" in tools
     assert "learn_fact" in tools
-    assert len(tools) == 14
+    assert len(tools) == 16
 
 
 def test_mcp_tool_listing_http_with_risky_writes_enabled():
@@ -79,7 +79,7 @@ def test_mcp_tool_listing_writes_disabled():
         srv = mcp_srv.build(http=False)
         tools = set(srv._tool_manager._tools.keys())
         # Only read tools registered
-        assert len(tools) == 10
+        assert len(tools) == 12
         assert "route_to_owner" not in tools
         assert "confirm_fact" not in tools
 
@@ -107,6 +107,10 @@ def test_mcp_read_tools_untrusted_disclaimer(mcp_world):
     res_paths = json.loads(mcp_srv.find_paths("system:ledger"))
     assert res_paths["note"] == mcp_srv.UNTRUSTED
     assert res_paths["pack"]["tool"] == "find_paths"
+
+    # count_related: Payments owns Ledger in the world fixture
+    res_count = json.loads(mcp_srv.count_related("team:payments", "OWNS", "System", direction="out"))
+    assert res_count["pack"]["items"][0]["aggregate"]["count"] == 1
 
     # find_experts
     res_experts = json.loads(mcp_srv.find_experts("system:ledger"))

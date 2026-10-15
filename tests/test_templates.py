@@ -231,6 +231,8 @@ PARAMS = {
     "graph_mentioned": lambda f: {"k": ["wiki"]},
     "graph_nodes": lambda f: {},
     "graph_ticks": lambda f: {},
+    "group_counts": lambda f: {"label": "Team", "p": "LEADS", "dir": "in", "member_label": "Person", "primary": False,
+                               "V": f.now},
     "impact_dependents": lambda f: {"x": "system:ledger", "V": f.now},
     "integrity_chains": lambda f: {},
     "integrity_i1": lambda f: {},
@@ -267,6 +269,8 @@ PARAMS = {
     "proposals_about": lambda f: {"e": "ticket:rds-42"},
     "rationale_spans": lambda f: {"d": "decision:adr-002", "max": MAX},
     "recent_actions": lambda f: {"u": "person:eve"},
+    "related_at": lambda f: {"a": "system:ledger", "p": "DEPENDS_ON", "dir": "in", "label": "System", "primary": False,
+                             "V": f.now},
     "replaced_by": lambda f: {"d": "decision:adr-001", "V": f.now},
     "replaces_out": lambda f: {"d": "decision:adr-002", "V": f.now},
     "revisions": lambda f: {"k": "src:test"},
@@ -880,6 +884,15 @@ def g_ticket_about(f, rows):
 
 def g_turn_count(f, rows):
     assert rows == [{"n": 2}]
+
+
+def g_group_counts(f, rows):
+    assert [(r["id"], r["n"]) for r in rows] == [("team:payments", 1), ("team:infra", 0), ("team:platform", 0)]
+    assert rows[0]["ms"] == [{"id": "person:priya", "name": "Priya Raman", "aid": f.ids["lead"]}]
+
+
+def g_related_at(f, rows):
+    assert rows == [{"id": "system:checkout", "name": "Checkout", "aid": f.ids["dep1"]}]   # not Storefront (2 hops)
 
 
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}

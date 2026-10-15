@@ -1,4 +1,4 @@
-"""Deterministic claim verifier V1–V9 (03 §4) and answer assembly (A61). No LLM."""
+"""Deterministic claim verifier V1–V10 (03 §4; V10 checks aggregate claims) and answer assembly (A61). No LLM."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,6 +13,7 @@ class Index:
     actions: dict[str, dict] = field(default_factory=dict)
     paths: dict[str, dict] = field(default_factory=dict)
     fact_spans: dict[str, set[str]] = field(default_factory=dict)   # assertion -> live evidence spans
+    aggregates: dict[tuple[str, str], dict] = field(default_factory=dict)   # (pack, item) -> aggregate item
 
 
 def index_packs(packs: dict[str, dict]) -> Index:
@@ -32,6 +33,8 @@ def index_packs(packs: dict[str, dict]) -> Index:
                     ix.actions.setdefault(a["action_id"], a)
             if it.get("path"):
                 ix.paths.setdefault(it["path"]["path_id"], it["path"])
+            if it.get("aggregate"):
+                ix.aggregates[(pid, it["item_id"])] = it
             for side in ("then", "now"):
                 for grp in ((it.get("then_now") or {}).get(side) or {}).values():
                     for f in grp:
@@ -105,6 +108,18 @@ def _check(c: dict, ix: Index, rewritten: list) -> tuple[str, str] | None:
     label = c.get("label", "graph")
     tense = c.get("tense", "current")
     cited = [ix.facts[a] for a in c.get("assertion_ids", [])]
+    # V10 aggregate: the claim restates one aggregate item exactly (its count, every fact it used, all current)
+    if label == "aggregate":
+        it = ix.aggregates.get((c.get("pack_id", ""), c.get("item_id", "")))
+        if not it:
+            return "V10", "aggregate claim names no aggregate item in the packs"
+        if c.get("count") != it["aggregate"]["count"]:
+            return "V10", f"count {c.get('count')} != item count {it['aggregate']['count']}"
+        if set(c.get("assertion_ids", [])) != {f["assertion_id"] for f in it["facts"]}:
+            return "V10", "aggregate claim must cite every fact of its item"
+        if any(f["status"] != "current" for f in cited):
+            return "V10", "aggregate over a fact that isn't current"
+        return None
     # V8 proposed
     if any(f["status"] == "proposed" for f in cited) or tense == "proposed":
         if tense != "proposed":
@@ -163,7 +178,10 @@ def assemble(kept: list[dict], packs: dict[str, dict], explanation: str = "") ->
     lines = []
     seen: dict[str, dict] = {}
     for c in kept:
-        if c.get("label") == "graph" and c.get("assertion_ids"):
+        if c.get("label") == "aggregate":
+            it = ix.aggregates[(c["pack_id"], c["item_id"])]
+            lines.append({"claim_id": c["claim_id"], "text": it["aggregate"]["text"], "status": "current", "also": []})
+        elif c.get("label") == "graph" and c.get("assertion_ids"):
             f = ix.facts[c["assertion_ids"][0]]
             txt = f["statement"]
             if c.get("tense") == "historical":

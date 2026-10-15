@@ -698,6 +698,113 @@ def recall_session(ctx: Ctx, user_id: str, query: str, k: int = 10) -> dict:
     return pb.build()
 
 
+# Aggregates: counts and lists over projection edges. Each answer is one item whose facts are every
+# edge used, so the count is checked against cited facts (verifier V10), not taken from the drafter.
+
+_NOUN = {"System": ("system", "systems"), "Team": ("team", "teams"), "Person": ("person", "people"),
+         "Decision": ("decision", "decisions"), "Project": ("project", "projects"), "Ticket": ("ticket", "tickets")}
+_VERB = {"OWNS": ("owns", "own"), "DEPENDS_ON": ("depends on", "depend on"), "PART_OF": ("is part of", "are part of"),
+         "AFFECTS": ("affects", "affect"), "MEMBER_OF": ("is a member of", "are members of"),
+         "WORKS_ON": ("works on", "work on"), "LEADS": ("leads", "lead"),
+         "ASSIGNED_TO": ("is assigned to", "are assigned to"), "ABOUT": ("is about", "are about"),
+         "DECIDED_BY": ("is decided by", "are decided by"), "REPLACES": ("replaces", "replace")}
+
+
+def _noun(label: str, n: int) -> str:
+    one, many = _NOUN.get(label, (label.lower(), label.lower() + "s"))
+    return one if n == 1 else many
+
+
+def _verb(step: dict, n: int) -> str:
+    one, many = _VERB.get(step["predicate"], (step["predicate"].lower(), step["predicate"].lower()))
+    v = one if n == 1 else many
+    return v.replace("a member", "a primary member").replace("members", "primary members") if step.get("primary") else v
+
+
+def _names(xs: list[str]) -> str:
+    if not xs:
+        return "none"
+    return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+
+
+def _related(ctx: Ctx, step: dict, label: str) -> list[dict]:
+    return ctx.q("related_at", {"a": step["entity_id"], "p": step["predicate"], "dir": step.get("direction", "in"),
+                                "label": label, "primary": bool(step.get("primary")), "V": ctx.V})
+
+
+def _that(ctx: Ctx, step: dict, n: int) -> str:
+    """The relative clause for items related by step: 'that depend on Ledger' / 'that Fulfilment owns'."""
+    who = _node(ctx, step["entity_id"])["name"]
+    if step.get("direction") == "out":
+        return f"that {who} {_verb(step, 1)}"
+    return f"that {_verb(step, n)} {who}"
+
+
+def _aggregate_item(ctx: Ctx, pb: PackBuilder, count: int, members: list[dict], edges: list[str], text: str) -> None:
+    aids = [a for run in sorted(set(edges)) for a in run_aids(ctx, run)]
+    fs = [f for f in facts(ctx, aids, with_disputes=False) if f["status"] == "current"]
+    it = pb.item("aggregate", 1.0, fs, None, span_items(evidence(ctx, [f["assertion_id"] for f in fs])), note=text)
+    it["aggregate"] = {"count": count, "members": members, "text": text}
+
+
+def count_related(ctx: Ctx, entity_id: str, predicate: str, label: str, direction: str = "in",
+                  primary: bool = False, also: dict | None = None, then: dict | None = None) -> dict:
+    step = {"entity_id": entity_id, "predicate": predicate, "direction": direction, "primary": primary}
+    pb = PackBuilder(ctx, "count_related", {"entity_id": entity_id, "predicate": predicate, "label": label,
+                                            "direction": direction, "primary": primary, "also": also, "then": then,
+                                            "as_of": ctx.V})
+    base = _related(ctx, step, label)
+    edges = [r["aid"] for r in base]
+    if also:
+        other = {r["id"]: r["aid"] for r in _related(ctx, also, label)}
+        base = [r for r in base if r["id"] in other]
+        edges = [r["aid"] for r in base] + [other[r["id"]] for r in base]
+    n = len(base)
+    members = [{"id": r["id"], "name": r["name"]} for r in base]
+    if direction == "out":
+        text = f"{_node(ctx, entity_id)['name']} {_verb(step, 1)} {n} {_noun(label, n)}"
+    else:
+        text = f"{n} {_noun(label, n)} {_verb(step, n)} {_node(ctx, entity_id)['name']}"
+    if also:
+        text += " " + _that(ctx, also, n).replace("that ", "that also ", 1)
+    if then:
+        found: dict[str, dict] = {}
+        for r in base:
+            for x in _related(ctx, {"entity_id": r["id"], "predicate": then["predicate"],
+                                    "direction": then.get("direction", "in")}, then["label"]):
+                found.setdefault(x["id"], {"id": x["id"], "name": x["name"]})
+                edges.append(x["aid"])
+        through, members = n, sorted(found.values(), key=lambda m: m["name"])
+        n = len(members)
+        text = (f"{n} {_noun(then['label'], n)} {_verb(then, n)} the {through} {_noun(label, through)} "
+                f"{_that(ctx, step, through)}")
+    text += ": " + _names([m["name"] for m in members]) + "."
+    _aggregate_item(ctx, pb, n, members, edges, text)
+    return pb.build()
+
+
+def rank_by_count(ctx: Ctx, label: str, predicate: str, member_label: str, direction: str = "in",
+                  primary: bool = False) -> dict:
+    pb = PackBuilder(ctx, "rank_by_count", {"label": label, "predicate": predicate, "member_label": member_label,
+                                            "direction": direction, "primary": primary, "as_of": ctx.V})
+    rows = ctx.q("group_counts", {"label": label, "p": predicate, "dir": direction, "member_label": member_label,
+                                  "primary": primary, "V": ctx.V})
+    if not rows or not rows[0]["n"]:
+        return pb.build()
+    top, n = rows[0], rows[0]["n"]
+    what = ("primary member" + ("" if n == 1 else "s")) if primary else _noun(member_label, n)
+    tie = [r["name"] for r in rows[1:] if r["n"] == n]
+    text = f"{top['name']} has the most {what} ({n})"
+    if tie:
+        text += f", tied with {_names(tie)}."
+    elif len(rows) > 1:
+        text += f"; next is {rows[1]['name']} ({rows[1]['n']})."
+    else:
+        text += "."
+    _aggregate_item(ctx, pb, n, [{"id": top["id"], "name": top["name"]}], [m["aid"] for m in top["ms"]], text)
+    return pb.build()
+
+
 # Registry
 
 @dataclass
@@ -716,6 +823,7 @@ def _s(props: dict, required: list[str]) -> dict:
 
 STR = {"type": "string"}
 INT = {"type": "integer"}
+BOOL = {"type": "boolean"}
 REGISTRY: dict[str, Tool] = {}
 
 
@@ -742,6 +850,19 @@ register(Tool("find_paths", "read", find_paths,
 register(Tool("search_spans", "read", search_spans,
               _s({"query": STR, "kinds": {"type": "array", "items": STR}, "k": INT}, ["query"]),
               "Hybrid text search over source spans. Text-only evidence; use when no template fits."))
+_STEP = {"type": "object", "properties": {"entity_id": STR, "predicate": STR, "direction": STR, "label": STR,
+                                          "primary": BOOL}}
+register(Tool("count_related", "read", count_related,
+              _s({"entity_id": STR, "predicate": STR, "label": STR, "direction": STR, "primary": BOOL,
+                  "also": _STEP, "then": _STEP}, ["entity_id", "predicate", "label"]),
+              "Count and list the entities of a label linked to an entity by one relation at as_of "
+              "(direction 'out': entity -> them, 'in': them -> entity); `also` intersects a second relation, "
+              "`then` follows one more relation from each result. For 'how many' questions."))
+register(Tool("rank_by_count", "read", rank_by_count,
+              _s({"label": STR, "predicate": STR, "member_label": STR, "direction": STR, "primary": BOOL},
+                 ["label", "predicate", "member_label"]),
+              "Rank the entities of a label by how many related entities they have, e.g. teams by primary "
+              "members. For 'which X has the most Y' questions."))
 register(Tool("query_graph", "read", query_graph, _s({"question": STR}, ["question"]),
               "Last resort: read-only generated Cypher. Results are labelled unverified.", timeout=5000))
 register(Tool("explain_action", "read", explain_action, _s({"action_id": STR}, ["action_id"]),

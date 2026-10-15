@@ -1,7 +1,9 @@
 from api.agent import Agent, heuristic_plan
 from api.verifier import verify
+from brain import store
 from brain.actions import Actions, Actor
 from brain.tools import Ctx, run_tool
+from brain.write_path import Candidate
 
 from .conftest import make_span
 from .test_actions import _fact, world  # noqa: F401
@@ -126,3 +128,59 @@ def test_verifier_drops_a_claim_whose_fact_is_not_an_object(world):
              "assertion_ids": [f["assertion_id"]], "span_ids": [], "fact": f["statement"]}
     ver = verify({"claims": [claim]}, {pack["pack_id"]: pack})
     assert ver["kept"] == [] and ver["dropped"][0]["rule"] == "V2"
+
+
+def _counting_world(world):
+    """World plus Checkout and Storefront (Payments owns Checkout; both depend on Ledger, Storefront also on
+    Checkout) and primary memberships: Priya and Bob in Payments, Eve in Platform."""
+    g, wp = world["g"], world["wp"]
+    store.upsert_entities(g, [{"id": "system:checkout", "name": "Checkout", "aliases": []},
+                              {"id": "system:storefront", "name": "Storefront", "aliases": []}])
+    for i, txt in enumerate(["checkout cat", "dep 1", "dep 2", "dep 3", "mem 1", "mem 2", "mem 3"]):
+        make_span(g, f"sc{i}", txt, 1)
+    ids = {"own_c": _fact(wp, "OWNS", "team:payments", "system:checkout", 1, "sc0"),
+           "d1": _fact(wp, "DEPENDS_ON", "system:checkout", "system:ledger", 1, "sc1"),
+           "d2": _fact(wp, "DEPENDS_ON", "system:storefront", "system:ledger", 1, "sc2"),
+           "d3": _fact(wp, "DEPENDS_ON", "system:storefront", "system:checkout", 1, "sc3")}
+    for i, (p, t) in enumerate([("person:priya", "team:payments"), ("person:bob", "team:payments"),
+                                ("person:eve", "team:platform")]):
+        plan = wp.new_plan()
+        wp.add_candidate(plan, Candidate("MEMBER_OF", p, t, qualifier="primary", valid_from=1, span_id=f"sc{4 + i}",
+                                         quote_end=5, form="structured", source_id="src:test"))
+        wp.execute(plan)
+    world["clock"].tick(10)
+    return ids
+
+
+def test_counting_questions_answer_with_a_verified_count(world):
+    _counting_world(world)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    for q, want in [("How many systems does Payments own?", "Payments owns 2 systems: Checkout and Ledger."),
+                    ("How many systems depend directly on Ledger?", "2 systems depend on Ledger: Checkout and Storefront."),
+                    ("How many systems does Storefront depend on?", "Storefront depends on 2 systems: Checkout and Ledger."),
+                    ("How many systems does Payments own that depend on Ledger?",
+                     "Payments owns 1 system that also depends on Ledger: Checkout."),
+                    ("How many different teams own systems that depend on Ledger?",
+                     "1 team owns the 2 systems that depend on Ledger: Payments."),
+                    ("How many people are primary members of Payments?",
+                     "2 people are primary members of Payments: Bob Okafor and Priya Raman."),
+                    ("Which team has the most people?", "Payments has the most primary members (2); next is Platform (1).")]:
+        ans = answer_of(run(agent, s, q))
+        assert not ans["abstained"], q
+        assert [l["text"] for l in ans["assembled"]["lines"]] == [want], q
+        assert ans["claims"][0]["label"] == "aggregate" and ans["claims"][0]["assertion_ids"], q
+
+
+def test_aggregate_claim_with_a_wrong_count_is_dropped(world):
+    _counting_world(world)
+    pack = run_tool(Ctx(world["g"], now=world["clock"]()), "count_related",
+                    {"entity_id": "system:ledger", "predicate": "DEPENDS_ON", "label": "System"})
+    it = pack["items"][0]
+    claim = {"claim_id": "c1", "label": "aggregate", "pack_id": pack["pack_id"], "item_id": it["item_id"],
+             "count": 3, "assertion_ids": [f["assertion_id"] for f in it["facts"]], "span_ids": []}
+    assert verify({"claims": [claim]}, {pack["pack_id"]: pack})["dropped"][0]["rule"] == "V10"
+    claim["count"] = 2
+    assert verify({"claims": [claim]}, {pack["pack_id"]: pack})["kept"] == [claim]
+    claim["assertion_ids"] = claim["assertion_ids"][:1]
+    assert verify({"claims": [claim]}, {pack["pack_id"]: pack})["dropped"][0]["rule"] == "V10"

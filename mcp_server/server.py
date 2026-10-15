@@ -82,6 +82,23 @@ def find_paths(from_id: str, to_id: str | None = None, max_hops: int = 3) -> str
     return _pack("find_paths", {"from_id": from_id, "to_id": to_id, "max_hops": max_hops})
 
 
+def count_related(entity_id: str, predicate: str, label: str, direction: str = "in", primary: bool = False,
+                  also: dict | None = None, then: dict | None = None) -> str:
+    """Count and list the entities of a label (System, Team, Person, ...) linked to an entity by one relation
+    (OWNS, DEPENDS_ON, PART_OF, AFFECTS, MEMBER_OF, ...). direction 'out': entity -> them, 'in': them ->
+    entity. `also` ({entity_id, predicate, direction}) intersects a second relation; `then` ({predicate,
+    direction, label}) follows one more relation from each result. For "how many" questions."""
+    return _pack("count_related", {"entity_id": entity_id, "predicate": predicate, "label": label,
+                                   "direction": direction, "primary": primary, "also": also, "then": then})
+
+
+def rank_by_count(label: str, predicate: str, member_label: str, direction: str = "in", primary: bool = False) -> str:
+    """Rank the entities of a label by how many related entities they have, e.g. Team by MEMBER_OF Person
+    (primary=true for primary members). For "which X has the most Y" questions."""
+    return _pack("rank_by_count", {"label": label, "predicate": predicate, "member_label": member_label,
+                                   "direction": direction, "primary": primary})
+
+
 def search_spans(query: str, k: int = 10) -> str:
     """Hybrid text search over source spans (text-only evidence)."""
     return _pack("search_spans", {"query": query, "k": k})
@@ -136,8 +153,8 @@ def learn_fact(statement: str) -> str:
                               "MCP calls carry no such span").as_dict())
 
 
-READ = [link_entities, get_owner, get_history, trace_decision, find_experts, find_paths, search_spans,
-        query_graph, explain_action, recall_session]
+READ = [link_entities, get_owner, get_history, trace_decision, find_experts, find_paths, count_related,
+        rank_by_count, search_spans, query_graph, explain_action, recall_session]
 WRITE = [route_to_owner, draft_adr_supersession, flag_stale_docs, learn_fact]
 RISKY = [confirm_fact, undo_action]
 
