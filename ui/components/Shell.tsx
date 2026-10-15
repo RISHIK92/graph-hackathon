@@ -1,13 +1,14 @@
 "use client";
 
 import {
-  AlertCircle, BookOpen, LayoutGrid, Calendar, ChevronDown, GitBranch, Inbox, Info, KeyRound, Loader2, MessageSquare, PanelLeft, Search, Settings2, UserRound, X,
+  AlertCircle, BookOpen, HelpCircle, LayoutGrid, Calendar, ChevronDown, GitBranch, Inbox, Info, KeyRound, Loader2, MessageSquare, PanelLeft, Search, Settings2, UserRound, X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { dateInputValue, fmtDate, fmtDateTime, fromDateInput, initials } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { CodingAgentHelp } from "./CodingAgentHelp";
 import { CommandPalette } from "./CommandPalette";
 import Inspector from "./Inspector";
 import { Button, Chip, CountBadge, Field, Modal, Notice, Popover, Segmented, Toasts } from "./ui";
@@ -25,6 +26,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const s = useStore();
   const hasInspector = s.inspector.length > 0;
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // keyboard: ⌘K palette, [ sidebar, g+key jumps, / search
   useEffect(() => {
@@ -68,6 +70,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         })}
         <div className="sidebar-footer">
           <SessionStatus />
+          <button className="session-status" onClick={() => setHelpOpen(true)} title="Use from your coding agent">
+            <HelpCircle className="icon-sm" /><span>Help: use from your coding agent</span>
+          </button>
           <button className="session-status" onClick={() => s.setSidebarCollapsed(!s.sidebarCollapsed)} title="Toggle sidebar  [">
             <PanelLeft className="icon-sm" /><span>Collapse</span><kbd className="right">[</kbd>
           </button>
@@ -91,7 +96,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </div>
 
       <Inspector />
-      {s.sessionSheetOpen && <SessionSheet />}
+      {s.sessionSheetOpen && <SessionSheet onHelp={() => { s.setSessionSheetOpen(false); setHelpOpen(true); }} />}
+      {helpOpen && <CodingAgentHelp onClose={() => setHelpOpen(false)} />}
       {s.paletteOpen && <CommandPalette />}
       <Toasts />
     </div>
@@ -202,7 +208,7 @@ function ActingMenu() {
 }
 
 /** Session sheet: mode, token, acting person, as-of, theme, debug, reset (DESIGN.md §4.1). */
-function SessionSheet() {
+function SessionSheet({ onHelp }: { onHelp: () => void }) {
   const s = useStore();
   const [tok, setTok] = useState("");
   const anon = s.session?.anonymous;
@@ -242,6 +248,7 @@ function SessionSheet() {
         </Field>
       </div>
       <div className="t-small text-3">Debug panels (raw packs, verifier report) show when the page URL has <code>?debug=1</code>.</div>
+      <div className="t-small"><button className="link-btn" onClick={onHelp}>Use from your coding agent (MCP)</button></div>
     </Modal>
   );
 }

@@ -159,6 +159,13 @@ WRITE = [route_to_owner, draft_adr_supersession, flag_stale_docs, learn_fact]
 RISKY = [confirm_fact, undo_action]
 
 
+def tool_list() -> list[dict]:
+    """Every tool the stdio server registers with default settings, for the UI's "Use from your coding agent"
+    section (M16): name, kind and the first line of its description."""
+    return [{"name": fn.__name__, "kind": kind, "description": (fn.__doc__ or "").strip().split("\n")[0]}
+            for kind, fns in (("read", READ), ("write", WRITE), ("risky", RISKY)) for fn in fns]
+
+
 def build(http: bool) -> MCPServer:
     TRANSPORT["http"] = http
     srv = MCPServer(name="company-brain", instructions="A company knowledge graph. Every result is an evidence "
@@ -190,7 +197,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--http", action="store_true")
     ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--list-tools", action="store_true", help="print the registered tools as JSON and exit")
     a = ap.parse_args()
+    if a.list_tools:
+        print(json.dumps(tool_list(), indent=1))
+        return
     srv = build(a.http)
     if a.http:
         import uvicorn

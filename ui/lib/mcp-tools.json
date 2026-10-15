@@ -1,0 +1,92 @@
+[
+ {
+  "name": "link_entities",
+  "kind": "read",
+  "description": "Resolve names, aliases or ids (e.g. 'ledger-service', 'RDS-42') to entity ids."
+ },
+ {
+  "name": "get_owner",
+  "kind": "read",
+  "description": "Who owns a system or project, with the owning team's lead, citations and any open dispute."
+ },
+ {
+  "name": "get_history",
+  "kind": "read",
+  "description": "Every assertion in an entity's chain for a predicate (OWNS, LEADS, MEMBER_OF, DEPENDS_ON, ...)."
+ },
+ {
+  "name": "trace_decision",
+  "kind": "read",
+  "description": "Why a decision was made: replacement chain, deciders, what it affects, motivating source spans."
+ },
+ {
+  "name": "find_experts",
+  "kind": "read",
+  "description": "Who knows about an entity, with a per-signal breakdown."
+ },
+ {
+  "name": "find_paths",
+  "kind": "read",
+  "description": "Typed paths between two entities. Without to_id: impact mode (what depends on it and who to tell)."
+ },
+ {
+  "name": "count_related",
+  "kind": "read",
+  "description": "Count and list the entities of a label (System, Team, Person, ...) linked to an entity by one relation"
+ },
+ {
+  "name": "rank_by_count",
+  "kind": "read",
+  "description": "Rank the entities of a label by how many related entities they have, e.g. Team by MEMBER_OF Person"
+ },
+ {
+  "name": "search_spans",
+  "kind": "read",
+  "description": "Hybrid text search over source spans (text-only evidence)."
+ },
+ {
+  "name": "query_graph",
+  "kind": "read",
+  "description": "Last resort: read-only generated Cypher, labelled unverified."
+ },
+ {
+  "name": "explain_action",
+  "kind": "read",
+  "description": "What an action relied on and produced, then versus now, and who confirmed it."
+ },
+ {
+  "name": "recall_session",
+  "kind": "read",
+  "description": "The user's own earlier turns (needs a token session)."
+ },
+ {
+  "name": "route_to_owner",
+  "kind": "write",
+  "description": "Propose routing a ticket to the current owner's lead (becomes real only on confirm)."
+ },
+ {
+  "name": "draft_adr_supersession",
+  "kind": "write",
+  "description": "Draft an ADR that supersedes decision_id (proposals; nothing changes until confirmed)."
+ },
+ {
+  "name": "flag_stale_docs",
+  "kind": "write",
+  "description": "Find documents whose latest revision still states a superseded fact; draft corrections."
+ },
+ {
+  "name": "learn_fact",
+  "kind": "write",
+  "description": "Learn a fact from a user's chat turn. Over MCP there is no user-authored session span to quote,"
+ },
+ {
+  "name": "confirm_fact",
+  "kind": "risky",
+  "description": "Confirm a disputed or proposed fact as the configured actor (graph authorisation applies)."
+ },
+ {
+  "name": "undo_action",
+  "kind": "risky",
+  "description": "Undo an action as the configured actor (graph authorisation applies)."
+ }
+]

@@ -229,3 +229,13 @@ async def test_mcp_http_app_token_extraction():
     # 4. Admin token -> HAS_TOKEN is True
     await test_scope([(b"authorization", f"Bearer {settings.admin_token}".encode())])
     assert captured_has_token == [True]
+
+
+def test_ui_tool_list_matches_the_registered_tools():
+    """M16: the UI's "Use from your coding agent" list is the server's own registry, regenerated with
+    `python -m mcp_server.server --list-tools > ui/lib/mcp-tools.json`, never a hand-written guess."""
+    from pathlib import Path
+    shipped = json.loads((Path(__file__).parent.parent / "ui" / "lib" / "mcp-tools.json").read_text())
+    assert shipped == mcp_srv.tool_list()
+    srv = mcp_srv.build(http=False)
+    assert {t["name"] for t in shipped} == set(srv._tool_manager._tools)
