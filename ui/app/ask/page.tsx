@@ -212,6 +212,8 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
     });
     const key = (r: typeof rows[number]) => {
       const p = r.f?.predicate || "";
+      const d = r.c?.decision;
+      if (d) return `Why ${d.name}${d.status ? ` (${d.status})` : ""}`;
       if (intent === "impact") return ["OWNS", "LEADS", "MEMBER_OF", "WORKS_ON"].includes(p) ? "Who to tell" : "What breaks";
       if (intent === "ownership") return p === "LEADS" ? "Lead" : p === "OWNS" ? "Owner" : predicateLabel(p);
       if (intent === "expertise") return "Who knows";

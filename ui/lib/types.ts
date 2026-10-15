@@ -220,6 +220,8 @@ export interface Claim {
   label: Label;
   disputed: boolean;
   quote?: string;
+  /** A decision's reason: whose it is (M5). */
+  decision?: { name: string; status: string };
 }
 
 export interface Line {

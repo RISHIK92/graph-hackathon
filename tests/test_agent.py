@@ -535,3 +535,20 @@ def test_draft_adr_card_says_what_was_drafted_and_who_approves(world):
     d = act["result"]["decision"]
     assert g.ro("MATCH (d:Decision {id:$d}) RETURN d.name AS n, d.title AS t", {"d": d}) == \
         [{"n": "ADR-002", "t": "Move Ledger to CockroachDB for multi-region writes"}]
+
+
+def test_rationale_claims_name_their_decision_and_old_reasons_are_historical(world):
+    """M5: each "because" claim says whose reason it is; a superseded decision's reasons are not Current."""
+    _decision_world(world)
+    g, wp = world["g"], world["wp"]
+    make_span(g, "sp_old", "Postgres was the shared relational store the team already ran.", 1)
+    make_span(g, "sp_st1", "adr1 status", 1)
+    _fact(wp, "HAS_STATUS", "decision:adr-001", "", 1, "sp_st1", value="superseded")
+    store.add_motivated_by(g, "decision:adr-001", "sp_old", "context", world["clock"]())
+    world["clock"].tick()
+    agent = Agent(g, world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    why = [c for c in answer_of(run(agent, s, "Why did we move Ledger to Aurora?"))["claims"] if c.get("decision")]
+    assert why and all(c["decision"] == {"name": "ADR-002", "status": "accepted"} for c in why)
+    old = [c for c in answer_of(run(agent, s, "What was the reasoning behind ADR-001?"))["claims"] if c.get("decision")]
+    assert old and all(c["decision"]["status"] == "superseded" and c["tense"] == "historical" for c in old)

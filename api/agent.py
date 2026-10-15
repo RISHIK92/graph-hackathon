@@ -762,9 +762,12 @@ def _decision_claims(packs: dict[str, dict], question: str, claims: list[dict]) 
         (head + ")" if r["title"] else r["name"])
     for o in r["replaces"][:1]:
         head += f", replacing {o['name']}" + (f" ({o['title']})" if o["title"] else "")
-    why = [{"text": sp["text"][:240], "tense": "current" if sp.get("live") else "historical", "label": "text_only",
-            "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [], "quote": sp["text"][:240],
-            "disputed": False, "context": f"{head}, because" if i == 0 else f"rationale ({sp['section']})"}
+    # M5: each reason names its decision; a superseded or rejected decision's reasons are history, not Current
+    old_decision = r["status"] in ("superseded", "rejected", "deprecated")
+    why = [{"text": sp["text"][:240], "tense": "current" if sp.get("live") and not old_decision else "historical",
+            "label": "text_only", "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [],
+            "quote": sp["text"][:240], "disputed": False, "decision": {"name": r["name"], "status": r["status"]},
+            "context": f"{head}, because" if i == 0 else f"rationale ({sp['section']})"}
            for i, sp in enumerate([s for s in lead["spans"] if not s.get("proposed")][:3])] \
         if re.search(r"\bwhy\b|reason|rationale|based on|because|motivat|justif", low) else []
 
