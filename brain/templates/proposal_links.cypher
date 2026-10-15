@@ -5,7 +5,8 @@
 // golden: tests/test_templates.py::test_goldens[proposal_links]
 UNWIND $ids AS i
 MATCH (p:Assertion {id:i})
-OPTIONAL MATCH (ac:Action)-[:PRODUCED]->(p)
-WITH p, collect(ac.id) AS producers
-OPTIONAL MATCH (c:Assertion)-[:CONFIRMS]->(p) WHERE c.retracted_at > $now
-RETURN p.id AS id, producers, collect(c.id) AS confirmed_by
+// Comprehensions, one per WITH (R12): on 6.0.1 an OPTIONAL MATCH after the WITH collect() boundary
+// returned no CONFIRMS rows (F21 family). A confirmation counts only once recorded at $now (as-of reads).
+WITH p, [(ac:Action)-[:PRODUCED]->(p) | ac.id] AS producers
+WITH p, producers, [(c:Assertion)-[:CONFIRMS]->(p) WHERE c.recorded_at <= $now AND c.retracted_at > $now | c.id] AS confirmed_by
+RETURN p.id AS id, producers, confirmed_by

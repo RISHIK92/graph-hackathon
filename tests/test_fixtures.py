@@ -202,12 +202,6 @@ def test_fx_r1_s5_confirm_undo_reconfirm_distinct_ids_and_past_reads(world):
     _run_s5(world)
 
 
-PROPOSAL_LINKS_BUG = ("brain/templates/proposal_links.cypher: on 6.0.1 the OPTIONAL MATCH after the WITH collect() "
-                      "boundary returns no CONFIRMS rows (F21 family), and on both versions it lacks "
-                      "`c.recorded_at <= $now`, so a proposal's confirmed/pending display is wrong at T")
-
-
-@pytest.mark.xfail(strict=True, reason=PROPOSAL_LINKS_BUG)
 def test_fx_r1_s5_proposal_shows_confirmed_then_proposed_then_confirmed(world):
     g, now, t0, Pid, F30, F50 = _run_s5(world)
     h = history_facts(g, now, "ticket:rds-42", "ASSIGNED_TO", T=t0 + 35, V=t0 + 35)
@@ -437,7 +431,6 @@ def test_fx_r1_s9_adr_draft_confirm_undo_draft(world):
     _run_s9(world)
 
 
-@pytest.mark.xfail(strict=True, reason=PROPOSAL_LINKS_BUG)
 def test_fx_r1_s9_proposals_pending_at_t25_confirmed_at_t35(world):
     g, now, t0, V, S, props, c = _run_s9(world)
     facts, _ = _trace_statuses(g, now, t0 + 25, V, S)
@@ -681,8 +674,7 @@ def test_fx_r2_s9_withdraw_then_undo_confirmation(world):
     now = clock.tick()
     h = history_facts(g, now, "ticket:rds-42", "ASSIGNED_TO")
     assert h[X]["status"] == "proposed" and status_of(g, N) == "current"
-    if g.port == 6392:                                                                          # see PROPOSAL_LINKS_BUG
-        assert h[X]["confirmed_by"] == {"assertion_id": N}                                   # confirmed, not pending
+    assert h[X]["confirmed_by"] == {"assertion_id": N}                                       # confirmed, not pending
     acts.undo_action(actor("person:eve"), r["action_id"])                                      # undo R
     assert status_of(g, X) == "retracted" and status_of(g, N) == "current"
     assert g.ro("MATCH (ac:Action {id:$id}) RETURN ac.status AS s", {"id": r["action_id"]})[0]["s"] == "undone"

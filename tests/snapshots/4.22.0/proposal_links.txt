@@ -1,11 +1,15 @@
 Results
-    Aggregate
-        Apply
-            Aggregate
-                Optional Conditional Traverse | (p)->(ac:Action)
-                    Node By Index Scan | (p:Assertion)
-                        Unwind
-            Optional
-                Filter
-                    Conditional Traverse | (p)->(c:Assertion)
-                        Argument
+    Project
+        Project
+            Apply
+                Project
+                    Apply
+                        Node By Index Scan | (p:Assertion)
+                            Unwind
+                        Aggregate
+                            Conditional Traverse | (p)-[anon_0:PRODUCED]->(ac:Action)
+                                Argument
+                Aggregate
+                    Filter
+                        Conditional Traverse | (p)-[anon_1:CONFIRMS]->(c:Assertion)
+                            Argument

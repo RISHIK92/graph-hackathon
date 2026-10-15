@@ -1,14 +1,15 @@
-Aggregate
-    Apply
-        Aggregate
-            Apply
+Project
+    Project
+        Apply
+            Project
+                Apply
+                    Filter
+                        Node By Index Scan | (p:Assertion)
+                            Unwind
+                    Aggregate
+                        Conditional Traverse | (ac)->(p:Assertion)
+                            Argument
+            Aggregate
                 Filter
-                    Node By Index Scan | (p:Assertion)
-                        Unwind
-                Optional
-                    Conditional Traverse | (ac)->(p:Assertion)
+                    Conditional Traverse | (c)->(p:Assertion)
                         Argument
-        Optional
-            Conditional Traverse | (c)->(p:Assertion)
-                Filter
-                    Argument
