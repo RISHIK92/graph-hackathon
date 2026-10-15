@@ -17,7 +17,7 @@ interface Turn {
   at: number;
   asOf: number | null;
   stages: StreamEvent[];
-  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string }; packs: Record<string, Pack>; nearest?: (Path | null)[] };
+  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
   actions: StreamEvent[];
   turnId?: string;
   done: boolean;
@@ -252,7 +252,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes }: { t: Turn; idx:
           <div className="answer">
             {t.answer.abstained ? (
               <div className="stack-3" style={{ padding: 16 }}>
-                <Notice tone="info" title="No verified answer">Nothing in the graph supported a claim the verifier would keep.</Notice>
+                <Notice tone="info" title="No verified answer">{t.answer.missing?.length ? t.answer.missing.join(" ") : "Nothing in the graph supported a claim the verifier would keep."}</Notice>
                 {t.answer.nearest?.filter(Boolean).length ? (
                   <div className="stack">
                     <span className="t-label">Nearest evidence</span>

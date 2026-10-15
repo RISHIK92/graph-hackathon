@@ -109,8 +109,10 @@ class Agent:
                 pass
         yield {"event": "plan", "turn_id": turn_id, **plan}
 
-        # tool phase: read tools only (A54 §8 i)
-        calls = self.tool_calls(plan, text, ctx, s)
+        # tool phase: read tools only (A54 §8 i). A question about an attribute the graph doesn't model
+        # gets no tools: any fact the tools found about the entity would verify but not answer it.
+        gap = unmodelled(plan, text)
+        calls = [] if gap else self.tool_calls(plan, text, ctx, s)
         for name, args in calls[:6]:
             q0 = len(ctx.queries)
             yield {"event": "tool_call", "name": name, "args": args}
@@ -125,8 +127,11 @@ class Agent:
             yield {"event": "tool_result", "name": name, "pack_id": pack["pack_id"], "items": len(pack["items"]),
                    "labels": labels, "queries": qs}
 
+        for p in ctx.packs.values():   # the current turn is never evidence for its own answer
+            for it in p.get("items", []) if turn_span else []:
+                it["spans"] = [x for x in it["spans"] if x.get("span_id") != turn_span]
         packs = {k: v for k, v in ctx.packs.items() if not k.startswith("_")}
-        answer = self.draft(text, plan, packs)
+        answer = {"claims": [], "explanation": ""} if gap else self.draft(text, plan, packs)
         yield {"event": "draft", "claims": len(answer["claims"])}
         ver = verify(answer, ctx.packs)
         if ver["dropped"] and not ver["abstained"] and providers.llm_available():
@@ -140,6 +145,7 @@ class Agent:
                  "packs": {pid: packs[pid] for pid in packs}}
         if ver["abstained"]:
             final["nearest"] = [it.get("path") for p in packs.values() for it in p["items"] if it.get("path")][:3]
+            final["missing"] = gap or missing(plan, text)
         yield {"event": "answer", "turn_id": turn_id, **final}
 
         # act: write tools only now, arguments from the current user turn (A54)
@@ -432,7 +438,7 @@ def heuristic_plan(text: str) -> dict:
         want = "learn_fact"
     if want != "none":
         intent = "action"
-    elif re.search(r"what breaks|goes down|impact|who do i tell|blast radius", t):
+    elif re.search(r"what breaks|goes down|outage|impact|who do i tell|who should i tell|blast radius", t):
         intent = "impact"
     elif re.search(r"who should i (ask|talk to) about [a-z][a-z0-9]+-\d+", t):
         intent = "ownership"     # a ticket: its assignee, then the owner of what it is about
@@ -445,7 +451,7 @@ def heuristic_plan(text: str) -> dict:
         intent = "decision_trace"
     elif re.search(r"connected|path between|related to", t):
         intent = "path"
-    elif re.search(r"\b(owns?|owner|responsible|assigned|handle)\b", t):
+    elif re.search(r"\b(owns?|owners?|responsible|assigned|handle)\b", t):
         intent = "ownership"
     elif re.search(r"earlier|last time|what did i|remember", t):
         intent = "memory"
@@ -466,6 +472,52 @@ def _quote_for(span: dict) -> str:
 
 _STOP = set("who what which why is the a an of to and on in for does do did i should about now today team "
             "currently goes down tell if with be it its this that are was were how many much".split())
+
+
+# Words a question can use for what the graph records (registry predicates, tools and their phrasing).
+_VOCAB = set("own owns owned owner owners ownership responsible lead leads leader led head heads manage manages "
+             "run runs team teams member members part project projects depend depends dependency dependencies "
+             "dependent break breaks broken down outage outages fail fails failure affected impact tell notify assigned assignee assign ticket tickets affect affects decision "
+             "decisions decided decide adr replace replaces replaced supersede superseded status state work works "
+             "working stale doc docs document documents path connected related history changed route routed know "
+             "knows expert experts ask".split())
+_NOT_NAMES = set("January February March April May June July August September October November December Monday "
+                 "Tuesday Wednesday Thursday Friday Saturday Sunday".split())
+_RECORDS = "It records ownership, leads, teams, projects, dependencies, tickets and decisions."
+
+
+def unmodelled(plan: dict, text: str) -> list[str]:
+    """A "what is X's <attribute>" question about a known entity whose remaining words name nothing the
+    graph records (an SLA, a cost, a version): say so instead of answering with the entity's other facts."""
+    known = [m for m in plan["mentions"] if m["entity_id"]]
+    if heuristic_plan(text)["intent"] != "fact" or not known:
+        return []
+    named = {w.lower() for m in known for w in re.findall(r"[A-Za-z0-9]+", m["text"])}
+    rest = [w for w in re.findall(r"[A-Za-z0-9]+", text)
+            if w.lower() not in _STOP and w.lower() not in named and len(w) > 2]
+    if not rest or any(w.lower() in _VOCAB for w in rest):
+        return []
+    return [f"The graph has no facts about “{' '.join(rest)}” for {known[0]['text']}. {_RECORDS}"]
+
+
+def missing(plan: dict, text: str) -> list[str]:
+    """What an abstained answer lacked: names the graph doesn't know, else what was found and not matched."""
+    known = [m["text"] for m in plan["mentions"] if m["entity_id"]]
+    unknown = [m["text"] for m in plan["mentions"] if not m["entity_id"]]
+    if not known:
+        words = re.findall(r"[A-Za-z0-9]+", text)[1:]   # the first word is capitalised anyway
+        run: list[str] = []
+        for w in words + [""]:
+            if re.fullmatch(r"[A-Z][a-z0-9]+", w) and w not in _NOT_NAMES:
+                run.append(w)
+            elif run:
+                unknown.append(" ".join(run))
+                run = []
+    if unknown:
+        return [f"“{u}” isn't in the company graph: no person, team, system, project, ticket or decision has that "
+                f"name." for u in unknown]
+    about = f" about {', '.join(known)}" if known else ""
+    return [f"Nothing in the graph{about} supports an answer: no fact or document passage matched what was asked."]
 
 
 def _content(t: str) -> set[str]:
