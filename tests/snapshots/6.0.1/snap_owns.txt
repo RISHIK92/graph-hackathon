@@ -1,0 +1,3 @@
+Project
+    Conditional Traverse | (o)-[e:OWNS]->(x:N)
+        Node By Label Scan | (o:N)

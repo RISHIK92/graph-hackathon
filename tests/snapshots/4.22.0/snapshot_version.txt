@@ -1,0 +1,8 @@
+Results
+    Aggregate
+        Apply
+            Aggregate
+                Node By Label Scan | (a:Assertion)
+            Optional
+                Node By Label Scan | (ac:Action)
+                    Argument

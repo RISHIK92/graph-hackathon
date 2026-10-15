@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from . import integrity, schema
+from . import integrity, schema, snapshot
 from .config import ROOT, settings
 from .db import Graph
 
@@ -22,6 +22,7 @@ def reset_seed(g: Graph, seed_dir: str | None = None) -> dict:
     seed = Path(seed_dir) if seed_dir else DEFAULT_SEED
     t0 = time.time()
     h0, m0 = providers.CACHE_STATS["hits"], providers.CACHE_STATS["misses"]
+    snapshot.drop_all(g)   # derived from the graph being replaced (item 17)
     g.delete()
     schema.configure_timeouts(g)
     schema.create(g)

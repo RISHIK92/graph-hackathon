@@ -35,11 +35,11 @@ def test_mcp_tool_listing_stdio():
     srv = mcp_srv.build(http=False)
     tools = set(srv._tool_manager._tools.keys())
 
-    # All 12 read tools present
+    # All 16 read tools present
     expected_reads = {
         "link_entities", "get_owner", "get_history", "trace_decision",
         "find_experts", "find_paths", "count_related", "rank_by_count", "search_spans", "query_graph",
-        "explain_action", "recall_session",
+        "explain_action", "recall_session", "critical_systems", "connection_between", "key_people", "knowledge_gaps",
     }
     assert expected_reads.issubset(tools)
 
@@ -49,7 +49,7 @@ def test_mcp_tool_listing_stdio():
     # Risky tools present in stdio mode
     assert "confirm_fact" in tools
     assert "undo_action" in tools
-    assert len(tools) == 18
+    assert len(tools) == 22
 
 
 def test_mcp_tool_listing_http_excludes_risky_by_default():
@@ -61,7 +61,7 @@ def test_mcp_tool_listing_http_excludes_risky_by_default():
     assert "undo_action" not in tools
     assert "route_to_owner" in tools
     assert "learn_fact" in tools
-    assert len(tools) == 16
+    assert len(tools) == 20
 
 
 def test_mcp_tool_listing_http_with_risky_writes_enabled():
@@ -79,7 +79,7 @@ def test_mcp_tool_listing_writes_disabled():
         srv = mcp_srv.build(http=False)
         tools = set(srv._tool_manager._tools.keys())
         # Only read tools registered
-        assert len(tools) == 12
+        assert len(tools) == 16
         assert "route_to_owner" not in tools
         assert "confirm_fact" not in tools
 

@@ -1,0 +1,5 @@
+Project
+    Conditional Traverse | (s)<-[e:DEPENDS_ON]-(d:N)
+        Project
+            Filter
+                Node By Index Scan | (s:N)

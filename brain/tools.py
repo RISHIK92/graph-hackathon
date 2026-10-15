@@ -6,12 +6,13 @@ from __future__ import annotations
 import hashlib
 import math
 import re
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from . import chain as chainmod
-from . import ids, providers, registry, templates
+from . import ids, providers, registry, snapshot, templates
 from .config import MAX, settings
 from .db import Graph
 from .past_belief_cypher import past_belief_cypher
@@ -899,6 +900,111 @@ def register(t: Tool) -> None:
     REGISTRY[t.name] = t
 
 
+# Graph algorithms (item 17): FalkorDB's algo.* procedures run on a snapshot graph of the edges live at V
+# (brain/snapshot.py). A result is a ranking, not a fact: items cite the main-graph facts behind each edge,
+# say how they were computed, and carry ranks, never raw scores (PageRank and betweenness scales differ
+# between 6.0.1 and 4.22.0, F25).
+
+def _snap(ctx: Ctx, as_of: int | None) -> Ctx:
+    if as_of is not None:
+        ctx.as_of = as_of
+    snap = snapshot.snapshot(ctx.g, ctx.as_of, ctx.now)
+    return Ctx(snap, now=ctx.now, as_of=ctx.as_of, queries=ctx.queries)
+
+
+def _when(ctx: Ctx) -> str:
+    if ctx.as_of is None:
+        return "now"
+    d = time.gmtime(ctx.as_of / 1000)
+    return f"as of {d.tm_mday} {time.strftime('%b %Y', d)}"
+
+
+def _ranked(rows: list[dict]) -> list[dict]:
+    """Highest score first, ties by name; only the order is used (F25)."""
+    return sorted(rows, key=lambda r: (-round(r["score"], 9), r["name"]))
+
+
+def critical_systems(ctx: Ctx, as_of: int | None = None, k: int = 5) -> dict:
+    sx = _snap(ctx, as_of)
+    how = f"Ranked by how many systems depend on it, directly or indirectly, {_when(ctx)} (PageRank over dependencies)"
+    pb = PackBuilder(ctx, "critical_systems", {"as_of": ctx.as_of, "k": k, "method": how})
+    ranked = _ranked(sx.q("snap_pagerank", {}))
+    for i, r in enumerate(ranked[:k], start=1):
+        deps = sx.q("snap_dependents", {"id": r["id"]})
+        aids = [a for d in deps for a in run_aids(ctx, d["aid"])]
+        it = fact_item(ctx, pb, aids, None, 1.0 / i, "graph", f"#{i} most depended-on", extra_disputes=False) if aids else None
+        if it is not None:
+            it["ranking"] = {"rank": i, "of": len(ranked), "id": r["id"], "name": r["name"], "method": how,
+                             "when": _when(ctx), "how": "Ranked by how many systems depend on each, directly or "
+                                                         "indirectly (PageRank)",
+                             "dependents": [{"id": d["id"], "name": d["name"]} for d in deps]}
+    return pb.build()
+
+
+def connection_between(ctx: Ctx, from_id: str, to_id: str, as_of: int | None = None) -> dict:
+    sx = _snap(ctx, as_of)
+    pb = PackBuilder(ctx, "connection_between", {"from_id": from_id, "to_id": to_id, "as_of": ctx.as_of})
+    seen: set[tuple[str, ...]] = set()
+    rows = sx.q("snap_paths", {"a": from_id, "b": to_id, "types": list(snapshot.EDGE_TYPES)})
+    for r in sorted(rows, key=lambda r: len(r["ids"])):
+        key = tuple(r["ids"])
+        if key in seen:   # 4.22.0 returns one path per parallel edge
+            continue
+        seen.add(key)
+        steps: list[tuple[dict, dict | None]] = [(_node(ctx, key[0]), None)]
+        aids: list[str] = []
+        for nid, rel in zip(key[1:], r["rels"]):
+            steps.append((_node(ctx, nid), {"type": rel["type"], "aid": rel["aid"], "valid_from": None, "valid_to": None,
+                                            "subject": rel["from"]}))
+            aids += run_aids(ctx, rel["aid"])
+        hops = len(r["rels"])
+        fact_item(ctx, pb, aids, make_path(steps), 1.0 / hops, "graph",
+                  f"{hops} hop(s), shortest connection {_when(ctx)}", extra_disputes=False)
+    return pb.build()
+
+
+def key_people(ctx: Ctx, as_of: int | None = None, k: int = 5) -> dict:
+    sx = _snap(ctx, as_of)
+    how = (f"Ranked by how many connections between people, teams and systems run through them, {_when(ctx)} "
+           "(betweenness over ownership, leads, membership, dependencies, work and what they wrote)")
+    pb = PackBuilder(ctx, "key_people", {"as_of": ctx.as_of, "k": k, "method": how})
+    nodes = sx.q("snap_node_count", {})[0]["n"]
+    ranked = [r for r in _ranked(sx.q("snap_betweenness", {"n": max(nodes, 1), "seed": 7})) if r["score"] > 0]
+    for i, r in enumerate(ranked[:k], start=1):
+        edges = sx.q("snap_person_edges", {"id": r["id"]})
+        aids = [a for e in edges for a in run_aids(ctx, e["aid"])]
+        it = fact_item(ctx, pb, aids, None, 1.0 / i, "graph", f"#{i} connector", extra_disputes=False) if aids else None
+        if it is not None:
+            it["ranking"] = {"rank": i, "of": len(ranked), "id": r["id"], "name": r["name"], "method": how,
+                             "when": _when(ctx), "how": "Ranked by how many connections between people, teams and "
+                                                         "systems run through each (betweenness)"}
+    return pb.build()
+
+
+def knowledge_gaps(ctx: Ctx, as_of: int | None = None) -> dict:
+    """Systems with no current owner path to a lead (connected components over ownership, leads, membership and
+    part-of), and teams with no lead; each gap is an aggregate whose count is checked against what it cites."""
+    sx = _snap(ctx, as_of)
+    pb = PackBuilder(ctx, "knowledge_gaps", {"as_of": ctx.as_of})
+    comps = sx.q("snap_wcc", {})
+    led = {r["team"] for r in sx.q("snap_leaders", {})}
+    leaders = {r["person"] for r in sx.q("snap_leaders", {})}
+    owns = {r["id"]: r for r in sx.q("snap_owns", {})}
+    has_lead = {r["c"] for r in comps if r["id"] in leaders}
+    systems = sorted((r for r in comps if "System" in r["labels"] and r["c"] not in has_lead), key=lambda r: r["name"])
+    teams = sorted((r for r in comps if "Team" in r["labels"] and r["id"] not in led), key=lambda r: r["name"])
+    if systems:
+        _aggregate_item(ctx, pb, len(systems), [{"id": s["id"], "name": s["name"]} for s in systems],
+                        [owns[s["id"]]["aid"] for s in systems if s["id"] in owns],
+                        f"{len(systems)} system{'s' if len(systems) != 1 else ''} with no owner who has a lead "
+                        f"{_when(ctx)}: " + _names([s["name"] for s in systems]) + ".")
+    if teams:
+        _aggregate_item(ctx, pb, len(teams), [{"id": x["id"], "name": x["name"]} for x in teams], [],
+                        f"{len(teams)} team{'s' if len(teams) != 1 else ''} with no lead {_when(ctx)}: "
+                        + _names([x["name"] for x in teams]) + ".")
+    return pb.build()
+
+
 register(Tool("link_entities", "read", link_entities,
               _s({"mentions": {"type": "array", "items": STR}, "types": {"type": "array", "items": STR}}, ["mentions"]),
               "Resolve names or ids mentioned by the user to entity ids."))
@@ -931,6 +1037,18 @@ register(Tool("rank_by_count", "read", rank_by_count,
                  ["label", "predicate", "member_label"]),
               "Rank the entities of a label by how many related entities they have, e.g. teams by primary "
               "members. For 'which X has the most Y' questions."))
+register(Tool("critical_systems", "read", critical_systems, _s({"as_of": INT, "k": INT}, []),
+              "The most depended-on systems, directly or indirectly, at as_of (PageRank over dependencies on a "
+              "snapshot of the graph at that date). A ranking with the dependency facts behind it, not a fact."))
+register(Tool("connection_between", "read", connection_between,
+              _s({"from_id": STR, "to_id": STR, "as_of": INT}, ["from_id", "to_id"]),
+              "Up to three shortest connections (at most 4 hops, either direction) between two entities at as_of, "
+              "each edge cited. For 'how is X connected to Y' and 'who can introduce me to ...'."))
+register(Tool("key_people", "read", key_people, _s({"as_of": INT, "k": INT}, []),
+              "The people most connections between teams, people and systems run through at as_of (betweenness): "
+              "single points of failure. A ranking with each person's role facts, not a fact."))
+register(Tool("knowledge_gaps", "read", knowledge_gaps, _s({"as_of": INT}, []),
+              "Systems with no owner who has a lead, and teams with no lead, at as_of."))
 register(Tool("query_graph", "read", query_graph, _s({"question": STR}, ["question"]),
               "Last resort: read-only generated Cypher. Results are labelled unverified.", timeout=5000))
 register(Tool("explain_action", "read", explain_action, _s({"action_id": STR}, ["action_id"]),

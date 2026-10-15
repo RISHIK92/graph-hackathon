@@ -8,7 +8,7 @@ if os.environ.get("BRAIN_TEST_LLM") != "1":
 
 import pytest
 
-from brain import schema, store
+from brain import schema, snapshot, store
 from brain.db import Graph
 
 PORTS = {"6.0.1": int(os.environ.get("FALKOR6_PORT", 6391)), "4.22.0": int(os.environ.get("FALKOR4_PORT", 6392))}
@@ -24,6 +24,7 @@ def _graph(port: int) -> Graph:
 def g(request):
     graph = _graph(PORTS[request.param])
     yield graph
+    snapshot.drop_all(graph)
     graph.delete()
 
 
@@ -31,6 +32,7 @@ def g(request):
 def g6():
     graph = _graph(PORTS["6.0.1"])
     yield graph
+    snapshot.drop_all(graph)
     graph.delete()
 
 

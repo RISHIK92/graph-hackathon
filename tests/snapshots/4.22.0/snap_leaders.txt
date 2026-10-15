@@ -1,0 +1,4 @@
+Results
+    Project
+        Conditional Traverse | (p)-[e:LEADS]->(t:Team)
+            Node By Label Scan | (p:Person)

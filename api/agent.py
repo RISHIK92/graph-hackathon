@@ -26,7 +26,9 @@ from .verifier import assemble, check_lead, index_packs, verify
 from brain.ids import now_ms
 
 INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "aggregate", "fact", "memory",
-           "summary", "dependency", "stale_docs", "action", "other"]
+           "summary", "dependency", "stale_docs", "critical", "key_people", "gaps", "action", "other"]
+# Questions about the whole organisation (item 17's graph algorithms): no entity has to be named.
+GLOBAL_INTENTS = ("critical", "key_people", "gaps")
 
 
 @dataclass
@@ -242,6 +244,9 @@ class Agent:
         if people and re.search(r"which team|primary team|what team|team is .* on|on which team", low):
             calls.append(("get_history", {"entity_id": people[0], "predicate": "MEMBER_OF", "current_only": True}))
             return calls
+        if intent in GLOBAL_INTENTS:
+            return calls + [{"critical": ("critical_systems", {"k": 5}), "key_people": ("key_people", {"k": 5}),
+                             "gaps": ("knowledge_gaps", {})}[intent]]
         if intent == "summary" and tgt:
             return calls + _summary_calls(tgt)
         if intent == "dependency" and tgt:
@@ -271,8 +276,8 @@ class Agent:
                 calls.append(("get_history", {"entity_id": key, "predicate": pred}))
         elif intent == "impact" and tgt:
             calls.append(("find_paths", {"from_id": tgt}))
-        elif intent == "path" and len(ents) >= 2:
-            calls.append(("find_paths", {"from_id": ents[0], "to_id": ents[1]}))
+        elif intent == "path" and len(ents) >= 2:   # shortest connections on the snapshot graph (item 17)
+            calls.append(("connection_between", {"from_id": ents[0], "to_id": ents[1]}))
         elif intent == "memory" and not s.anonymous:
             calls.append(("recall_session", {"user_id": s.user_id, "query": text}))
             return calls   # the answer is in the turns; a document search only adds noise
@@ -319,11 +324,11 @@ class Agent:
         base = {**deterministic_draft(plan, packs, text), "drafted": "deterministic"}
         # Recall quotes the session's turns, a count is the tool's own V10-checked sentence, and a decision
         # trace has a fixed shape (the cited "because" first): no LLM rewrite.
-        names_nothing = plan["intent"] not in ("other", "memory") and plan.get("mentions") is not None \
+        names_nothing = plan["intent"] not in ("other", "memory", *GLOBAL_INTENTS) and plan.get("mentions") is not None \
             and not any(m.get("entity_id") for m in plan["mentions"])
         # A question naming nothing the graph knows abstains in live mode too (the deterministic rule); the
         # LLM must not answer it from a passage about something else.
-        if names_nothing or not providers.llm_available() or plan["intent"] == "memory" or \
+        if names_nothing or not providers.llm_available() or plan["intent"] in ("memory", *GLOBAL_INTENTS) or \
                 any(it["label"] == "aggregate" or it.get("rationale") for p in packs.values() for it in p["items"]):
             return base
         try:
@@ -530,6 +535,14 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
         return "Read what the action relied on, then and now"
     if name == "query_graph":
         return "Wrote and ran a graph query (unverified)"
+    if name == "critical_systems":
+        return "Ranked systems with PageRank over their dependencies, on a snapshot of the graph at the date"
+    if name == "connection_between":
+        return f"Found the shortest connections between {x} and {entity_name(args.get('to_id', ''))} (shortest paths)"
+    if name == "key_people":
+        return "Ranked people by how many connections run through them (betweenness) on a snapshot of the graph"
+    if name == "knowledge_gaps":
+        return "Looked for systems with no owner who has a lead (connected components) and teams with no lead"
     return name.replace("_", " ").capitalize()
 
 
@@ -578,6 +591,12 @@ def heuristic_plan(text: str) -> dict:
     elif re.search(r"\b(my|the) (last|previous|earlier|first) (question|message)|what did i (ask|say|tell)|"
                    r"earlier in (this|the|our) (session|conversation|chat)|remind me what i", t):
         intent = "memory"    # conversation recall: answered from the session's own turns (item 18)
+    elif re.search(r"single points? of failure|\bkey (people|persons?)\b|bus factor|most (connected|central) (people|person)", t):
+        intent = "key_people"
+    elif re.search(r"most (critical|important|depended[- ]on)|critical systems|which systems matter", t):
+        intent = "critical"
+    elif re.search(r"knowledge gaps?|\bgaps\b|(no|without an?) (current )?(owner|lead)\b|unowned|leaderless", t):
+        intent = "gaps"
     elif re.search(r"^(tell me about|what do you know about|give me an overview of|overview of|summari[sz]e)\b", t):
         intent = "summary"   # M9: an entity summary (Graph "Ask about it", entity panels)
     elif re.search(r"^how many\b|^which \w+ (has|have) the (most|largest|biggest)\b", t):
@@ -776,6 +795,7 @@ def _content(t: str) -> set[str]:
 _INTENT_PREDS = {"ownership": {"OWNS", "LEADS", "ASSIGNED_TO", "PART_OF", "MEMBER_OF"},
                  "summary": {"OWNS", "LEADS", "DEPENDS_ON", "PART_OF", "HAS_STATUS", "MEMBER_OF", "ASSIGNED_TO"},
                  "dependency": {"DEPENDS_ON"},
+                 "critical": {"DEPENDS_ON"}, "key_people": {"LEADS", "MEMBER_OF", "WORKS_ON"},
                  "impact": {"DEPENDS_ON", "OWNS", "LEADS", "PART_OF"}}
 
 
@@ -837,7 +857,7 @@ def lead_sentence(plan: dict, kept: list[dict], packs: dict[str, dict], as_of: i
                   key=lambda a: a.get("kind") != "route_to_owner")
     at = acts[0]["recorded_at"] if acts else as_of   # "why did you route X?" is about the action's own time
     past = _past_lead(kept, ix, at, acts, now_statement) if at is not None else ""
-    return past or _intent_lead(plan, kept, ix, question)
+    return past or _intent_lead(plan, kept, ix, question, packs)
 
 
 def _past_lead(kept: list[dict], ix, at: int, acts: list[dict], now_statement) -> str:
@@ -888,7 +908,37 @@ def _summary_lead(plan: dict, graph: list, current: list, leads: dict) -> str:
     return f"{x}: " + "; ".join(parts) + "." if parts else ""
 
 
-def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "") -> str:
+def _ranking_lead(intent: str, kept: list[dict], ix, packs: dict[str, dict]) -> str:
+    """Item 17: a ranking says what it ranks and how, never a raw score: "Most depended-on systems now: 1. Ledger,
+    2. Checkout. Ranked by ..."."""
+    cited = {a for c in kept for a in c.get("assertion_ids") or []}
+    items = [it for p in packs.values() for it in p["items"] if it.get("ranking")
+             and {f["assertion_id"] for f in it["facts"]} & cited]
+    if not items:
+        return ""
+    r0 = items[0]["ranking"]
+    what = "Most depended-on systems" if intent == "critical" else "People most connections run through"
+    names = ", ".join(f"{it['ranking']['rank']}. {it['ranking']['name']}" for it in items)
+    return f"{what} {r0['when']}: {names}. {r0['how']}."
+
+
+def _connection_lead(packs: dict[str, dict], kept: list[dict]) -> str:
+    """Item 17: the shortest cited connection as one sentence, each edge read in its stored direction."""
+    cited = {a for c in kept for a in c.get("assertion_ids") or []}
+    paths = [it["path"] for p in packs.values() if p["tool"] == "connection_between" for it in p["items"]
+             if it.get("path") and {f["assertion_id"] for f in it["facts"]} & cited]
+    if not paths:
+        return ""
+    steps = paths[0]["steps"]
+    parts = []
+    for prev, st in zip(steps, steps[1:]):
+        e, a, b = st["edge"], prev["node"]["name"], st["node"]["name"]
+        verb = _PRESENT.get(e["type"], f" {e['type'].lower()} ").strip()
+        parts.append(f"{a} {verb} {b}" if e.get("dir") != "backward" else f"{b} {verb} {a}")
+    return f"{steps[0]['node']['name']} is connected to {steps[-1]['node']['name']}: " + "; ".join(parts) + "."
+
+
+def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: dict[str, dict] | None = None) -> str:
     """M4: the first sentence answers the asked intent from verified claims; "" when no shape fits."""
     intent = plan.get("intent", "")
     graph = [(c, ix.facts[c["assertion_ids"][0]]) for c in kept
@@ -907,6 +957,12 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "") -> str:
             return (f"Route {ticket} to {who}, because {first['statement']}"
                     + (f" and {lead['statement']}." if lead else ".")) if ticket else ""
         return first["statement"] + "." + (f" {lead['statement']}." if lead else "")
+    if intent in ("critical", "key_people"):
+        return _ranking_lead(intent, kept, ix, packs or {})
+    if intent == "path":
+        return _connection_lead(packs or {}, kept)
+    if intent == "gaps":
+        return " ".join(c["text"] for c in kept if c.get("label") == "aggregate")
     if intent == "summary":
         return _summary_lead(plan, graph, current, leads)
     if intent == "dependency":
@@ -1022,7 +1078,7 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
            for i, (pid, it) in enumerate((pid, it) for pid, p in packs.items() for it in p["items"] if it.get("aggregate"))]
     if agg:
         return {"claims": agg, "explanation": ""}
-    if plan.get("intent") not in ("other", "memory") and plan.get("mentions") is not None \
+    if plan.get("intent") not in ("other", "memory", *GLOBAL_INTENTS) and plan.get("mentions") is not None \
             and not any(m.get("entity_id") for m in plan["mentions"]):
         return {"claims": [], "explanation": ""}
     qwords = _content(question)

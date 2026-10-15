@@ -1,0 +1,7 @@
+Results
+    Aggregate
+        Filter
+            Conditional Traverse | (s:Span)->(x:Entity)
+                Conditional Traverse | (s)->(p:Person)
+                    Filter
+                        Node By Label Scan | (s:Span)

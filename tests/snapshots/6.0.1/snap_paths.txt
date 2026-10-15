@@ -1,0 +1,7 @@
+Project
+    ProcedureCall
+        Filter
+            Node By Index Scan | (t:N)
+                Project
+                    Filter
+                        Node By Index Scan | (s:N)

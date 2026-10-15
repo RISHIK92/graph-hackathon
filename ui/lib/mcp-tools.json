@@ -40,6 +40,26 @@
   "description": "Rank the entities of a label by how many related entities they have, e.g. Team by MEMBER_OF Person"
  },
  {
+  "name": "critical_systems",
+  "kind": "read",
+  "description": "The most depended-on systems, directly or indirectly (PageRank over dependencies at as_of). A ranking"
+ },
+ {
+  "name": "connection_between",
+  "kind": "read",
+  "description": "Up to three shortest connections (at most 4 hops, either direction) between two entities, each edge"
+ },
+ {
+  "name": "key_people",
+  "kind": "read",
+  "description": "The people most connections between teams, people and systems run through (betweenness): single"
+ },
+ {
+  "name": "knowledge_gaps",
+  "kind": "read",
+  "description": "Systems with no owner who has a lead, and teams with no lead."
+ },
+ {
   "name": "search_spans",
   "kind": "read",
   "description": "Hybrid text search over source spans (text-only evidence)."

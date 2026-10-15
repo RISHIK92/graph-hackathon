@@ -1,0 +1,5 @@
+Results
+    Project
+        Conditional Traverse | (p)-[e:LEADS|MEMBER_OF|WORKS_ON]->(x:N)
+            Project
+                Node By Index Scan | (p:N)

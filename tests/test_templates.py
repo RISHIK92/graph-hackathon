@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from brain import providers, store, templates
+from brain import providers, snapshot, store, templates
 from brain.actions import Actions, Actor
 from brain.config import MAX
 from brain.db import Graph, with_params
@@ -282,6 +282,18 @@ PARAMS = {
     "session_spans": lambda f: {"user": "u1"},
     "source_exists": lambda f: {"id": "src:test"},
     "source_view": lambda f: {"id": "src:test"},
+    "snap_betweenness": lambda f: {"_graph": _snap(f), "n": 100, "seed": 7},
+    "snap_dependents": lambda f: {"_graph": _snap(f), "id": "system:ledger"},
+    "snap_leaders": lambda f: {"_graph": _snap(f)},
+    "snap_meta": lambda f: {"_graph": _snap(f)},
+    "snap_node_count": lambda f: {"_graph": _snap(f)},
+    "snap_owns": lambda f: {"_graph": _snap(f)},
+    "snap_pagerank": lambda f: {"_graph": _snap(f)},
+    "snap_paths": lambda f: {"_graph": _snap(f), "a": "person:priya", "b": "system:ledger", "types": list(snapshot.EDGE_TYPES)},
+    "snap_person_edges": lambda f: {"_graph": _snap(f), "id": "person:priya"},
+    "snap_wcc": lambda f: {"_graph": _snap(f)},
+    "snapshot_touches": lambda f: {"V": f.now},
+    "snapshot_version": lambda f: {},
     "span_details": lambda f: {"sids": ["sp_own", "turn1"], "T": f.now},
     "span_facts": lambda f: {"sids": ["sp_own_old", "sp_own"], "max": MAX},
     "span_view": lambda f: {"id": "sp_own", "max": MAX},
@@ -459,6 +471,70 @@ def g_search_vector(f, rows):
 
 def g_session_spans(f, rows):
     assert rows == [{"id": "turn1", "text": "who owns ledger?", "ts": 7}]
+
+
+def _snap(f) -> Graph:
+    if "snap" not in f.memo:
+        f.memo["snap"] = snapshot.snapshot(f.g, None, f.now)
+    return f.memo["snap"]
+
+
+def g_snapshot_touches(f, rows):
+    assert rows == [{"person": "person:bob", "target": "system:ledger", "w": 1}]
+
+
+def g_snapshot_version(f, rows):
+    assert len(rows) == 1 and rows[0]["n"] > 0 and rows[0]["actions"] >= 1 and rows[0]["last"] > 0
+
+
+def g_snap_meta(f, rows):
+    assert len(rows) == 1 and rows[0]["V"] == f.now and rows[0]["version"].count(":") == 3
+
+
+def g_snap_pagerank(f, rows):
+    order = [r["id"] for r in sorted(rows, key=lambda r: (-r["score"], r["name"]))]
+    assert order == ["system:ledger", "system:checkout", "system:storefront"]   # ranks, never scores (F25)
+
+
+def g_snap_dependents(f, rows):
+    assert rows == [{"id": "system:checkout", "name": "Checkout", "aid": f.ids["dep1"]}]
+
+
+def g_snap_betweenness(f, rows):
+    assert {r["id"] for r in rows} == {"person:priya", "person:bob", "person:eve"}
+    assert all(r["score"] >= 0 for r in rows)
+
+
+def g_snap_person_edges(f, rows):
+    assert rows == [{"type": "LEADS", "id": "team:payments", "name": "Payments", "aid": f.ids["lead"]}]
+
+
+def g_snap_wcc(f, rows):
+    comp = {r["id"]: r["c"] for r in rows}
+    ledger = {i for i, c in comp.items() if c == comp["system:ledger"]}
+    assert ledger == {"system:ledger", "team:payments", "person:priya", "project:commerce", "team:platform"}
+    assert comp["system:checkout"] != comp["system:ledger"]
+    assert ("Team" in next(r["labels"] for r in rows if r["id"] == "team:payments"))
+
+
+def g_snap_node_count(f, rows):
+    assert rows == [{"n": 13}]
+
+
+def g_snap_leaders(f, rows):
+    assert rows == [{"person": "person:priya", "team": "team:payments", "aid": f.ids["lead"]}]
+
+
+def g_snap_owns(f, rows):
+    assert sorted((r["owner"], r["id"], r["aid"]) for r in rows) == sorted([
+        ("team:payments", "system:ledger", f.ids["own"]), ("team:platform", "project:commerce", f.ids["own_proj"])])
+
+
+def g_snap_paths(f, rows):
+    paths = {tuple(r["ids"]) for r in rows}   # 4.22.0 may repeat a path per parallel edge; callers de-duplicate
+    assert paths == {("person:priya", "team:payments", "system:ledger"), ("person:priya", "decision:adr-002", "system:ledger")}
+    rels = next(r["rels"] for r in rows if r["ids"][1] == "team:payments")
+    assert [(x["type"], x["from"]) for x in rels] == [("LEADS", "person:priya"), ("OWNS", "team:payments")]
 
 
 def g_span_facts(f, rows):
@@ -1004,9 +1080,10 @@ def _run_checks(fx: Fixture, name: str, checks: list[tuple[str, callable]]) -> N
 
 @pytest.mark.parametrize("name", templates.all_names())
 def test_goldens(fx: Fixture, name: str):
-    params = PARAMS[name](fx)
-    rows = fx.g.ro(templates.body(name), params, template=name)
-    plan = explain_lines(fx.g, templates.body(name), params)
+    params = dict(PARAMS[name](fx))
+    g = params.pop("_graph", fx.g)   # snapshot-graph templates (item 17) run on the snapshot their params build
+    rows = g.ro(templates.body(name), params, template=name)
+    plan = explain_lines(g, templates.body(name), params)
     _run_checks(fx, name, [
         ("golden", lambda: GOLDENS[name](fx, rows)),
         ("snapshot", lambda: check_snapshot(fx.version, name, plan)),

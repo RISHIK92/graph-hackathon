@@ -99,6 +99,29 @@ def rank_by_count(label: str, predicate: str, member_label: str, direction: str 
                                    "direction": direction, "primary": primary})
 
 
+def critical_systems(as_of: int | None = None, k: int = 5) -> str:
+    """The most depended-on systems, directly or indirectly (PageRank over dependencies at as_of). A ranking
+    with the dependency facts behind it, never a raw score."""
+    return _pack("critical_systems", {"as_of": as_of, "k": k})
+
+
+def connection_between(from_id: str, to_id: str, as_of: int | None = None) -> str:
+    """Up to three shortest connections (at most 4 hops, either direction) between two entities, each edge
+    cited. For "how is X connected to Y?"."""
+    return _pack("connection_between", {"from_id": from_id, "to_id": to_id, "as_of": as_of})
+
+
+def key_people(as_of: int | None = None, k: int = 5) -> str:
+    """The people most connections between teams, people and systems run through (betweenness): single
+    points of failure. A ranking with each person's role facts."""
+    return _pack("key_people", {"as_of": as_of, "k": k})
+
+
+def knowledge_gaps(as_of: int | None = None) -> str:
+    """Systems with no owner who has a lead, and teams with no lead."""
+    return _pack("knowledge_gaps", {"as_of": as_of})
+
+
 def search_spans(query: str, k: int = 10) -> str:
     """Hybrid text search over source spans (text-only evidence)."""
     return _pack("search_spans", {"query": query, "k": k})
@@ -154,7 +177,8 @@ def learn_fact(statement: str) -> str:
 
 
 READ = [link_entities, get_owner, get_history, trace_decision, find_experts, find_paths, count_related,
-        rank_by_count, search_spans, query_graph, explain_action, recall_session]
+        rank_by_count, critical_systems, connection_between, key_people, knowledge_gaps, search_spans, query_graph,
+        explain_action, recall_session]
 WRITE = [route_to_owner, draft_adr_supersession, flag_stale_docs, learn_fact]
 RISKY = [confirm_fact, undo_action]
 
