@@ -256,3 +256,18 @@ def test_pending_webhook_posts_new_proposals(world, monkeypatch):
     assert body["event"] == "proposal_created" and body["action_id"] == r["action_id"]
     assert body["proposals"] == [r["proposal"]] and body["kind"] == "route_to_owner" and body["actor"] == "person:eve"
     assert body["summary"]
+
+
+def test_proposer_cannot_approve_own_proposal(world):
+    """M18: separation of duties. Priya routes RDS-42 to herself (she leads the owning team); she may not confirm
+    it, by action or by assertion, and the preview says why; another eligible person still can."""
+    acts = Actions(world["g"], world["clock"])
+    r = acts.route_to_owner(actor("person:priya"), ticket_id="ticket:rds-42")
+    assert r["target"] == "person:priya"
+    pv = acts.confirm_preview("person:priya", action_id=r["action_id"])
+    assert pv["admissible"] and not pv["actor_eligible"] and pv["self_proposed"]
+    world["clock"].tick()
+    for kw in ({"action_id": r["action_id"]}, {"assertion_id": r["proposal"]}):
+        with pytest.raises(Refused, match="you proposed this"):
+            acts.confirm_fact(actor("person:priya"), **kw)
+    assert not acts.confirm_preview("person:eve", action_id=r["action_id"])["self_proposed"]

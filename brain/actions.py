@@ -400,9 +400,20 @@ class Actions:
                 return {"admissible": False, "refusal": why, "eligible": [], "fallback": False, "actor_eligible": False}
         el = self.eligibility(targets, draft, now)
         mine = self._actor_paths(el, actor_id)
+        own = self._proposer(targets, action_id) == actor_id
         return {"admissible": True, "refusal": None, "eligible": el["eligible"], "fallback": el["fallback"],
-                "actor_eligible": mine is not None,
+                "actor_eligible": mine is not None and not own, "self_proposed": own,
                 "missing_fact": self.missing_fact(targets) if el["fallback"] else None}
+
+    def _proposer(self, targets: list[dict], action_id: str | None) -> str:
+        """Who proposed what is being confirmed (a routing or a draft ADR); "" for anything else (M18)."""
+        acs = [action_id] if action_id else [r["ac"] for t in targets if t["status"] == "proposed"
+                                             for r in self.g.q("withdrawn_by", {"id": t["id"]})]
+        for a in acs:
+            ac = self._action(a) or {}
+            if ac.get("kind") in ("route_to_owner", "draft_adr_supersession"):
+                return ac.get("actor", "")
+        return ""
 
     def _targets(self, assertion_id: str | None, action_id: str | None) -> tuple[list[dict], dict | None]:
         if assertion_id:
@@ -432,6 +443,10 @@ class Actions:
             if why:
                 rid = self._record(actor, "confirm_fact", "refused", why, {"reason": why}, ent_targets)
                 raise Refused(why, action_id=rid)
+        if self._proposer(targets, action_id) == actor.person_id:   # separation of duties (M18)
+            reason = "you proposed this; ask another decider to approve"
+            rid = self._record(actor, "confirm_fact", "refused", reason, {"reason": reason}, ent_targets)
+            raise Refused(reason, action_id=rid)
         el = self.eligibility(targets, draft, now)
         mine = self._actor_paths(el, actor.person_id)
         if mine is None:

@@ -10,6 +10,7 @@ from api.agent import Agent
 from brain.actions import Actions, Actor
 from brain.config import settings
 
+from .conftest import make_span
 from .test_actions import _fact, world  # noqa: F401
 
 
@@ -331,3 +332,16 @@ def test_pending_count_matches_inbox(api_client):
     assert len(full["awaiting"]) == 1
     assert client.get("/people/person:priya/pending/count").json() == {"awaiting": 1}
     assert client.get("/people/person:bob/pending/count").json() == {"awaiting": 0}
+
+
+def test_pending_dispute_shows_both_sides(api_client):
+    """M18: an Inbox dispute row names the recorded side and the challenger, not just the challenger."""
+    client, world = api_client
+    g, clock = world["g"], world["clock"]
+    make_span(g, "turn3", "Infra owns Ledger", clock(), src="sess1", kind="chat_session", role="user")
+    Actions(g, clock).learn_fact(Actor("person:eve"), "turn3", {"predicate": "OWNS", "subject_id": "team:infra",
+                                                                "object_id": "system:ledger"}, "sess1")
+    clock.tick()
+    rows = [a for a in client.get("/people/person:priya/pending").json()["awaiting"] if a["type"] == "dispute"]
+    assert [(a["recorded"], a["challenger"]) for a in rows] == [("Payments owns Ledger", "Infra owns Ledger")]
+    assert rows[0]["summary"] == "Payments owns Ledger (recorded) vs Infra owns Ledger (challenger)"

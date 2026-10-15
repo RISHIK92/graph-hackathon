@@ -479,12 +479,18 @@ def _awaiting(acts: Actions, pid: str, props: list[dict]) -> list[dict]:
         if pv["admissible"] and pv["actor_eligible"]:
             awaiting.append({**p, "fallback": pv["fallback"], "type": "proposal"})
     for run_id, ds in _open_dispute_runs().items():
+        members = G.q("run_members", {"run": run_id})
+        rec = G.q("statement", {"id": members[0]["id"]}) if members else []
         for d in ds:
             pv = acts.confirm_preview(pid, assertion_id=d)
             if pv["admissible"] and pv["actor_eligible"]:
                 st = G.q("statement", {"id": d})
-                awaiting.append({"assertion_id": d, "summary": st[0]["s"] if st else d, "fallback": pv["fallback"],
-                                 "type": "dispute"})
+                ch = st[0]["s"] if st else d
+                recorded = rec[0]["s"] if rec else ""
+                # M18: both sides, and why anyone may settle it when the fallback applies
+                awaiting.append({"assertion_id": d, "recorded": recorded, "challenger": ch,
+                                 "summary": f"{recorded} (recorded) vs {ch} (challenger)" if recorded else ch,
+                                 "fallback": pv["fallback"], "missing_fact": pv.get("missing_fact"), "type": "dispute"})
     return awaiting
 
 

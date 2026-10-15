@@ -197,6 +197,15 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
       </div>
     );
   }
+  if (pv.self_proposed) {
+    const others = pv.eligible.filter((e) => e.person_id !== actingAs);
+    return (
+      <div className="stack">
+        <div className="t-small text-2">You proposed this. Ask another decider to approve.</div>
+        {!hideWho && others.length > 0 && <WhoCan people={others} verb="approve" compact />}
+      </div>
+    );
+  }
   if (hideWho) return null;
   return (
     <div className="stack">

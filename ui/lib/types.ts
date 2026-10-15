@@ -130,6 +130,8 @@ export interface ConfirmPreview {
   eligible: Eligible[];
   fallback: boolean;
   actor_eligible: boolean;
+  /** The acting person made this proposal and so may not approve it (M18). */
+  self_proposed?: boolean;
   missing_fact?: string | null;
   request_id: string;
 }
@@ -281,7 +283,10 @@ export interface Directory {
   tickets: DirTicket[];
 }
 
-export interface PendingItem { type: string; action_id?: string; assertion_id?: string; summary: string; fallback: boolean; kind?: string }
+export interface PendingItem {
+  type: string; action_id?: string; assertion_id?: string; summary: string; fallback: boolean; kind?: string;
+  recorded?: string; challenger?: string; missing_fact?: string | null;
+}
 export interface PendingData {
   awaiting: PendingItem[];
   mine: { action_id: string; kind: string; summary: string }[];
