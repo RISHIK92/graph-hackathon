@@ -8,7 +8,7 @@ export interface CanvasEdge {
   target: string;
   type: string;
   aid: string;
-  kind: "normal" | "disputed" | "stale";
+  kind: "normal" | "disputed" | "stale" | "added" | "removed";
   label?: string;
   id?: string;
 }
@@ -92,6 +92,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
       const bg = cssVar("--surface", "#fff");
       const disputed = cssVar("--error-600", "#dc2626");
       const stale = cssVar("--warning-600", "#d97706");
+      const added = cssVar("--success-600", "#16a34a");
       const accent = cssVar("--accent-600", "#4f46e5");
       cyRef.current?.destroy();
       const allPositioned = nodes.length > 0 && nodes.every((n) => positions.current.has(n.id));
@@ -124,6 +125,8 @@ const GraphCanvas = forwardRef<GraphHandle, {
           { selector: "edge:selected, edge.hl", style: { "text-opacity": 1 } },
           { selector: "edge.disputed", style: { "line-color": disputed, "target-arrow-color": disputed, width: 2.2, color: disputed, "text-opacity": 1, "line-style": "solid" } },
           { selector: "edge.stale", style: { "line-color": stale, "target-arrow-color": stale, width: 1.8, "line-style": "dashed", color: stale, "text-opacity": 1 } },
+          { selector: "edge.added", style: { "line-color": added, "target-arrow-color": added, width: 2.6, "text-opacity": 1, color: added } },
+          { selector: "edge.removed", style: { "line-style": "dashed", opacity: 0.35, width: 1.6 } },
           { selector: "edge:selected", style: { width: 3, "line-color": accent, "target-arrow-color": accent } },
           { selector: "node:selected", style: { "border-width": 3, "border-color": accent } },
         ],
@@ -156,7 +159,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
 export default GraphCanvas;
 
 function layoutOptions(layout: "cose" | "concentric" | "breadthfirst"): cytoscape.LayoutOptions {
-  if (layout === "cose") return { name: "cose", animate: false, nodeRepulsion: () => 12000, idealEdgeLength: () => 80, randomize: true, padding: 40 } as cytoscape.LayoutOptions;
+  if (layout === "cose") return { name: "cose", animate: false, nodeRepulsion: () => 12000, idealEdgeLength: () => 80, randomize: false, padding: 40 } as cytoscape.LayoutOptions;
   return { name: layout, padding: 40 } as cytoscape.LayoutOptions;
 }
 

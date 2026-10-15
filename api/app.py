@@ -339,7 +339,8 @@ def graph(as_of: int | None = None, labels: str = "", source_kinds: str = "") ->
         e["kinds"] = kmap.get(e["aid"], [])
     if kinds:
         edges = [e for e in edges if set(e["kinds"]) & set(kinds)]
-    nodes = G.q("graph_nodes", timeout=10000)
+    # M10: a decision made after V isn't drawn yet (other entities carry no creation date)
+    nodes = [n for n in G.q("graph_nodes", timeout=10000) if not (n.get("decided_at") and n["decided_at"] > V)]
     ids_on = {e["source"] for e in edges} | {e["target"] for e in edges}
     if kinds:
         mentioned = {r["id"] for r in G.q("graph_mentioned", {"k": kinds}, timeout=10000)}

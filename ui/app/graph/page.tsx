@@ -39,21 +39,47 @@ function GraphInner() {
   const { data, error, loading, reload } = useApi<GraphData>(`/graph${qs({ as_of: s.asOf, labels: labels.join(","), source_kinds: kinds.join(",") })}`);
 
   const nodes = useMemo(() => (data?.nodes || []).filter((n) => !hideTickets || !n.labels.includes("Ticket")), [data, hideTickets]);
+  // M10: after the date moves, edges that appeared flash green and edges that went away linger faded briefly
+  const prevEdges = useRef<Map<string, CanvasEdge> | null>(null);
+  const prevAsOf = useRef(s.asOf);
+  const [flash, setFlash] = useState<{ added: Set<string>; removed: CanvasEdge[] } | null>(null);
+  useEffect(() => {
+    if (!data) return;
+    const now = new Map(data.edges.map((e): [string, CanvasEdge] => [e.aid, { source: e.source, target: e.target, type: e.type, aid: e.aid, kind: "normal" }]));
+    const before = prevEdges.current;
+    const moved = before && prevAsOf.current !== s.asOf;
+    prevEdges.current = now;
+    prevAsOf.current = s.asOf;
+    if (!moved) return;
+    const added = new Set([...now.keys()].filter((k) => !before.has(k)));
+    const removed = [...before.values()].filter((e) => !now.has(e.aid)).map((e): CanvasEdge => ({ ...e, kind: "removed", id: `r-${e.aid}` }));
+    if (!added.size && !removed.length) return;
+    setFlash({ added, removed });
+    const t = setTimeout(() => setFlash(null), 3000);
+    return () => clearTimeout(t);
+  }, [data, s.asOf]);
   const edges: CanvasEdge[] = useMemo(() => {
     if (!data) return [];
     const ids = new Set(nodes.map((n) => n.id));
-    const out: CanvasEdge[] = data.edges.filter((e) => ids.has(e.source) && ids.has(e.target)).map((e) => ({ source: e.source, target: e.target, type: e.type, aid: e.aid, kind: "normal" }));
+    const out: CanvasEdge[] = data.edges.filter((e) => ids.has(e.source) && ids.has(e.target)).map((e) => ({ source: e.source, target: e.target, type: e.type, aid: e.aid, kind: flash?.added.has(e.aid) ? "added" : "normal" }));
+    flash?.removed.forEach((e) => ids.has(e.source) && ids.has(e.target) && out.push(e));
     if (showDisputed) data.disputed.forEach((d) => ids.has(d.source) && ids.has(d.target) && out.push({ source: d.source, target: d.target, type: "challenger", aid: d.assertion_id, kind: "disputed", label: "disputed", id: `d-${d.assertion_id}` }));
     if (showStale) data.stale.forEach((st, i) => ids.has(st.source) && ids.has(st.target) && out.push({ source: st.source, target: st.target, type: "stale", aid: st.span, kind: "stale", label: st.doc, id: `s-${i}` }));
     return out;
-  }, [data, nodes, showDisputed, showStale]);
+  }, [data, nodes, showDisputed, showStale, flash]);
 
   useEffect(() => { setLaying(true); }, [nodes, edges, layout]);
 
   const names = useMemo(() => new Map((data?.nodes || []).map((n) => [n.id, n.name])), [data]);
-  const ticks = data?.ticks || [];
+  const ticks = useMemo(() => data?.ticks || [], [data]);
   const hi = now ?? ticks[ticks.length - 1] ?? 0;
   const lo = ticks.length ? ticks[0] : hi - 365 * 86400000;
+  // M10: the busiest days on the scrubber get a marker, e.g. "12 changes · 1 Apr 2026" for a reorganisation
+  const markers = useMemo(() => {
+    const byDay = new Map<number, number>();
+    ticks.forEach((t) => { const d = Math.floor(t / 86400000) * 86400000; byDay.set(d, (byDay.get(d) || 0) + 1); });
+    return [...byDay].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  }, [ticks]);
   const cur = preview ?? (s.asOf || hi);
   const toggle = (xs: string[], x: string, set: (v: string[]) => void) => set(xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]);
   const applied = labels.length + kinds.length + (hideTickets ? 0 : 1) + (showDisputed ? 0 : 1) + (showStale ? 0 : 1);
@@ -150,6 +176,13 @@ function GraphInner() {
           <div className="ticks" aria-hidden>
             {ticks.map((t) => <i key={t} style={{ left: `${((t - lo) / (hi - lo)) * 100}%` }} title={fmtDate(t)} />)}
           </div>
+          <div className="markers">
+            {markers.map(([d, n]) => (
+              <button key={d} className="marker" style={{ left: `${((d - lo) / (hi - lo)) * 100}%` }} onClick={() => commitAsOf(d + 86400000)} title={`Jump to just after ${fmtDate(d)}`}>
+                {n} changes · {fmtDate(d)}
+              </button>
+            ))}
+          </div>
         </div>
         <span className="date cur tnum">{cur >= hi - 86400000 ? "Today" : fmtDate(cur)}</span>
         {s.asOf && <Button size="sm" onClick={() => commitAsOf(hi)}>Today</Button>}
@@ -168,7 +201,7 @@ function GraphInner() {
               setSelected((cur) => (additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : [id]));
               if (!additive) s.openEntity(id, names.get(id));
             }}
-            onEdge={(e) => s.openInspector({ kind: "edge", aid: e.aid, source: e.source, target: e.target, type: e.type, edgeKind: e.kind, label: e.label })}
+            onEdge={(e) => s.openInspector({ kind: "edge", aid: e.aid, source: e.source, target: e.target, type: e.type, edgeKind: e.kind === "added" || e.kind === "removed" ? "normal" : e.kind, label: e.label })}
             onBackground={() => undefined}
           />
         )}

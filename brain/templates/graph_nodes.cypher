@@ -4,4 +4,4 @@
 // indexes: none (the whole-graph view; bounded by the world size)
 // golden: tests/test_templates.py::test_goldens[graph_nodes]
 MATCH (n:Entity)
-RETURN n.id AS id, n.name AS name, labels(n) AS labels
+RETURN n.id AS id, n.name AS name, labels(n) AS labels, n.decided_at AS decided_at

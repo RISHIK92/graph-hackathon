@@ -472,6 +472,8 @@ details.details > .details-body { padding: var(--s-2) var(--s-3) var(--s-3); bor
 .scrubber input[type="range"] { width: 100%; margin: 0; accent-color: var(--primary); position: relative; z-index: 1; }
 .scrubber .ticks { position: absolute; left: 7px; right: 7px; top: 22px; height: 6px; }
 .scrubber .ticks i { position: absolute; top: 0; width: 1px; height: 6px; background: var(--n-400); }
+.scrubber .markers { position: absolute; left: 7px; right: 7px; top: -14px; height: 14px; pointer-events: none; }
+.scrubber .marker { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: 11px; color: var(--text-2); background: none; border: 0; padding: 0; cursor: pointer; pointer-events: auto; }
 .scrubber .date { font-variant-numeric: tabular-nums; font-size: var(--fs-small); color: var(--text-2); white-space: nowrap; min-width: 84px; }
 .scrubber .date.cur { color: var(--text); font-weight: 600; text-align: center; }
 .graph-stage { position: relative; flex: 1 1 auto; min-height: 0; }

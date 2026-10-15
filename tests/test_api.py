@@ -345,3 +345,12 @@ def test_pending_dispute_shows_both_sides(api_client):
     rows = [a for a in client.get("/people/person:priya/pending").json()["awaiting"] if a["type"] == "dispute"]
     assert [(a["recorded"], a["challenger"]) for a in rows] == [("Payments owns Ledger", "Infra owns Ledger")]
     assert rows[0]["summary"] == "Payments owns Ledger (recorded) vs Infra owns Ledger (challenger)"
+
+
+def test_graph_hides_decisions_not_made_yet(api_client):
+    """M10: at an earlier date the graph doesn't draw a decision that was only made later."""
+    client, world = api_client
+    from brain import store
+    store.upsert_entities(world["g"], [{"id": "decision:adr-050", "name": "ADR-050", "aliases": [], "decided_at": 500}])
+    assert "decision:adr-050" in {n["id"] for n in client.get("/graph").json()["nodes"]}
+    assert "decision:adr-050" not in {n["id"] for n in client.get("/graph?as_of=400").json()["nodes"]}

@@ -588,7 +588,9 @@ def g_graph_mentioned(f, rows):
 
 def g_graph_nodes(f, rows):
     r = _by(rows, "id")
-    assert len(r) == 13 and r["system:ledger"] == {"id": "system:ledger", "name": "Ledger", "labels": ["Entity", "System"]}
+    assert len(r) == 13 and r["system:ledger"] == {"id": "system:ledger", "name": "Ledger", "labels": ["Entity", "System"],
+                                                   "decided_at": None}
+    assert r["decision:adr-002"]["decided_at"] == 3
 
 
 def g_graph_ticks(f, rows):
