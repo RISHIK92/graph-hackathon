@@ -78,7 +78,9 @@ export function statusTone(st: string): { tone: "success" | "error" | "accent" |
 }
 
 export function spansFor(spans: SpanItem[] | undefined, aid: string): SpanItem[] {
-  return (spans || []).filter((s) => s.cites?.includes(aid));
+  // One chip per span: several run members cite the same span (B4 duplicate keys, m2 duplicate chips).
+  const seen = new Set<string>();
+  return (spans || []).filter((s) => s.cites?.includes(aid) && !seen.has(s.span_id) && !!seen.add(s.span_id));
 }
 
 /** Humanised name from an id: "system:postgres-main" → "Postgres Main". */

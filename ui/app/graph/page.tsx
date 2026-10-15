@@ -25,6 +25,9 @@ function GraphInner() {
   const [kinds, setKinds] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>(() => (params.get("select") || "").split(",").filter(Boolean));
   const [showDisputed, setShowDisputed] = useState(true);
+  // The clock is read after mount: Date.now() during render differs between server and client (B4).
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
   const [showStale, setShowStale] = useState(true);
   const [hideTickets, setHideTickets] = useState(true);
   const [layout, setLayout] = useState<"cose" | "concentric" | "breadthfirst">("cose");
@@ -48,8 +51,8 @@ function GraphInner() {
 
   const names = useMemo(() => new Map((data?.nodes || []).map((n) => [n.id, n.name])), [data]);
   const ticks = data?.ticks || [];
-  const lo = ticks.length ? ticks[0] : Date.now() - 365 * 86400000;
-  const hi = Date.now();
+  const hi = now ?? ticks[ticks.length - 1] ?? 0;
+  const lo = ticks.length ? ticks[0] : hi - 365 * 86400000;
   const cur = preview ?? (s.asOf || hi);
   const toggle = (xs: string[], x: string, set: (v: string[]) => void) => set(xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]);
   const applied = labels.length + kinds.length + (hideTickets ? 0 : 1) + (showDisputed ? 0 : 1) + (showStale ? 0 : 1);
