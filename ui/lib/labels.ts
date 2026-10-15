@@ -15,7 +15,7 @@ export function entityName(id: string): string {
 
 export const KIND_LABEL: Record<string, string> = {
   catalog: "Catalogue", roster: "Roster", ticket: "Ticket", wiki: "Wiki", meeting: "Meeting note", adr: "ADR",
-  chat: "Chat", chat_session: "Session", session: "Session", draft: "Agent draft", confirmation: "Confirmation",
+  chat: "Chat", chat_session: "Chat", session: "Chat", draft: "Agent draft", confirmation: "Confirmed",
 };
 
 /** "history of ch_DEPENDS_ON:system:checkout>system:ledger" → "Checkout depends on Ledger". */
@@ -96,4 +96,9 @@ const RAW_ID = /\b(system|person|team|project|decision|ticket):[a-z0-9][a-z0-9-]
 /** Raw ids inside source text ("person:ana-costa commented …") read as names (M17). */
 export function displayText(text: string): string {
   return text.replace(RAW_ID, (id) => entityName(id));
+}
+
+/** Source kinds as the Graph filter names them: imported chat versus this app's own chat (m10). */
+export function filterKindLabel(k: string): string {
+  return k === "chat_session" ? "Chat in this app" : k === "chat" ? "Chat (imported)" : KIND_LABEL[k] || k;
 }

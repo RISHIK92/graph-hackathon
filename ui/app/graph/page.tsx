@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button, Chip, Empty, ErrorState, Popover } from "@/components/ui";
 import { qs } from "@/lib/api";
 import { ENTITY_LABELS, fmtDate, plural, SOURCE_KINDS } from "@/lib/format";
-import { KIND_LABEL } from "@/lib/labels";
+import { filterKindLabel } from "@/lib/labels";
 import { useApi, useStore } from "@/lib/store";
 import type { GraphData } from "@/lib/types";
 
@@ -69,6 +69,11 @@ function GraphInner() {
   }, [data, nodes, showDisputed, showStale, flash]);
 
   useEffect(() => { setLaying(true); }, [nodes, edges, layout]);
+  // m10: a new filter re-fits the view to what is left
+  useEffect(() => {
+    const t = setTimeout(() => canvas.current?.fit(), 600);
+    return () => clearTimeout(t);
+  }, [labels, kinds, hideTickets]);
 
   const names = useMemo(() => new Map((data?.nodes || []).map((n) => [n.id, n.name])), [data]);
   const ticks = useMemo(() => data?.ticks || [], [data]);
@@ -142,22 +147,22 @@ function GraphInner() {
           {ENTITY_LABELS.map((l) => (
             <label key={l} className="checkbox menu-item"><input type="checkbox" checked={labels.includes(l)} onChange={() => toggle(labels, l, setLabels)} />{l}</label>
           ))}
+          <label className="checkbox menu-item"><input type="checkbox" checked={hideTickets} onChange={() => setHideTickets((v) => !v)} />Hide tickets</label>
           <div className="t-small text-3" style={{ padding: "4px 10px" }}>None selected shows all types.</div>
         </FilterPopover>
         <FilterPopover label="Source kind" count={kinds.length}>
           {SOURCE_KINDS.map((k) => (
-            <label key={k} className="checkbox menu-item"><input type="checkbox" checked={kinds.includes(k)} onChange={() => toggle(kinds, k, setKinds)} />{KIND_LABEL[k] || k}</label>
+            <label key={k} className="checkbox menu-item"><input type="checkbox" checked={kinds.includes(k)} onChange={() => toggle(kinds, k, setKinds)} />{filterKindLabel(k)}</label>
           ))}
           <div className="t-small text-3" style={{ padding: "4px 10px" }}>Show only facts that come from these sources.</div>
         </FilterPopover>
-        <FilterPopover label="Highlights" count={(showDisputed ? 0 : 1) + (showStale ? 0 : 1) + (hideTickets ? 0 : 1)}>
+        <FilterPopover label="Highlights" count={(showDisputed ? 0 : 1) + (showStale ? 0 : 1)}>
           <label className="checkbox menu-item"><input type="checkbox" checked={showDisputed} onChange={() => setShowDisputed((v) => !v)} />Disputed <span className="meta">{data?.disputed.length ?? 0}</span></label>
           <label className="checkbox menu-item"><input type="checkbox" checked={showStale} onChange={() => setShowStale((v) => !v)} />Stale documents <span className="meta">{data?.stale.length ?? 0}</span></label>
-          <label className="checkbox menu-item"><input type="checkbox" checked={hideTickets} onChange={() => setHideTickets((v) => !v)} />Hide tickets</label>
           <div className="t-small text-3" style={{ padding: "4px 10px" }}>Highlights always show today&apos;s view. The slider changes the date shown.</div>
         </FilterPopover>
         {labels.map((l) => <Chip key={l} tone="accent" onClick={() => toggle(labels, l, setLabels)} title="Remove">{l} <X /></Chip>)}
-        {kinds.map((k) => <Chip key={k} tone="accent" onClick={() => toggle(kinds, k, setKinds)} title="Remove">{KIND_LABEL[k] || k} <X /></Chip>)}
+        {kinds.map((k) => <Chip key={k} tone="accent" onClick={() => toggle(kinds, k, setKinds)} title="Remove">{filterKindLabel(k)} <X /></Chip>)}
         {!hideTickets && <Chip tone="accent" onClick={() => setHideTickets(true)}>Tickets shown <X /></Chip>}
         {applied > 0 && <Button size="sm" variant="ghost" onClick={() => { setLabels([]); setKinds([]); setHideTickets(true); setShowDisputed(true); setShowStale(true); }}>Clear all</Button>}
         <span className="result-count">{loading ? <span className="row"><Loader2 className="icon-sm spin" />Loading…</span> : data ? `${plural(nodes.length, "node")} · ${plural(edges.length, "edge")}` : ""}</span>

@@ -704,3 +704,9 @@ def test_dependency_questions_and_stale_doc_refusal(world):
     assert _lead(agent, s, "Which systems depend on Ledger?") == "Checkout and Storefront depend on Ledger."
     ans = answer_of(run(agent, s, "Which docs about Ledger are stale?"))
     assert ans["abstained"] and "flag stale docs about Ledger" in " ".join(ans["missing"])
+
+
+def test_flag_stale_docs_says_what_it_flagged(fx):  # noqa: F811
+    """m23: the flag-stale-docs result names the documents and what they still say."""
+    r = Actions(fx.g, Clock(fx.now + 10)).flag_stale_docs(Actor("person:eve"), "system:ledger")
+    assert r["summary"].startswith("Flagged 1 outdated passage: src:test says “Platform owns Ledger”"), r["summary"]

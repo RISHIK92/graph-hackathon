@@ -102,7 +102,7 @@ export function fromDateInput(v: string): number | null {
   return Number.isNaN(t) ? null : t;
 }
 
-export const SOURCE_KINDS = ["catalog", "roster", "ticket", "wiki", "meeting", "adr", "chat"];
+export const SOURCE_KINDS = ["catalog", "roster", "ticket", "wiki", "meeting", "adr", "chat", "chat_session"];
 
 export const ENTITY_LABELS = ["Team", "Person", "System", "Project", "Decision", "Ticket"];
 

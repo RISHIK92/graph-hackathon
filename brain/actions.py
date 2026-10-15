@@ -748,7 +748,7 @@ class Actions:
         now = self.clock()
         found = self.stale_detection(entity_id)
         if not found:
-            return {"action_id": None, "flagged": []}
+            return {"action_id": None, "flagged": [], "summary": "Nothing outdated found."}
         names = self._names()
         wp = WritePath(self.g, self.clock, names)
         plan = wp.new_plan(now)
@@ -767,7 +767,9 @@ class Actions:
         plan.targets = sorted({f["s"] for f in found} | {f["o"] for f in found if f["o"]})
         plan.session_id = actor.session_source_id
         self._run(wp, plan, actor, "flag_stale_docs", plan.targets)
-        return {"action_id": acid, "flagged": found}
+        # m23: say what was flagged, not just how many
+        said = "; ".join(dict.fromkeys(f"{f['title']} says “{f['statement']}”" for f in found[:3]))
+        return {"action_id": acid, "flagged": found, "summary": f"{props['summary']}: {said}."}
 
     # learn_fact (A9, A54, A62)
     def learn_fact(self, actor: Actor, turn_span_id: str, extracted: dict, session_source_id: str) -> dict:

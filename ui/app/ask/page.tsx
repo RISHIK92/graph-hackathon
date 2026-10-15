@@ -40,9 +40,11 @@ function Ask() {
     else if (q) { setText(q); taRef.current?.focus(); }
   }, [params]);
 
+  // m22: a new question scrolls to its own header, not to the bottom of a long answer
   useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
-  }, [turns]);
+    const last = logRef.current?.querySelectorAll(".turn");
+    last?.[last.length - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [turns.length]);
 
   // A question sent while the session is still connecting waits for it instead of being dropped (M22)
   useEffect(() => {

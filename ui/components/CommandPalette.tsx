@@ -11,6 +11,8 @@ import type { GraphData } from "@/lib/types";
 interface Item { id: string; kind: string; title: string; sub?: string; icon: React.ElementType; run: () => void }
 
 /** ⌘K: entities, pages, people to switch to, ask a question. */
+const EXAMPLES = ["Who owns Ledger?", "Who knows about Ledger?", "What breaks if Ledger goes down, and who do I tell?"];
+
 export function CommandPalette() {
   const s = useStore();
   const router = useRouter();
@@ -35,16 +37,18 @@ export function CommandPalette() {
       { id: "p-inbox", kind: "Page", title: "Inbox", icon: Inbox, run: () => router.push("/inbox") },
       { id: "p-today", kind: "Time", title: "View today", icon: Calendar, run: () => s.setAsOf(null) },
     ];
-    const ents: Item[] = nodes
-      .filter((n) => !t || n.name.toLowerCase().includes(t) || n.id.includes(t))
-      .slice(0, t ? 12 : 6)
-      .map((n) => ({ id: n.id, kind: labelOf(n.labels, n.id), title: n.name, sub: n.id, icon: BookOpen, run: () => s.openEntity(n.id, n.name) }));
+    // m21: opens on questions to try; entities only once you type, shown by name and kind, never by raw id
+    const ents: Item[] = t ? nodes
+      .filter((n) => n.name.toLowerCase().includes(t) || n.id.includes(t))
+      .slice(0, 12)
+      .map((n) => ({ id: n.id, kind: labelOf(n.labels, n.id), title: n.name, icon: BookOpen, run: () => s.openEntity(n.id, n.name) })) : [];
+    const examples: Item[] = t ? [] : EXAMPLES.map((x, i) => ({ id: `ex-${i}`, kind: "Ask", title: x, icon: MessageSquare, run: () => router.push(`/ask${qs({ q: x, send: "1" })}`) }));
     const ppl: Item[] = t
       ? s.people.filter((p) => p.name.toLowerCase().includes(t)).slice(0, 4).map((p) => ({ id: `sw-${p.id}`, kind: "Switch", title: `Act as ${p.name}`, sub: p.leads.length ? `Leads ${p.leads.join(", ")}` : p.team.join(", "), icon: UserRound, run: () => { s.setActingAs(p.id); s.toast({ tone: "info", title: `Now acting as ${p.name}` }); } }))
       : [];
-    const ask: Item[] = t.length > 2 ? [{ id: "ask", kind: "Ask", title: `Ask “${q.trim()}”`, icon: MessageSquare, run: () => router.push(`/ask${qs({ q: q.trim() })}`) }] : [];
+    const ask: Item[] = t.length > 2 ? [{ id: "ask", kind: "Ask", title: `Ask “${q.trim()}”`, icon: MessageSquare, run: () => router.push(`/ask${qs({ q: q.trim(), send: "1" })}`) }] : [];
     const pg = pages.filter((p) => !t || p.title.toLowerCase().includes(t));
-    return [...ents, ...ppl, ...ask, ...pg];
+    return [...examples, ...ents, ...ppl, ...ask, ...pg];
   }, [q, nodes, s, router]);
 
   useEffect(() => setSel(0), [q]);
