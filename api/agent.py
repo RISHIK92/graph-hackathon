@@ -255,6 +255,7 @@ class Agent:
             calls.append(("find_paths", {"from_id": ents[0], "to_id": ents[1]}))
         elif intent == "memory" and not s.anonymous:
             calls.append(("recall_session", {"user_id": s.user_id, "query": text}))
+            return calls   # the answer is in the turns; a document search only adds noise
         elif intent == "action" and tgt:
             if tgt.startswith("ticket:"):
                 about = self.g.q("ticket_about", {"t": tgt, "m": MAX})
@@ -274,7 +275,9 @@ class Agent:
     # draft
     def draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None = None) -> dict:
         base = {**deterministic_draft(plan, packs, text), "drafted": "deterministic"}
-        if not providers.llm_available():
+        # Recall quotes the session's turns, and a count is the tool's own V10-checked sentence: no LLM rewrite.
+        if not providers.llm_available() or plan["intent"] == "memory" or \
+                any(it["label"] == "aggregate" for p in packs.values() for it in p["items"]):
             return base
         try:
             llm = self._llm_draft(text, plan, packs, errors)
@@ -441,8 +444,9 @@ def heuristic_plan(text: str) -> dict:
     if not re.match(r"^(who|what|why|how|which|when|is|does|did|on\b|earlier\b)\b", t) and \
             re.search(r"\broute\b|\bassign\b|send (it|this) to", t):
         want = "route_to_owner"
-    elif re.search(r"\bdraft\b.*\badr\b|supersed(e|ing) adr", t):
-        want = "draft_adr_supersession"
+    elif not t.endswith("?") and not re.match(r"(who|what|why|how|which|when|is|are|does|did|has|have)\b", t) \
+            and re.search(r"\bdraft\b.*\badr\b|supersed(e|ing) adr", t):
+        want = "draft_adr_supersession"   # an imperative; "is there a draft ...?" is a question about proposals
     elif re.search(r"flag .*stale|stale doc", t):
         want = "flag_stale_docs"
     elif re.search(r"^(confirm|approve)\b", t):
@@ -454,6 +458,9 @@ def heuristic_plan(text: str) -> dict:
         want = "learn_fact"
     if want != "none":
         intent = "action"
+    elif re.search(r"\b(my|the) (last|previous|earlier|first) (question|message)|what did i (ask|say|tell)|"
+                   r"earlier in (this|the|our) (session|conversation|chat)|remind me what i", t):
+        intent = "memory"    # conversation recall: answered from the session's own turns (item 18)
     elif re.search(r"^how many\b|^which \w+ (has|have) the (most|largest|biggest)\b", t):
         intent = "aggregate"
     elif re.search(r"what breaks|goes down|outage|impact|who do i tell|who should i tell|blast radius", t):
@@ -465,7 +472,7 @@ def heuristic_plan(text: str) -> dict:
     elif re.search(r"history|used to|previous|before|owned .* in|changed|routed", t) or \
             (re.search(r"\bwhy\b", t) and re.search(r"route", t)):
         intent = "history"
-    elif re.search(r"\bwhy\b|decid|adr|pending", t):
+    elif re.search(r"\bwhy\b|decid|adr|pending|\bdrafts?\b|proposals?\b|proposed|supersed", t):
         intent = "decision_trace"
     elif re.search(r"connected|path between|related to", t):
         intent = "path"

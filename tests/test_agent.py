@@ -207,3 +207,79 @@ def test_llm_draft_never_vetoes_a_verified_deterministic_answer(world, monkeypat
         assert not ans["abstained"]
         assert any("Payments owns Ledger" in l["text"] for l in ans["assembled"]["lines"])
         assert agent.turn_log[ans["turn_id"]]["verification"]["draft"] == "deterministic"
+
+
+def test_conversation_recall_routes_to_the_session_without_the_llm(world, monkeypatch):
+    """Item 18 fix 2: "my last question" / "what did I ask" questions call recall_session and are answered
+    from the session's turns, citing the turn span, with no LLM draft."""
+    from api import agent as agent_mod
+    for q in ("Remind me: what was my last question about?", "What did I ask you about earlier?",
+              "Earlier in this session, what did I ask about?", "What was my previous question?"):
+        assert heuristic_plan(q)["intent"] == "memory", q
+
+    called = []
+
+    def no_model(*a, **k):
+        called.append(1)
+        return {"claims": [], "explanation": ""}
+
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    monkeypatch.setattr(Agent, "_llm_draft", no_model)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    run(agent, s, "Who owns Ledger?")
+    world["clock"].tick()
+    called.clear()
+    ev = run(agent, s, "Remind me: what was my last question about?")
+    assert [e["name"] for e in ev if e["event"] == "tool_call"] == ["recall_session"]
+    ans = answer_of(ev)
+    assert not ans["abstained"]
+    assert any("Ledger" in l["text"] for l in ans["assembled"]["lines"])
+    assert not called
+
+
+def test_pending_draft_questions_read_proposals_and_never_draft(world):
+    """Item 18 fix 2: "is there a draft / anything pending / a proposal to supersede X?" is a question, routed
+    to the decision trace (which carries proposals), never the draft_adr_supersession action."""
+    for q in ("Is there a draft that would supersede ADR-001?", "Is anything pending for ADR-001?",
+              "Are there proposals to supersede ADR-001?", "Which draft supersedes ADR-001?"):
+        p = heuristic_plan(q)
+        assert (p["intent"], p["wants_action"]) == ("decision_trace", "none"), q
+    assert heuristic_plan("Draft an ADR superseding ADR-001: move to Aurora")["wants_action"] == "draft_adr_supersession"
+    g, clock, wp = world["g"], world["clock"], world["wp"]
+    _fact(wp, "HAS_STATUS", "decision:adr-001", "", 1, "sp7", value="accepted")
+    _fact(wp, "AFFECTS", "decision:adr-001", "system:ledger", 1, "sp7")
+    _fact(wp, "DECIDED_BY", "decision:adr-001", "person:priya", 1, "sp7")
+    clock.tick()
+    Actions(g, clock).draft_adr_supersession(Actor("person:eve"), "decision:adr-001", "move to Aurora")
+    clock.tick()
+    n_actions = g.ro("MATCH (a:Action) RETURN count(a) AS n")[0]["n"]
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:bob")
+    ev = run(agent, s, "Is there a draft that would supersede ADR-001?")
+    assert "trace_decision" in [e["name"] for e in ev if e["event"] == "tool_call"]
+    ans = answer_of(ev)
+    assert not ans["abstained"]
+    assert any(l["status"] == "proposed" for l in ans["assembled"]["lines"])
+    assert g.ro("MATCH (a:Action) RETURN count(a) AS n")[0]["n"] == n_actions
+
+
+def test_counting_answers_keep_the_tool_sentence_with_an_llm(world, monkeypatch):
+    """Item 18 fix 2: an aggregate answer is the count tool's own V10-checked sentence, not an LLM restatement."""
+    from api import agent as agent_mod
+    _counting_world(world)
+    called = []
+
+    def no_model(*a, **k):
+        called.append(1)
+        return {"claims": [], "explanation": ""}
+
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    monkeypatch.setattr(Agent, "_llm_draft", no_model)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "How many systems does Payments own?"))
+    assert [l["text"] for l in ans["assembled"]["lines"]] == ["Payments owns 2 systems: Checkout and Ledger."]
+    assert not called
