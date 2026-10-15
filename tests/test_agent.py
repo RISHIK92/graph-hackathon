@@ -1,5 +1,7 @@
 from api.agent import Agent, heuristic_plan
+from api.verifier import verify
 from brain.actions import Actions, Actor
+from brain.tools import Ctx, run_tool
 
 from .conftest import make_span
 from .test_actions import _fact, world  # noqa: F401
@@ -114,3 +116,13 @@ def test_answerable_questions_keep_answering(world):
     assert not ans["abstained"] and not ans.get("missing")
     ans = answer_of(run(agent, s, "Who owned Ledger in March 2026?"))
     assert not any("March" in m for m in ans.get("missing") or [])
+
+
+def test_verifier_drops_a_claim_whose_fact_is_not_an_object(world):
+    """A live LLM draft returned `fact` as a string; the verifier must drop the claim, not crash."""
+    pack = run_tool(Ctx(world["g"], now=world["clock"]()), "get_owner", {"entity_id": "system:ledger"})
+    f = pack["items"][0]["facts"][0]
+    claim = {"claim_id": "c1", "text": f["statement"], "tense": "current", "label": "graph",
+             "assertion_ids": [f["assertion_id"]], "span_ids": [], "fact": f["statement"]}
+    ver = verify({"claims": [claim]}, {pack["pack_id"]: pack})
+    assert ver["kept"] == [] and ver["dropped"][0]["rule"] == "V2"

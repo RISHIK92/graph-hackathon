@@ -40,6 +40,8 @@ def index_packs(packs: dict[str, dict]) -> Index:
 
 
 def _fact_matches(claim_fact: dict, f: dict) -> bool:
+    if not isinstance(claim_fact, dict):   # LLM drafts sometimes return the statement string here
+        return False
     return (claim_fact.get("subject_id") == f["subject_id"] and claim_fact.get("predicate") == f["predicate"]
             and (claim_fact.get("object_id") or "") == (f.get("object_id") or "")
             and (claim_fact.get("object_value") or "") == (f.get("object_value") or "")
