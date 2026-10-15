@@ -1127,6 +1127,9 @@ def test_path_template_types_match_registry(name: str):
 def test_readme_cypher_section_matches_templates():
     """The README lists the shipped Cypher (07 §3); `python -m brain.readme` regenerates it."""
     from brain import readme
-    text = (Path(__file__).parent.parent / "README.md").read_text()
+    path = Path(__file__).parent.parent / "README.md"
+    if not path.exists():
+        pytest.skip("README.md is kept out of git")
+    text = path.read_text()
     block = text[text.index(readme.START) + len(readme.START):text.index(readme.END)]
     assert block.strip() == readme.section().strip(), "README Cypher section is stale: run `python -m brain.readme`"
