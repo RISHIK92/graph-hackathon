@@ -163,6 +163,7 @@ function ActingMenu() {
         <button className="pill" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title="Acting as (demo identity, not authentication)">
           <span className="avatar">{me ? initials(me.name) : "?"}</span>
           <span className="truncate" style={{ maxWidth: 160 }}>{me?.name || "Acting as…"}</span>
+          <Chip tone="neutral" title="Switching person is for the demo. It is not a login.">Demo identity</Chip>
           <ChevronDown className="icon-sm" />
         </button>
       )}
