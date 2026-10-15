@@ -75,28 +75,31 @@ def _cached(kind: str, payload: Any, fn):
     return out
 
 
-def _post_retry(url: str, body: dict) -> httpx.Response:
+def _post_retry(url: str, body: dict, timeout: float = 120, attempts: int = 6) -> httpx.Response:
     """POST with backoff on 429 / 5xx and on transient transport errors (SSL EOF, resets, timeouts),
     which otherwise abort an hour-long ingestion."""
     last: Exception | None = None
-    for attempt in range(6):
+    for attempt in range(attempts):
         try:
-            r = httpx.post(url, json=body, timeout=120, headers={"Authorization": f"Bearer {settings.openrouter_key}"})
+            r = httpx.post(url, json=body, timeout=timeout, headers={"Authorization": f"Bearer {settings.openrouter_key}"})
         except (httpx.TransportError, httpx.RemoteProtocolError) as e:
             last = e
-            time.sleep(min(30, 2 ** attempt))
+            if attempt + 1 < attempts:
+                time.sleep(min(30, 2 ** attempt))
             continue
         if r.status_code not in (429, 500, 502, 503, 524):
             return r
-        time.sleep(min(30, 2 ** attempt))
+        if attempt + 1 < attempts:
+            time.sleep(min(30, 2 ** attempt))
     if last:
         raise last
     return r
 
 
 def complete(messages: list[dict], schema: dict | None = None, tools: list[dict] | None = None,
-             model: str | None = None, temperature: float = 0.0) -> dict:
-    """Returns {"content": str, "tool_calls": [...], "json": parsed-or-None}."""
+             model: str | None = None, temperature: float = 0.0, timeout: float | None = None) -> dict:
+    """Returns {"content": str, "tool_calls": [...], "json": parsed-or-None}. With `timeout`, one attempt
+    bounded by it (an interactive step); without, the patient retry used by ingestion."""
     model = model or settings.llm_model
     payload = {"model": model, "messages": messages, "schema": schema, "tools": tools, "t": temperature}
 
@@ -110,7 +113,8 @@ def complete(messages: list[dict], schema: dict | None = None, tools: list[dict]
                                            "json_schema": {"name": "out", "strict": False, "schema": schema}}
             if tools:
                 body["tools"] = tools
-            return _post_retry("https://openrouter.ai/api/v1/chat/completions", body)
+            limit = {"timeout": timeout, "attempts": 1} if timeout else {}
+            return _post_retry("https://openrouter.ai/api/v1/chat/completions", body, **limit)
 
         if schema and model in _NO_SCHEMA:
             r = post(_with_schema_prompt(messages, schema), use_schema=False)

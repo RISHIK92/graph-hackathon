@@ -351,7 +351,7 @@ def test_decision_lead_survives_an_llm_draft_that_drops_the_rationale(world, mon
     from api import agent as agent_mod
     _decision_world(world)
 
-    def llm(self, text, plan, packs, errors=None):
+    def llm(self, text, plan, packs, errors=None, timeout=None):
         base = agent_mod.deterministic_draft(plan, packs, text)
         return {"claims": [c for c in base["claims"] if c["label"] == "graph"], "explanation": ""}
 
@@ -439,3 +439,31 @@ def test_action_explanation_leads_with_what_it_relied_on_then(world):
     assert lead.startswith("Proposed routing RDS-42 to Priya Raman on 1 Jan 1970: Payments owned Ledger on 1 Jan 1970")
     assert lead.endswith("(still the case).")
     assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == ""
+
+
+def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
+    """Item 18 fix 6: the verifier-driven redraft is one LLM call with a ~5 s timeout; on timeout the first
+    verified draft stands and the trace says so."""
+    import httpx
+
+    from api import agent as agent_mod
+    calls = []
+
+    def llm(self, text, plan, packs, errors=None, timeout=None):
+        calls.append(timeout)
+        if errors:
+            raise httpx.ReadTimeout("slow model")
+        base = agent_mod.deterministic_draft(plan, packs, text)
+        bogus = {"claim_id": "x1", "text": "made up", "tense": "current", "span_ids": ["sp_missing"],
+                 "assertion_ids": [], "action_ids": [], "label": "text_only", "quote": "made up"}
+        return {"claims": base["claims"] + [bogus], "explanation": ""}
+
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    monkeypatch.setattr(Agent, "_llm_draft", llm)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Who owns Ledger?"))
+    assert calls == [None, agent_mod.REDRAFT_TIMEOUT_S] and agent_mod.REDRAFT_TIMEOUT_S <= 5
+    assert not ans["abstained"] and any("Payments owns Ledger" in l["text"] for l in ans["assembled"]["lines"])
+    assert agent.turn_log[ans["turn_id"]]["verification"]["redraft"] == "timed out; kept the first verified draft"

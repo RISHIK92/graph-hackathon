@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterator
 
+import httpx
+
 from brain import ids, providers, registry, store
 from brain.actions import Actions, Actor, Refused
 from brain.config import MAX
@@ -136,9 +138,14 @@ class Agent:
         answer = {"claims": [], "explanation": ""} if gap else self.draft(text, plan, packs)
         yield {"event": "draft", "claims": len(answer["claims"])}
         ver = verify(answer, ctx.packs)
+        redraft = ""
         if ver["dropped"] and not ver["abstained"] and providers.llm_available():
-            answer = self.draft(text, plan, packs, errors=ver["dropped"])
-            ver = verify(answer, ctx.packs)
+            retry = self.draft(text, plan, packs, errors=ver["dropped"], timeout=REDRAFT_TIMEOUT_S)
+            if retry.get("llm_error"):   # item 18 fix 6: a slow model never holds the answer up
+                redraft = "timed out; kept the first verified draft" if retry["llm_error"] == "timeout" else \
+                    "failed; kept the first verified draft"
+            else:
+                answer, ver = retry, verify(retry, ctx.packs)
         drafted = answer.get("drafted", "deterministic")
         if ver["abstained"] and drafted == "llm":
             # The LLM may rephrase, never veto (item 18): an LLM draft that abstains, comes back empty or
@@ -148,7 +155,7 @@ class Agent:
             if not bver["abstained"]:
                 answer, ver, drafted = base, bver, "deterministic"
         trace["verification"] = {"kept": len(ver["kept"]), "dropped": ver["dropped"], "rewritten": ver["rewritten"],
-                                 "draft": drafted}
+                                 "draft": drafted, "redraft": redraft}
         yield {"event": "verification", "kept": len(ver["kept"]), "dropped": ver["dropped"],
                "rewritten": ver["rewritten"]}
         final = {"claims": ver["kept"], "abstained": ver["abstained"],
@@ -285,7 +292,8 @@ class Agent:
         return cur[0]["st"] if cur else ""
 
     # draft
-    def draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None = None) -> dict:
+    def draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None = None,
+              timeout: float | None = None) -> dict:
         base = {**deterministic_draft(plan, packs, text), "drafted": "deterministic"}
         # Recall quotes the session's turns, a count is the tool's own V10-checked sentence, and a decision
         # trace has a fixed shape (the cited "because" first): no LLM rewrite.
@@ -293,9 +301,11 @@ class Agent:
                 any(it["label"] == "aggregate" or it.get("rationale") for p in packs.values() for it in p["items"]):
             return base
         try:
-            llm = self._llm_draft(text, plan, packs, errors)
+            llm = self._llm_draft(text, plan, packs, errors, timeout=timeout)
+        except httpx.TimeoutException:
+            return {**base, "llm_error": "timeout"}
         except Exception:  # noqa: BLE001
-            return base
+            return {**base, "llm_error": "failed"}
         if not llm["claims"]:   # an empty or abstaining LLM draft never vetoes the graph's answer (item 18)
             return base
         # Hybrid: the LLM's claims and explanation, plus any graph fact it left out. Free-tier models
@@ -308,7 +318,8 @@ class Agent:
         return {"claims": relevant_claims(plan, llm["claims"] + extra), "explanation": llm.get("explanation", ""),
                 "drafted": "llm"}
 
-    def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None) -> dict:
+    def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None,
+                   timeout: float | None = None) -> dict:
         slim = []
         for p in packs.values():
             for it in p["items"]:
@@ -329,7 +340,8 @@ class Agent:
             user += f"\nFix these verifier errors: {errors}"
         res = providers.complete([{"role": "system", "content": sys}, {"role": "user", "content": user}],
                                  schema={"type": "object", "properties": {"claims": {"type": "array"},
-                                                                          "explanation": {"type": "string"}}})
+                                                                          "explanation": {"type": "string"}}},
+                                 timeout=timeout)
         j = res.get("json") or {}
         return {"claims": normalise_claims(j.get("claims", []), packs), "explanation": j.get("explanation", "")}
 
@@ -448,6 +460,9 @@ def normalise_claims(claims: list, packs: dict[str, dict]) -> list[dict]:
                     else sp["text"][:200]
         out.append(c)
     return out
+
+
+REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first verified draft stands
 
 
 # Offline planner and drafter
