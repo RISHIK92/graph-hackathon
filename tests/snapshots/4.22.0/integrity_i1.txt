@@ -1,0 +1,4 @@
+Results
+    Aggregate
+        Filter
+            Node By Label Scan | (a:Assertion)

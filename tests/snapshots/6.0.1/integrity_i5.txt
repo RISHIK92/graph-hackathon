@@ -1,0 +1,6 @@
+Limit
+    Project
+        Anti Semi Apply
+            Node By Label Scan | (a:Assertion)
+            Conditional Traverse | (a)->(anon_1)
+                Argument

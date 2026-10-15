@@ -1,0 +1,5 @@
+Results
+    Project
+        Filter
+            Aggregate
+                Node By Label Scan | (a:Assertion)

@@ -231,6 +231,12 @@ PARAMS = {
     "graph_nodes": lambda f: {},
     "graph_ticks": lambda f: {},
     "impact_dependents": lambda f: {"x": "system:ledger", "V": f.now},
+    "integrity_chains": lambda f: {},
+    "integrity_i1": lambda f: {},
+    "integrity_i11": lambda f: (f.g.write("UNWIND range(1, 51) AS i CREATE (:Assertion {id:'as_cap' + toString(i), "
+                                          "chain_id:'ch_cap'})"), {})[1],
+    "integrity_i5": lambda f: (f.g.write("CREATE (:Assertion {id:'as_bare', chain_id:'ch_bare'})"), {})[1],
+    "integrity_sentinel": lambda f: {},
     "latest_spans": lambda f: {"l": "src:test"},
     "lead_at": lambda f: {"t": "team:payments", "V": f.now},
     "learn_ents": lambda f: {"ids": ["team:payments", "system:ledger"]},
@@ -781,6 +787,30 @@ def g_doc_evidence(f, rows):
 
 def g_existing_spans(f, rows):
     assert rows == [{"id": "sp_own", "ts": 1}]
+
+
+def g_integrity_chains(f, rows):
+    r = _by(rows, "id")
+    assert len(r) == 12 and r["ch_OWNS:system:ledger"] == {"id": "ch_OWNS:system:ledger", "p": "OWNS", "q": "",
+                                                           "k": "system:ledger"}
+
+
+def g_integrity_i1(f, rows):
+    r = {x["c"]: x["runs"] for x in rows}
+    assert all(len(v) == 1 for v in r.values())
+    assert r["ch_OWNS:system:ledger"] == [f.ids["own"]]       # Platform's is superseded, Infra's disputed
+
+
+def g_integrity_i11(f, rows):
+    assert rows == [{"c": "ch_cap", "n": 51}]
+
+
+def g_integrity_i5(f, rows):
+    assert rows == [{"id": "as_bare"}]
+
+
+def g_integrity_sentinel(f, rows):
+    assert rows == [{"n": 1}]
 
 
 def g_latest_spans(f, rows):
