@@ -10,22 +10,9 @@ import { Button, Chip, Notice, Placeholder } from "@/components/ui";
 import { streamTurn, type StreamEvent } from "@/lib/api";
 import { fmtDate, fmtDateTime, initials, plural } from "@/lib/format";
 import { displayText, intentLabel, predicateLabel } from "@/lib/labels";
-import { useStore } from "@/lib/store";
-import type { Claim, Fact, Line, Pack, Path, Refusal, SpanItem } from "@/lib/types";
+import { type Turn, useStore } from "@/lib/store";
+import type { Claim, Fact, Pack, Path, Refusal, SpanItem } from "@/lib/types";
 
-interface Turn {
-  text: string;
-  at: number;
-  asOf: number | null;
-  stages: StreamEvent[];
-  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string; lead?: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
-  actions: StreamEvent[];
-  turnId?: string;
-  actor: string;   // who asked: the acting person at the time, not whoever is acting now (M2)
-  writeSeq: number;
-  done: boolean;
-  error?: string;
-}
 
 const SUGGEST_Q = ["Who owns Ledger?", "Who knows about Ledger?", "Why is Ledger on Aurora?", "What breaks if Ledger goes down, and who do I tell?", "Is anything pending for ADR-007?"];
 const SUGGEST_A = ["Route RDS-42 to the owner", "Infra owns Ledger now"];
@@ -38,7 +25,8 @@ function Ask() {
   const s = useStore();
   const params = useSearchParams();
   const [text, setText] = useState("");
-  const [turns, setTurns] = useState<Turn[]>([]);
+  // M3: the thread lives in the store, so it survives a visit to another page while the tab is open
+  const { thread: turns, setThread: setTurns } = s;
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string>("");
   const logRef = useRef<HTMLDivElement>(null);

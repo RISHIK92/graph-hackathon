@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { fetchNames, get, getToken, send, setToken as saveToken } from "./api";
-import type { NameMap, Pack, Path, Person } from "./types";
+import { fetchNames, get, getToken, send, setToken as saveToken, type StreamEvent } from "./api";
+import type { Claim, Line, NameMap, Pack, Path, Person } from "./types";
 
 // inspector views (DESIGN.md §2.3: one panel, one level, breadcrumb inside)
 
@@ -31,6 +31,21 @@ export type InspectorView =
   | { kind: "edge"; aid: string; source: string; target: string; type: string; edgeKind: "normal" | "disputed" | "stale"; label?: string }
   | { kind: "trace"; turnId: string }
   | { kind: "inbox"; actionId?: string; assertionId?: string; summary: string };
+
+/** One Ask turn as the page shows it. */
+export interface Turn {
+  text: string;
+  at: number;
+  asOf: number | null;
+  stages: StreamEvent[];
+  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string; lead?: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
+  actions: StreamEvent[];
+  turnId?: string;
+  actor: string;   // who asked: the acting person at the time, not whoever is acting now (M2)
+  writeSeq: number;
+  done: boolean;
+  error?: string;
+}
 
 export interface Toast {
   id: number;
@@ -65,6 +80,8 @@ interface Store {
   bump: () => void;
   /** The latest confirm or undo, so answers asked before it can say they're out of date (M1). */
   lastWrite: { seq: number; text: string } | null;
+  thread: Turn[];
+  setThread: React.Dispatch<React.SetStateAction<Turn[]>>;
   noteWrite: (text: string) => void;
   pendingCount: number;
   debug: boolean;
@@ -148,6 +165,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const bump = useCallback(() => setVersion((v) => v + 1), []);
   const [lastWrite, setLastWrite] = useState<{ seq: number; text: string } | null>(null);
+  const [thread, setThread] = useState<Turn[]>([]);
   const noteWrite = useCallback((text: string) => {
     setLastWrite((w) => ({ seq: (w?.seq || 0) + 1, text }));
     bump();
@@ -283,7 +301,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(
     () => ({
       ready, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
-      people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, pendingCount, debug,
+      people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, pendingCount, debug,
       nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
       openEntity: (id, name, mode = "replace") => openInspector({ kind: "entity", id, name }, mode),
@@ -292,7 +310,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toasts, toast, dismissToast, names, resolveNames,
     }),
     [ready, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
-      lastWrite, noteWrite, pendingCount, debug, nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen,
+      lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],
   );
