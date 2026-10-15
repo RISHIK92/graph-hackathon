@@ -172,6 +172,24 @@ def _check(c: dict, ix: Index, rewritten: list) -> tuple[str, str] | None:
     return errors[0] if errors else ("V2", "no witness")
 
 
+# What a first sentence must say to answer each intent (M4); intents not listed only need the asked entity.
+_LEAD_WORDS = {"ownership": (" owns ", " owned ", " leads ", " led ", " is assigned to ", " is a member of ", " is part of "),
+               "expertise": ("Ask ",), "impact": ("would be affected",),
+               "decision_trace": ("because", " is ", "pending", "proposal"), "history": (" on ",),
+               "action": ("Route ", "Recorded", " owns ")}
+
+
+def check_lead(plan: dict, lead: str) -> bool:
+    """M4: the lead sentence names an entity the question asked about and answers the asked intent."""
+    if not lead:
+        return True
+    names = [m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")]
+    if names and not any(n.lower() in lead.lower() for n in names):
+        return False
+    words = _LEAD_WORDS.get(plan.get("intent", ""))
+    return not words or any(w in lead for w in words)
+
+
 def assemble(kept: list[dict], packs: dict[str, dict], explanation: str = "") -> dict:
     """The displayed answer is built from surviving claims, never shown from the drafter's prose (A61)."""
     ix = index_packs(packs)

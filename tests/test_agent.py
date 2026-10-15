@@ -425,7 +425,7 @@ def test_past_belief_answer_leads_with_the_change(world):
     ans = answer_of(run(agent, s, "Who owned Vault then?", as_of=1769904000000))
     assert ans["assembled"]["lead"] == "Platform owned Vault on 1 Feb 2026 (changed to Payments on 1 Mar 2026)."
     ans = answer_of(run(agent, s, "Who owns Vault?"))
-    assert ans["assembled"]["lead"] == ""
+    assert ans["assembled"]["lead"] == "Payments owns Vault. Priya Raman leads Payments."
 
 
 def test_action_explanation_leads_with_what_it_relied_on_then(world):
@@ -439,7 +439,7 @@ def test_action_explanation_leads_with_what_it_relied_on_then(world):
     lead = answer_of(run(agent, s, "Why did you route RDS-42 to Priya?"))["assembled"]["lead"]
     assert lead.startswith("Proposed routing RDS-42 to Priya Raman on 1 Jan 1970: Payments owned Ledger on 1 Jan 1970")
     assert lead.endswith("(still the case).")
-    assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == ""
+    assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == "Payments owns Ledger. Priya Raman leads Payments."
 
 
 def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
@@ -514,8 +514,8 @@ def test_confirmed_proposals_are_resolved_not_pending(world):
                 if f["assertion_id"] == r["proposal"])
     assert prop["confirmed_by"]["by"] == "Priya Raman" and prop["confirmed_by"]["at"] == clock() - 1
     ans = answer_of(run(agent, s, "Is anything pending for ADR-002?"))
-    assert ans["assembled"]["lead"] == "Nothing is pending."
-    assert answer_of(run(agent, s, "Why was ADR-001 superseded?"))["assembled"]["lead"] != "Nothing is pending."
+    assert ans["assembled"]["lead"] == "Nothing is pending for ADR-002."
+    assert not answer_of(run(agent, s, "Why was ADR-001 superseded?"))["assembled"]["lead"].startswith("Nothing")
     assert not any("pending confirmation" in l["text"] for l in ans["assembled"]["lines"])
 
 
@@ -597,3 +597,36 @@ def test_path_edges_carry_the_stored_direction(fx):  # noqa: F811
                 assert f["subject_id"] == (prev["node"]["id"] if e["dir"] == "forward" else st["node"]["id"]), (e, f)
                 seen += 1
     assert seen >= 4
+
+
+def _lead(agent, s, q):
+    return answer_of(run(agent, s, q))["assembled"]["lead"]
+
+
+def test_first_sentence_answers_ownership_and_routing(world):
+    """M4: one golden per intent; the lead names the asked entity and answers what was asked."""
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    assert _lead(agent, s, "Who owns Ledger?") == "Payments owns Ledger. Priya Raman leads Payments."
+    assert _lead(agent, s, "Route RDS-42 to the owner") == (
+        "Route RDS-42 to Priya Raman, because Payments owns Ledger and Priya Raman leads Payments.")
+
+
+def test_first_sentence_answers_impact_expertise_and_decisions(fx):  # noqa: F811
+    fa = Agent(fx.g, Clock(fx.now + 10))
+    fs = fa.create_session("judge", "person:eve")
+    assert _lead(fa, fs, "What breaks if Ledger goes down, and who do I tell?") == (
+        "2 systems would be affected if Ledger goes down: Checkout and Storefront. Tell Priya Raman.")
+    exp = _lead(fa, fs, "Who knows about Ledger?")
+    assert exp.startswith("Ask ") and " first. " in exp and "item about Ledger" in exp, exp
+    assert _lead(fa, fs, "Why did ADR-002 replace ADR-001?").startswith("Move Ledger to Postgres (ADR-002")
+    assert _lead(fa, fs, "What is the status of ADR-002?") == "ADR-002 is accepted."
+
+
+def test_lead_check_rejects_a_sentence_that_misses_the_question():
+    """M4 verifier check: sentence 1 must name an asked entity and answer the asked intent."""
+    from api.verifier import check_lead
+    plan = {"intent": "ownership", "mentions": [{"text": "Ledger", "entity_id": "system:ledger"}]}
+    assert check_lead(plan, "Payments owns Ledger. Priya Raman leads Payments.")
+    assert not check_lead(plan, "Priya Raman leads Payments.")
+    assert not check_lead({**plan, "intent": "expertise"}, "Payments owns Ledger.")
