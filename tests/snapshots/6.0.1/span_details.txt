@@ -2,6 +2,6 @@ Project
     Aggregate
         Sort
             Project
-                Filter
-                    Conditional Traverse | (s)<-[h:HAS_SPAN]-(src:Source)
-                        Unwind
+                Conditional Traverse | (s)<-[h:HAS_SPAN]-(src:Source)
+                    Filter
+                        Node By Index Scan | (s:Span)

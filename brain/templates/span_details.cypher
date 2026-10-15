@@ -3,8 +3,9 @@
 // params: sids (list of span ids), T
 // indexes: Span.id
 // golden: tests/test_templates.py::test_goldens[span_details]
-UNWIND $sids AS sid
-MATCH (s:Span {id:sid})<-[h:HAS_SPAN]-(src:Source)
+// `s.id IN $sids`, not UNWIND + {id:sid}: 6.0.1 plans the UNWIND form as a traverse off the Unwind
+// with no Span.id index scan; the IN form uses the index on both versions.
+MATCH (s:Span)<-[h:HAS_SPAN]-(src:Source) WHERE s.id IN $sids
 WITH s, src, h ORDER BY src.updated_at DESC
 WITH s, collect({src:src.id, title:src.title, uri:src.uri, kind:src.kind, doc_key:src.doc_key,
                  cs:h.char_start, ce:h.char_end, live:(h.recorded_at <= $T AND h.removed_at > $T)}) AS revs

@@ -38,9 +38,6 @@ INDEX_OPS = ("Node By Index Scan", "Edge By Index Scan", "Node By Fulltext Index
 
 # (template, version, check) -> reason. Observed Oct 2026 on the fixture below; see the module docstring.
 KNOWN_FAILURES: dict[tuple[str, str, str], str] = {
-    ("span_details", "6.0.1", "index"):
-        "6.0.1 plans UNWIND $sids ... MATCH (s:Span {id:sid}) as a Conditional Traverse straight off the Unwind "
-        "with no Node By Index Scan on Span.id (rows are still correct). 4.22.0 uses the index.",
 }
 
 
