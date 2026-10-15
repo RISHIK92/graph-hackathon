@@ -1,0 +1,4 @@
+Results
+    Aggregate
+        Optional Conditional Traverse | (s)-[h:HAS_SPAN]->(sp:Span)
+            Node By Index Scan | (s:Source)

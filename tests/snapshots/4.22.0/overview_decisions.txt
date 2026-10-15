@@ -1,0 +1,10 @@
+Results
+    Sort
+        Aggregate
+            Apply
+                Filter
+                    Node By Label Scan | (d:Decision)
+                Optional
+                    Filter
+                        Edge By Index Scan | [a:AFFECTS]
+                            Argument

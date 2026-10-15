@@ -1,0 +1,7 @@
+Results
+    Distinct
+        Project
+            Filter
+                Conditional Traverse | (d)-[x:DISPUTES]->(m:Assertion)
+                    Filter
+                        Node By Label Scan | (d:Assertion)

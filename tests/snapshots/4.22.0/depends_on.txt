@@ -1,0 +1,5 @@
+Results
+    Project
+        Filter
+            Edge By Index Scan | [d:DEPENDS_ON]
+                Node By Index Scan | (x:Entity)

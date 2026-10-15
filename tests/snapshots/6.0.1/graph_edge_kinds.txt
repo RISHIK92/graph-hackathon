@@ -1,0 +1,5 @@
+Aggregate
+    Filter
+        Conditional Traverse | (a)-[ev:EVIDENCED_BY]->(s:Span)
+            Filter
+                Node By Index Scan | (a:Assertion)

@@ -7,6 +7,7 @@ from typing import Any
 
 from falkordb import FalkorDB
 
+from . import templates
 from .config import settings
 
 
@@ -78,6 +79,10 @@ class Graph:
         self.log.append(QueryLog(template, cypher, params or {}, len(rows),
                                  (time.perf_counter() - t0) * 1000))
         return rows
+
+    def q(self, name: str, params: dict | None = None, timeout: int | None = None) -> list[dict]:
+        """Run a named read template from brain/templates."""
+        return self.ro(templates.body(name), params, timeout=timeout, template=name)
 
     # writes
     def write(self, cypher: str, params: dict | None = None, template: str = "adhoc",

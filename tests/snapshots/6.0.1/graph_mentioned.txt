@@ -1,0 +1,5 @@
+Distinct
+    Project
+        Conditional Traverse | (s)->(n:Entity)
+            Filter
+                Node By Label Scan | (s:Span)

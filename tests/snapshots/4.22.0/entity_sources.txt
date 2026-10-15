@@ -1,0 +1,6 @@
+Results
+    Aggregate
+        Filter
+            Conditional Traverse | (e)->(src:Source)
+                Project
+                    Node By Index Scan | (e:Entity)

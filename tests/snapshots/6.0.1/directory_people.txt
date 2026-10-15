@@ -1,0 +1,28 @@
+Sort
+    Aggregate
+        Apply
+            Aggregate
+                Apply
+                    Aggregate
+                        Apply
+                            Aggregate
+                                Apply
+                                    Node By Label Scan | (p:Person)
+                                    Optional
+                                        Filter
+                                            Filter
+                                                Edge By Index Scan | (p)-[m:MEMBER_OF]->(t:Team)
+                                                    Argument
+                            Optional
+                                Filter
+                                    Filter
+                                        Edge By Index Scan | (p)-[l:LEADS]->(lt:Team)
+                                            Argument
+                    Optional
+                        Filter
+                            Edge By Index Scan | (d)-[db:DECIDED_BY]->(p)
+                                Argument
+            Optional
+                Filter
+                    Edge By Index Scan | (k)-[a:ASSIGNED_TO]->(p)
+                        Argument

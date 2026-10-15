@@ -1,0 +1,21 @@
+Results
+    Sort
+        Aggregate
+            Apply
+                Aggregate
+                    Apply
+                        Aggregate
+                            Apply
+                                Node By Label Scan | (p:Person)
+                                Optional
+                                    Filter
+                                        Edge By Index Scan | [m:MEMBER_OF]
+                                            Argument
+                        Optional
+                            Filter
+                                Edge By Index Scan | [l:LEADS]
+                                    Argument
+                Optional
+                    Filter
+                        Edge By Index Scan | [db:DECIDED_BY]
+                            Argument

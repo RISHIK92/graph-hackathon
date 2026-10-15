@@ -1,0 +1,7 @@
+Results
+    Sort
+        Distinct
+            Project
+                Filter
+                    Conditional Traverse | (anon_0)-[e]->(anon_1)
+                        All Node Scan | (anon_0)

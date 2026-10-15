@@ -1,0 +1,5 @@
+Results
+    Limit
+        Sort
+            Project
+                Node By Label Scan | (p:Person)

@@ -1,0 +1,5 @@
+Project
+    Filter
+        Edge By Index Scan | (x)-[d:DEPENDS_ON]->(y)
+            Filter
+                Node By Index Scan | (x:Entity)

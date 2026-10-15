@@ -1,0 +1,33 @@
+Results
+    Sort
+        Aggregate
+            Apply
+                Aggregate
+                    Apply
+                        Aggregate
+                            Apply
+                                Aggregate
+                                    Apply
+                                        Aggregate
+                                            Apply
+                                                Node By Label Scan | (s:System)
+                                                Optional
+                                                    Filter
+                                                        Edge By Index Scan | [o:OWNS]
+                                                            Argument
+                                        Optional
+                                            Filter
+                                                Edge By Index Scan | [d:DEPENDS_ON]
+                                                    Argument
+                                Optional
+                                    Filter
+                                        Edge By Index Scan | [u:DEPENDS_ON]
+                                            Argument
+                        Optional
+                            Filter
+                                Edge By Index Scan | [pp:PART_OF]
+                                    Argument
+                Optional
+                    Filter
+                        Edge By Index Scan | [af:AFFECTS]
+                            Argument

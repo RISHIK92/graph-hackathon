@@ -104,10 +104,10 @@ def create_session(body: NewSession, c: Caller = Depends(caller)) -> dict:
 
 
 def _default_identity() -> str:
-    r = G.ro("MATCH (s:Source {kind:'world_meta'}) RETURN s.demo_identity AS d LIMIT 1", template="demo_identity")
+    r = G.q("demo_identity")
     if r and r[0]["d"]:
         return r[0]["d"]
-    r = G.ro("MATCH (p:Person) RETURN p.id AS id ORDER BY p.id LIMIT 1", template="any_person")
+    r = G.q("any_person")
     return r[0]["id"] if r else ""
 
 
@@ -170,10 +170,7 @@ def _ctx(as_of: int | None = None) -> Ctx:
 
 @app.get("/spans/{span_id}")
 def get_span(span_id: str) -> dict:
-    r = G.ro("MATCH (s:Span {id:$id})<-[h:HAS_SPAN]-(src:Source) RETURN s.text AS text, s.kind AS kind, "
-             "s.ts AS ts, collect({source:src.id, title:src.title, uri:src.uri, cs:h.char_start, ce:h.char_end, "
-             "latest:src.is_latest, live:h.removed_at = $max}) AS revisions", {"id": span_id, "max": MAX},
-             template="span_view")
+    r = G.q("span_view", {"id": span_id, "max": MAX})
     if not r:
         raise HTTPException(404)
     return r[0]
@@ -181,17 +178,14 @@ def get_span(span_id: str) -> dict:
 
 @app.get("/sources/{source_id}")
 def get_source(source_id: str) -> dict:
-    r = G.ro("MATCH (s:Source {id:$id}) OPTIONAL MATCH (s)-[h:HAS_SPAN]->(sp:Span) "
-             "RETURN s AS source, collect({span:sp.id, text:sp.text, cs:h.char_start, ce:h.char_end, ord:h.ordinal}) AS spans",
-             {"id": source_id}, template="source_view")
+    r = G.q("source_view", {"id": source_id})
     if not r:
         raise HTTPException(404)
     src = r[0]["source"]
     spans = sorted([x for x in r[0]["spans"] if x["span"]], key=lambda x: x["ord"] or 0)
     out = {"source": src, "spans": spans, "text": "\n\n".join(x["text"] for x in spans)}
     if src.get("kind") == "draft":
-        undone = G.ro("MATCH (ac:Action)-[:PRODUCED]->(:Source {id:$id}) RETURN ac.status AS s", {"id": source_id},
-                      template="draft_status")
+        undone = G.q("draft_status", {"id": source_id})
         out["banner"] = "agent draft: not evidence" + (" · withdrawn" if undone and undone[0]["s"] == "undone" else "")
     return out
 
@@ -211,8 +205,7 @@ def get_path(path_id: str, pack: str | None = None) -> dict:
                         e = st.get("edge")
                         ev = []
                         if e and e.get("aid"):
-                            members = [r["id"] for r in G.ro("MATCH (a:Assertion {run_id:$r}) RETURN a.id AS id",
-                                                             {"r": e["aid"]}, template="run_members")]
+                            members = [r["id"] for r in G.q("run_members", {"run": e["aid"]})]
                             ev = span_items(evidence(ctx, members or [e["aid"]]))
                         steps.append({**st, "evidence": ev})
                     return {"path_id": path_id, "steps": steps}
@@ -222,24 +215,9 @@ def get_path(path_id: str, pack: str | None = None) -> dict:
 @app.get("/overview")
 def overview(as_of: int | None = None) -> dict:
     V = as_of or now_ms()
-    teams = G.ro(
-        "MATCH (t:Team) "
-        "OPTIONAL MATCH (p:Person)-[l:LEADS]->(t) WHERE l.valid_from <= $V AND l.valid_to > $V "
-        "WITH t, collect({id:p.id, name:p.name, aid:l.aid}) AS leads "
-        "OPTIONAL MATCH (m:Person)-[mm:MEMBER_OF]->(t) WHERE mm.primary = true AND mm.valid_from <= $V AND mm.valid_to > $V "
-        "WITH t, leads, collect({id:m.id, name:m.name, aid:mm.aid}) AS members "
-        "OPTIONAL MATCH (t)-[o:OWNS]->(x:Entity) WHERE o.valid_from <= $V AND o.valid_to > $V "
-        "RETURN t.id AS id, t.name AS name, leads, members, collect({id:x.id, name:x.name, aid:o.aid}) AS owns "
-        "ORDER BY name", {"V": V}, template="overview_teams", timeout=10000)
-    decisions = G.ro(
-        "MATCH (d:Decision) WHERE d.status = 'accepted' "
-        "OPTIONAL MATCH (d)-[a:AFFECTS]->(x:Entity) WHERE a.valid_from <= $V AND a.valid_to > $V "
-        "RETURN d.id AS id, d.name AS name, d.title AS title, d.status_aid AS aid, "
-        "collect({id:x.id, name:x.name, aid:a.aid}) AS affects ORDER BY name", {"V": V}, template="overview_decisions")
-    pending = G.ro("MATCH (ac:Action) WHERE ac.kind IN ['draft_adr_supersession','route_to_owner'] AND ac.status = 'done' "
-                   "MATCH (ac)-[:PRODUCED]->(p:Assertion) WHERE p.status = 'proposed' "
-                   "AND NOT (p)<-[:CONFIRMS]-(:Assertion {status:'current'}) "
-                   "RETURN DISTINCT ac.id AS action_id, ac.kind AS kind, ac.summary AS summary", template="overview_pending")
+    teams = G.q("overview_teams", {"V": V}, timeout=10000)
+    decisions = G.q("overview_decisions", {"V": V})
+    pending = G.q("overview_pending")
     disputed = _open_dispute_runs()
     for t in teams:
         for k in ("leads", "members", "owns"):
@@ -252,8 +230,7 @@ def overview(as_of: int | None = None) -> dict:
 
 
 def _open_dispute_runs() -> dict[str, list[str]]:
-    rows = G.ro("MATCH (d:Assertion)-[x:DISPUTES]->(m:Assertion) WHERE x.removed_at = $max AND d.status = 'disputed' "
-                "RETURN DISTINCT m.chain_id AS chain", {"max": MAX}, template="dispute_chains")
+    rows = G.q("dispute_chains", {"max": MAX})
     ctx = _ctx()
     out: dict[str, list[str]] = {}
     for r in rows:
@@ -272,61 +249,11 @@ def directory(as_of: int | None = None) -> dict:
     V = as_of or now_ms()
     P = {"V": V}
     disputed = _open_dispute_runs()
-    systems = G.ro(
-        "MATCH (s:System) "
-        "OPTIONAL MATCH (t:Team)-[o:OWNS]->(s) WHERE o.valid_from <= $V AND o.valid_to > $V "
-        "WITH s, collect({id:t.id, name:t.name, aid:o.aid})[0] AS owner "
-        "OPTIONAL MATCH (s)-[d:DEPENDS_ON]->(:Entity) WHERE d.valid_from <= $V AND d.valid_to > $V "
-        "WITH s, owner, count(d) AS depends_on "
-        "OPTIONAL MATCH (:Entity)-[u:DEPENDS_ON]->(s) WHERE u.valid_from <= $V AND u.valid_to > $V "
-        "WITH s, owner, depends_on, count(u) AS depended_on_by "
-        "OPTIONAL MATCH (s)-[pp:PART_OF]->(pr:Project) WHERE pp.valid_from <= $V AND pp.valid_to > $V "
-        "WITH s, owner, depends_on, depended_on_by, collect({id:pr.id, name:pr.name})[0] AS project "
-        "OPTIONAL MATCH (dc:Decision)-[af:AFFECTS]->(s) WHERE af.valid_from <= $V AND af.valid_to > $V "
-        "RETURN s.id AS id, s.name AS name, s.description AS description, owner, project, "
-        "depends_on, depended_on_by, count(dc) AS decisions ORDER BY name", P, template="directory_systems", timeout=10000)
-    projects = G.ro(
-        "MATCH (p:Project) "
-        "OPTIONAL MATCH (t:Team)-[o:OWNS]->(p) WHERE o.valid_from <= $V AND o.valid_to > $V "
-        "WITH p, collect({id:t.id, name:t.name, aid:o.aid})[0] AS owner "
-        "OPTIONAL MATCH (s:System)-[pp:PART_OF]->(p) WHERE pp.valid_from <= $V AND pp.valid_to > $V "
-        "WITH p, owner, collect({id:s.id, name:s.name}) AS systems "
-        "OPTIONAL MATCH (w:Person)-[wo:WORKS_ON]->(p) WHERE wo.valid_from <= $V AND wo.valid_to > $V "
-        "RETURN p.id AS id, p.name AS name, p.description AS description, owner, systems, count(w) AS people "
-        "ORDER BY name", P, template="directory_projects", timeout=10000)
-    people = G.ro(
-        "MATCH (p:Person) "
-        "OPTIONAL MATCH (p)-[m:MEMBER_OF]->(t:Team) WHERE m.primary = true AND m.valid_from <= $V AND m.valid_to > $V "
-        "WITH p, collect({id:t.id, name:t.name})[0] AS team "
-        "OPTIONAL MATCH (p)-[l:LEADS]->(lt:Team) WHERE l.valid_from <= $V AND l.valid_to > $V "
-        "WITH p, team, collect({id:lt.id, name:lt.name}) AS leads "
-        "OPTIONAL MATCH (d:Decision)-[db:DECIDED_BY]->(p) WHERE db.valid_from <= $V AND db.valid_to > $V "
-        "WITH p, team, leads, collect({id:d.id, name:d.name}) AS decides "
-        "OPTIONAL MATCH (k:Ticket)-[a:ASSIGNED_TO]->(p) WHERE a.valid_from <= $V AND a.valid_to > $V "
-        "RETURN p.id AS id, p.name AS name, p.title AS title, team, leads, decides, count(k) AS tickets "
-        "ORDER BY name", P, template="directory_people", timeout=10000)
-    decisions = G.ro(
-        "MATCH (d:Decision) "
-        "OPTIONAL MATCH (d)-[a:AFFECTS]->(x:Entity) WHERE a.valid_from <= $V AND a.valid_to > $V "
-        "WITH d, collect({id:x.id, name:x.name, aid:a.aid}) AS affects "
-        "OPTIONAL MATCH (d)-[db:DECIDED_BY]->(w:Person) WHERE db.valid_from <= $V AND db.valid_to > $V "
-        "WITH d, affects, collect({id:w.id, name:w.name}) AS deciders "
-        "OPTIONAL MATCH (d)-[r:REPLACES]->(old:Decision) "
-        "WITH d, affects, deciders, collect({id:old.id, name:old.name}) AS replaces "
-        "OPTIONAL MATCH (new:Decision)-[r2:REPLACES]->(d) "
-        "RETURN d.id AS id, d.name AS name, d.title AS title, d.description AS description, d.status AS status, "
-        "d.decided_at AS decided_at, affects, deciders, replaces, collect({id:new.id, name:new.name}) AS replaced_by "
-        "ORDER BY name", P, template="directory_decisions", timeout=10000)
-    tickets = G.ro(
-        "MATCH (k:Ticket) "
-        "OPTIONAL MATCH (k)-[ab:ABOUT]->(x:Entity) WHERE ab.valid_from <= $V AND ab.valid_to > $V "
-        "WITH k, collect({id:x.id, name:x.name})[0] AS about "
-        "OPTIONAL MATCH (k)-[a:ASSIGNED_TO]->(p:Person) WHERE a.valid_from <= $V AND a.valid_to > $V "
-        "WITH k, about, collect({id:p.id, name:p.name, aid:a.aid})[0] AS assignee "
-        "OPTIONAL MATCH (st:Assertion {subject_id:k.id, predicate:'HAS_STATE'}) "
-        "WHERE st.status = 'current' AND st.valid_from <= $V AND st.valid_to > $V "
-        "RETURN k.id AS id, k.name AS name, k.description AS description, about, assignee, "
-        "collect(st.object_value)[0] AS state ORDER BY name", P, template="directory_tickets", timeout=10000)
+    systems = G.q("directory_systems", P, timeout=10000)
+    projects = G.q("directory_projects", P, timeout=10000)
+    people = G.q("directory_people", P, timeout=10000)
+    decisions = G.q("directory_decisions", P, timeout=10000)
+    tickets = G.q("directory_tickets", P, timeout=10000)
     teams = overview(as_of)["teams"]
 
     def clean(rows: list[dict], one: tuple[str, ...] = (), many: tuple[str, ...] = ()) -> list[dict]:
@@ -361,8 +288,7 @@ def names(ids: str = "") -> dict:
     want = [x for x in ids.split(",") if x]
     if not want:
         return {}
-    rows = G.ro("MATCH (e:Entity) WHERE e.id IN $ids OR any(i IN $ids WHERE e.id ENDS WITH (':' + i)) "
-                "RETURN e.id AS id, e.name AS name, labels(e) AS labels", {"ids": want}, template="names")
+    rows = G.q("names", {"ids": want})
     out: dict[str, dict] = {}
     for r in rows:
         lab = next((x for x in r["labels"] if x != "Entity"), "Entity")
@@ -376,30 +302,25 @@ def entity_panel(eid: str, as_of: int | None = None) -> dict:
     ctx = _ctx(as_of)
     label = eid.split(":")[0]
     out: dict[str, Any] = {"id": eid}
-    r = G.ro("MATCH (e:Entity {id:$id}) RETURN e.name AS name, e.description AS d, labels(e) AS labels", {"id": eid},
-             template="entity")
+    r = G.q("entity", {"id": eid})
     if not r:
         raise HTTPException(404)
     out.update(r[0])
     if label in ("system", "project"):
         out["owner"] = run_tool(ctx, "get_owner", {"entity_id": eid})
         out["depended_on_by"] = run_tool(ctx, "find_paths", {"from_id": eid})
-        out["depends_on"] = G.ro("MATCH (x:Entity {id:$id})-[d:DEPENDS_ON]->(y) WHERE d.valid_from <= $V AND d.valid_to > $V "
-                 "RETURN y.id AS id, y.name AS name, d.aid AS aid", {"id": eid, "V": ctx.V}, template="depends_on")
+        out["depends_on"] = G.q("depends_on", {"id": eid, "V": ctx.V})
         out["decisions"] = run_tool(ctx, "trace_decision", {"entity_id": eid})
     if label == "team":
-        out["lead"] = G.ro("MATCH (p:Person)-[l:LEADS]->(:Team {id:$id}) WHERE l.valid_from <= $V AND l.valid_to > $V "
-                           "RETURN p.id AS id, p.name AS name, l.aid AS aid", {"id": eid, "V": ctx.V}, template="lead_at")
+        out["lead"] = [{"id": r["lead"], "name": r["name"], "aid": r["aid"]}
+                       for r in G.q("lead_at", {"t": eid, "V": ctx.V})]
     out["history"] = {}
     preds = {"system": ["OWNS", "DEPENDS_ON", "PART_OF"], "project": ["OWNS"], "team": ["LEADS", "OWNS"],
              "person": ["LEADS", "MEMBER_OF"], "ticket": ["ASSIGNED_TO", "HAS_STATE", "ABOUT"],
              "decision": ["HAS_STATUS", "REPLACES", "AFFECTS"]}.get(label, [])
     for p in preds:
         out["history"][p] = run_tool(ctx, "get_history", {"entity_id": eid, "predicate": p})
-    out["sources"] = G.ro("MATCH (:Entity {id:$id})<-[:MENTIONS]-(s:Span)<-[h:HAS_SPAN]-(src:Source) "
-                          "WHERE src.kind <> 'draft' AND src.is_latest = true "
-                          "RETURN src.kind AS kind, collect(DISTINCT {id:src.id, title:src.title}) AS sources",
-                          {"id": eid}, template="entity_sources")
+    out["sources"] = G.q("entity_sources", {"id": eid})
     return out
 
 
@@ -408,24 +329,18 @@ def graph(as_of: int | None = None, labels: str = "", source_kinds: str = "") ->
     V = as_of or now_ms()
     labs = [x for x in labels.split(",") if x]
     kinds = [x for x in source_kinds.split(",") if x]
-    edges = G.ro("MATCH (a:Entity)-[e]->(b:Entity) WHERE e.aid IS NOT NULL AND e.valid_from <= $V AND e.valid_to > $V "
-                 "RETURN a.id AS source, b.id AS target, type(e) AS type, e.aid AS aid, e.valid_from AS vf, "
-                 "e.valid_to AS vt, e.authority AS authority", {"V": V}, template="graph_edges", timeout=10000)
+    edges = G.q("graph_edges", {"V": V}, timeout=10000)
     aids = sorted({e["aid"] for e in edges})
-    kind_rows = G.ro("UNWIND $aids AS r MATCH (a:Assertion {run_id:r})-[ev:EVIDENCED_BY]->(s:Span) "
-                     "WHERE ev.authority >= 1 AND ev.removed_at = $max RETURN r AS aid, collect(DISTINCT s.kind) AS kinds",
-                     {"aids": aids, "max": MAX}, template="graph_edge_kinds", timeout=10000) if aids else []
+    kind_rows = G.q("graph_edge_kinds", {"aids": aids, "max": MAX}, timeout=10000) if aids else []
     kmap = {r["aid"]: r["kinds"] for r in kind_rows}
     for e in edges:
         e["kinds"] = kmap.get(e["aid"], [])
     if kinds:
         edges = [e for e in edges if set(e["kinds"]) & set(kinds)]
-    nodes = G.ro("MATCH (n:Entity) RETURN n.id AS id, n.name AS name, labels(n) AS labels", template="graph_nodes",
-                 timeout=10000)
+    nodes = G.q("graph_nodes", timeout=10000)
     ids_on = {e["source"] for e in edges} | {e["target"] for e in edges}
     if kinds:
-        mentioned = {r["id"] for r in G.ro("MATCH (s:Span)-[:MENTIONS]->(n:Entity) WHERE s.kind IN $k RETURN DISTINCT n.id AS id",
-                                           {"k": kinds}, template="graph_mentioned", timeout=10000)}
+        mentioned = {r["id"] for r in G.q("graph_mentioned", {"k": kinds}, timeout=10000)}
         ids_on |= mentioned
     nodes = [n for n in nodes if n["id"] in ids_on or not kinds]
     if labs:
@@ -436,14 +351,12 @@ def graph(as_of: int | None = None, labels: str = "", source_kinds: str = "") ->
     side = []
     for run_id, ds in disputed.items():
         for d in ds:
-            r = G.ro("MATCH (a:Assertion {id:$id}) RETURN a.subject_id AS s, a.object_id AS o, a.statement AS st",
-                     {"id": d}, template="dispute_edge")
+            r = G.q("dispute_edge", {"id": d})
             if r:
                 side.append({"run": run_id, "assertion_id": d, "source": r[0]["s"], "target": r[0]["o"],
                              "statement": r[0]["st"]})
     stale = Actions(G).stale_detection()
-    changes = G.ro("MATCH ()-[e]->() WHERE e.aid IS NOT NULL AND e.valid_from > 0 RETURN DISTINCT e.valid_from AS t "
-                   "ORDER BY t", template="graph_ticks", timeout=10000)
+    changes = G.q("graph_ticks", timeout=10000)
     return {"as_of": V, "nodes": nodes, "edges": edges, "disputed": side,
             "stale": [{"source": s["s"], "target": s["o"], "doc": s["title"], "why": s["why"], "span": s["span"],
                        "statement": s["statement"]} for s in stale],
@@ -454,21 +367,16 @@ def graph(as_of: int | None = None, labels: str = "", source_kinds: str = "") ->
 def neighbourhood(ids: str, as_of: int | None = None, hops: int = 1) -> dict:
     V = as_of or now_ms()
     h = max(1, min(2, hops))
-    typ = "|".join(__import__("brain.registry", fromlist=["PROJECTION_TYPES"]).PROJECTION_TYPES)
-    rows = G.ro(f"UNWIND $ids AS i MATCH p = (x:Entity {{id:i}})-[:{typ}*1..{h}]-(y:Entity) "
-                "WHERE all(e IN relationships(p) WHERE e.aid IS NOT NULL AND e.valid_from <= $V AND e.valid_to > $V) "
-                "UNWIND relationships(p) AS e RETURN DISTINCT startNode(e).id AS source, endNode(e).id AS target, "
-                "type(e) AS type, e.aid AS aid LIMIT 300", {"ids": ids.split(","), "V": V}, template="neighbourhood")
+    rows = G.q("neighbourhood", {"ids": ids.split(","), "V": V, "h": h})
     nid = sorted({r["source"] for r in rows} | {r["target"] for r in rows})
-    nodes = G.ro("UNWIND $ids AS i MATCH (n:Entity {id:i}) RETURN n.id AS id, n.name AS name, labels(n) AS labels",
-                 {"ids": nid}, template="nodes_by_id")
+    nodes = G.q("nodes_by_id", {"ids": nid})
     return {"nodes": nodes, "edges": rows}
 
 
 @app.get("/edges/{aid}")
 def edge(aid: str, as_of: int | None = None) -> dict:
     ctx = _ctx(as_of)
-    members = [r["id"] for r in G.ro("MATCH (a:Assertion {run_id:$r}) RETURN a.id AS id", {"r": aid}, template="run_members")]
+    members = [r["id"] for r in G.q("run_members", {"run": aid})]
     fs = facts(ctx, members or [aid])
     ev = evidence(ctx, [f["assertion_id"] for f in fs])
     return {"aid": aid, "facts": fs, "spans": span_items(ev)}
@@ -482,14 +390,7 @@ def history(eid: str, predicate: str) -> dict:
 @app.get("/people")
 def people() -> list[dict]:
     V = now_ms()
-    rows = G.ro("MATCH (p:Person) "
-                "OPTIONAL MATCH (p)-[m:MEMBER_OF]->(t:Team) WHERE m.primary = true AND m.valid_from <= $V AND m.valid_to > $V "
-                "WITH p, collect(t.name) AS team "
-                "OPTIONAL MATCH (p)-[l:LEADS]->(lt:Team) WHERE l.valid_from <= $V AND l.valid_to > $V "
-                "WITH p, team, collect(lt.name) AS leads "
-                "OPTIONAL MATCH (d:Decision)-[db:DECIDED_BY]->(p) WHERE db.valid_to > $V "
-                "RETURN p.id AS id, p.name AS name, p.title AS title, team, leads, collect(d.name) AS decides "
-                "ORDER BY name", {"V": V}, template="people", timeout=10000)
+    rows = G.q("people", {"V": V}, timeout=10000)
     return rows
 
 
@@ -500,8 +401,7 @@ def action_view(aid: str, session_id: str | None = None, c: Caller = Depends(cal
     pack = run_tool(_ctx(), "explain_action", {"action_id": aid})
     actor = _acting(session_id, c)
     undo = Actions(G).undo_preview(actor, aid) if actor else {"allowed": False, "undoers": []}
-    draft = G.ro("MATCH (:Action {id:$id})-[:PRODUCED]->(s:Source {kind:'draft'}) RETURN s.id AS id", {"id": aid},
-                 template="action_draft")
+    draft = G.q("action_draft", {"id": aid})
     return {"pack": pack, "undo": undo, "draft_source": draft[0]["id"] if draft else None,
             "request_id": str(uuid.uuid4())}
 
@@ -573,10 +473,7 @@ def undo(aid: str, body: Click, c: Caller = Depends(caller)) -> dict:
 @app.get("/people/{pid}/pending")
 def pending(pid: str) -> dict:
     acts = Actions(G)
-    props = G.ro("MATCH (ac:Action)-[:PRODUCED]->(p:Assertion) WHERE p.status = 'proposed' AND ac.status = 'done' "
-                 "AND NOT (p)<-[:CONFIRMS]-(:Assertion {status:'current'}) "
-                 "RETURN DISTINCT ac.id AS action_id, ac.kind AS kind, ac.summary AS summary, ac.actor AS actor",
-                 template="pending_proposals")
+    props = G.q("pending_proposals")
     awaiting, mine = [], []
     for p in props:
         pv = acts.confirm_preview(pid, action_id=p["action_id"])
@@ -588,11 +485,10 @@ def pending(pid: str) -> dict:
         for d in ds:
             pv = acts.confirm_preview(pid, assertion_id=d)
             if pv["admissible"] and pv["actor_eligible"]:
-                st = G.ro("MATCH (a:Assertion {id:$id}) RETURN a.statement AS s", {"id": d}, template="statement")
+                st = G.q("statement", {"id": d})
                 awaiting.append({"assertion_id": d, "summary": st[0]["s"] if st else d, "fallback": pv["fallback"],
                                  "type": "dispute"})
-    log = G.ro("MATCH (ac:Action {actor:$p}) RETURN ac.id AS id, ac.kind AS kind, ac.status AS status, "
-               "ac.summary AS summary, ac.recorded_at AS at ORDER BY at DESC LIMIT 50", {"p": pid}, template="action_log")
+    log = G.q("action_log", {"p": pid})
     for a in log:
         a["undo"] = acts.undo_preview(pid, a["id"])
     return {"awaiting": awaiting, "mine": mine, "log": log}

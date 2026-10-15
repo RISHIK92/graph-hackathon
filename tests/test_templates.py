@@ -27,6 +27,7 @@ from brain import providers, store, templates
 from brain.actions import Actions, Actor
 from brain.config import MAX
 from brain.db import Graph, with_params
+from brain.registry import PROJECTION_TYPES
 from brain.write_path import Candidate, WritePath
 
 from .conftest import PORTS, make_span, seed_basic
@@ -126,23 +127,51 @@ def fx(g, clock) -> Fixture:
 # parameters and golden rows per template
 
 PARAMS = {
+    "action_draft": lambda f: {"id": f.ids["action"]},
+    "action_log": lambda f: {"p": "person:eve"},
     "action_read": lambda f: {"id": f.ids["action"]},
+    "any_person": lambda f: {},
     "assertions_by_id": lambda f: {"ids": [f.ids["own"], f.ids["chat"]]},
     "chains_for_entity": lambda f: {"e": "system:ledger", "p": "OWNS"},
     "decision_trace": lambda f: {"d": "decision:adr-002", "V": f.now, "T": f.now},
     "decisions_affecting": lambda f: {"x": "system:ledger", "V": f.now},
+    "demo_identity": lambda f: {},
+    "depends_on": lambda f: {"id": "system:checkout", "V": f.now},
+    "directory_decisions": lambda f: {"V": f.now},
+    "directory_people": lambda f: {"V": f.now},
+    "directory_projects": lambda f: {"V": f.now},
+    "directory_systems": lambda f: {"V": f.now},
+    "directory_tickets": lambda f: {"V": f.now},
+    "dispute_chains": lambda f: {"max": MAX},
+    "dispute_edge": lambda f: {"id": f.ids["chat"]},
+    "draft_status": lambda f: {"id": f.g.q("action_draft", {"id": f.ids["action"]})[0]["id"]},
+    "entity": lambda f: {"id": "system:ledger"},
+    "entity_sources": lambda f: {"id": "system:ledger"},
     "evidence_fragment": lambda f: {"aids": [f.ids["own"], f.ids["proposal"]], "T": f.now},
     "experts_signals": lambda f: {"x": "system:ledger", "V": f.now},
+    "graph_edge_kinds": lambda f: {"aids": [f.ids["own"], f.ids["dep1"]], "max": MAX},
+    "graph_edges": lambda f: {"V": f.now},
+    "graph_mentioned": lambda f: {"k": ["wiki"]},
+    "graph_nodes": lambda f: {},
+    "graph_ticks": lambda f: {},
     "impact_dependents": lambda f: {"x": "system:ledger", "V": f.now},
     "lead_at": lambda f: {"t": "team:payments", "V": f.now},
     "link_exact": lambda f: {"q": "ledger-service"},
     "link_fulltext": lambda f: {"q": "ledger"},
     "link_vector": lambda f: {"k": 3, "vec": f.vec("Ledger")},
+    "names": lambda f: {"ids": ["ledger", "person:priya", "nope"]},
+    "neighbourhood": lambda f: {"ids": ["system:checkout"], "V": f.now, "h": 1},
+    "nodes_by_id": lambda f: {"ids": ["system:ledger", "team:payments"]},
+    "overview_decisions": lambda f: {"V": f.now},
+    "overview_pending": lambda f: {},
+    "overview_teams": lambda f: {"V": f.now},
     "owner_at": lambda f: {"x": "system:ledger", "V": f.now},
     "owner_inherited": lambda f: {"x": "system:ledger", "V": f.now},
     "owner_previous": lambda f: {"x": "system:ledger", "V": f.now},
     "past_belief_members": lambda f: {"members": [f.ids["own"]], "T": f.now},
     "past_belief_run": lambda f: {"chain": "ch_OWNS:system:ledger", "T": f.now, "V": f.now},
+    "pending_proposals": lambda f: {},
+    "people": lambda f: {"V": f.now},
     "proposal_links": lambda f: {"ids": [f.ids["proposal"]], "now": f.now},
     "proposals_about": lambda f: {"e": "ticket:rds-42"},
     "replaced_by": lambda f: {"d": "decision:adr-001", "V": f.now},
@@ -150,7 +179,10 @@ PARAMS = {
     "search_fulltext": lambda f: {"q": "ledger"},
     "search_vector": lambda f: {"k": 4, "vec": f.vec("Payments owns Ledger")},
     "session_spans": lambda f: {"user": "u1"},
+    "source_view": lambda f: {"id": "src:test"},
     "span_details": lambda f: {"sids": ["sp_own", "turn1"], "T": f.now},
+    "span_view": lambda f: {"id": "sp_own", "max": MAX},
+    "statement": lambda f: {"id": f.ids["own"]},
 }
 
 
@@ -327,6 +359,181 @@ def g_span_details(f, rows):
     assert [(x["src"], x["kind"], x["live"]) for x in r["turn1"]["revs"]] == [("sess1", "chat_session", True)]
 
 
+NULL_REF = {"id": None, "name": None}
+
+
+def g_action_draft(f, rows):
+    assert len(rows) == 1 and rows[0]["id"].startswith("src_draft_")
+
+
+def g_action_log(f, rows):
+    assert [(r["id"], r["kind"], r["status"]) for r in rows] == [(f.ids["action"], "route_to_owner", "done")]
+
+
+def g_any_person(f, rows):
+    assert rows == [{"id": "person:bob"}]
+
+
+def g_demo_identity(f, rows):
+    assert rows == []                                   # the fixture has no world_meta Source
+
+
+def g_depends_on(f, rows):
+    assert rows == [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["dep1"]}]
+
+
+def g_directory_decisions(f, rows):
+    r = _by(rows, "id")
+    assert list(r) == ["decision:adr-001", "decision:adr-002"]
+    new = r["decision:adr-002"]
+    assert (new["title"], new["status"]) == ("Move Ledger to Postgres", "accepted")
+    assert new["affects"] == [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["affects"]}]
+    assert new["deciders"] == [{"id": "person:priya", "name": "Priya Raman"}]
+    assert new["replaces"] == [{"id": "decision:adr-001", "name": "ADR-001"}]
+    assert r["decision:adr-001"]["replaced_by"] == [{"id": "decision:adr-002", "name": "ADR-002"}]
+
+
+def g_directory_people(f, rows):
+    r = _by(rows, "id")
+    assert list(r) == ["person:bob", "person:eve", "person:priya"]
+    assert r["person:priya"]["leads"] == [{"id": "team:payments", "name": "Payments"}]
+    assert r["person:priya"]["decides"] == [{"id": "decision:adr-002", "name": "ADR-002"}]
+    assert r["person:priya"]["team"] == NULL_REF and r["person:priya"]["tickets"] == 0   # routing only proposed
+
+
+def g_directory_projects(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["id"] == "project:commerce"
+    assert r["owner"] == {"id": "team:platform", "name": "Platform", "aid": f.ids["own_proj"]}
+    assert r["systems"] == [{"id": "system:ledger", "name": "Ledger"}] and r["people"] == 0
+
+
+def g_directory_systems(f, rows):
+    r = _by(rows, "id")
+    assert list(r) == ["system:checkout", "system:ledger", "system:storefront"]
+    led = r["system:ledger"]
+    assert led["owner"] == {"id": "team:payments", "name": "Payments", "aid": f.ids["own"]}
+    assert led["project"] == {"id": "project:commerce", "name": "Commerce"}
+    assert (led["depends_on"], led["depended_on_by"], led["decisions"]) == (0, 1, 1)
+    assert (r["system:checkout"]["depends_on"], r["system:checkout"]["depended_on_by"]) == (1, 1)
+
+
+def g_directory_tickets(f, rows):
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["id"] == "ticket:rds-42" and r["about"] == {"id": "system:ledger", "name": "Ledger"}
+    assert r["assignee"]["id"] is None and r["state"] is None      # the routing is only proposed
+
+
+def g_dispute_chains(f, rows):
+    assert rows == [{"chain": "ch_OWNS:system:ledger"}]
+
+
+def g_dispute_edge(f, rows):
+    assert rows == [{"s": "team:infra", "o": "system:ledger", "st": "Infra owns Ledger"}]
+
+
+def g_draft_status(f, rows):
+    assert rows == [{"s": "done"}]
+
+
+def g_entity(f, rows):
+    assert rows == [{"name": "Ledger", "d": "", "labels": ["Entity", "System"]}]
+
+
+def g_entity_sources(f, rows):
+    assert rows == [{"kind": "wiki", "sources": [{"id": "src:test", "title": "src:test"}]}]
+
+
+def g_graph_edge_kinds(f, rows):
+    assert _by(rows, "aid") == {f.ids["own"]: {"aid": f.ids["own"], "kinds": ["wiki"]},
+                                f.ids["dep1"]: {"aid": f.ids["dep1"], "kinds": ["wiki"]}}
+
+
+def g_graph_edges(f, rows):
+    got = {(r["source"], r["type"], r["target"]): r for r in rows}
+    assert set(got) == {
+        ("team:payments", "OWNS", "system:ledger"), ("team:platform", "OWNS", "project:commerce"),
+        ("system:ledger", "PART_OF", "project:commerce"), ("person:priya", "LEADS", "team:payments"),
+        ("ticket:rds-42", "ABOUT", "system:ledger"), ("system:checkout", "DEPENDS_ON", "system:ledger"),
+        ("system:storefront", "DEPENDS_ON", "system:checkout"), ("decision:adr-002", "AFFECTS", "system:ledger"),
+        ("decision:adr-002", "DECIDED_BY", "person:priya"), ("decision:adr-002", "REPLACES", "decision:adr-001")}
+    own = got[("team:payments", "OWNS", "system:ledger")]   # not Platform's ended claim nor Infra's disputed one
+    assert (own["aid"], own["vf"], own["vt"], own["authority"]) == (f.ids["own"], 5, MAX, 4)
+
+
+def g_graph_mentioned(f, rows):
+    assert rows == [{"id": "system:ledger"}]
+
+
+def g_graph_nodes(f, rows):
+    r = _by(rows, "id")
+    assert len(r) == 13 and r["system:ledger"] == {"id": "system:ledger", "name": "Ledger", "labels": ["Entity", "System"]}
+
+
+def g_graph_ticks(f, rows):
+    assert rows == [{"t": 1}, {"t": 3}, {"t": 5}]
+
+
+def g_names(f, rows):
+    assert sorted(rows, key=lambda r: r["id"]) == [
+        {"id": "person:priya", "name": "Priya Raman", "labels": ["Entity", "Person"]},
+        {"id": "system:ledger", "name": "Ledger", "labels": ["Entity", "System"]}]   # "ledger" by bare id
+
+
+def g_neighbourhood(f, rows):
+    assert sorted((r["source"], r["type"], r["target"], r["aid"]) for r in rows) == [
+        ("system:checkout", "DEPENDS_ON", "system:ledger", f.ids["dep1"]),
+        ("system:storefront", "DEPENDS_ON", "system:checkout", f.ids["dep2"])]       # h=1: no Ledger edges
+
+
+def g_nodes_by_id(f, rows):
+    assert [r["id"] for r in rows] == ["system:ledger", "team:payments"]
+
+
+def g_overview_decisions(f, rows):
+    assert rows == [{"id": "decision:adr-002", "name": "ADR-002", "title": "Move Ledger to Postgres",
+                     "aid": f.ids["status"], "affects": [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["affects"]}]}]
+
+
+def g_overview_pending(f, rows):
+    assert [(r["action_id"], r["kind"]) for r in rows] == [(f.ids["action"], "route_to_owner")]
+
+
+def g_overview_teams(f, rows):
+    r = _by(rows, "id")
+    assert list(r) == ["team:infra", "team:payments", "team:platform"]
+    assert r["team:payments"]["leads"] == [{"id": "person:priya", "name": "Priya Raman", "aid": f.ids["lead"]}]
+    assert r["team:payments"]["owns"] == [{"id": "system:ledger", "name": "Ledger", "aid": f.ids["own"]}]
+    assert r["team:platform"]["owns"] == [{"id": "project:commerce", "name": "Commerce", "aid": f.ids["own_proj"]}]
+    assert [x for x in r["team:infra"]["owns"] if x["id"]] == []       # Infra's chat claim is disputed
+
+
+def g_pending_proposals(f, rows):
+    assert [(r["action_id"], r["actor"]) for r in rows] == [(f.ids["action"], "person:eve")]
+
+
+def g_people(f, rows):
+    r = _by(rows, "id")
+    assert list(r) == ["person:bob", "person:eve", "person:priya"]
+    assert (r["person:priya"]["leads"], r["person:priya"]["decides"]) == (["Payments"], ["ADR-002"])
+
+
+def g_source_view(f, rows):
+    assert len(rows) == 1 and rows[0]["source"]["id"] == "src:test"
+    assert {s["span"] for s in rows[0]["spans"]} == set(TEXTS)
+
+
+def g_span_view(f, rows):
+    assert rows == [{"text": "Payments owns Ledger", "kind": "wiki", "ts": 1, "revisions": [
+        {"source": "src:test", "title": "src:test", "uri": "", "cs": 0, "ce": 20, "latest": True, "live": True}]}]
+
+
+def g_statement(f, rows):
+    assert rows == [{"s": "Payments owns Ledger"}]
+
+
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}
 
 
@@ -361,7 +568,11 @@ def check_snapshot(version: str, name: str, plan: list[str]) -> None:
 
 
 def check_index(name: str, plan: list[str]) -> None:
-    anchor = templates.header(name)["indexes"].split(",")[0].strip()
+    indexes = templates.header(name)["indexes"]
+    if indexes.startswith("none"):     # an intentional scan must say why
+        assert re.fullmatch(r"none \(.+\)", indexes), f"{name}: `indexes: none` needs a reason in parentheses"
+        return
+    anchor = indexes.split(",")[0].strip()
     text = "\n".join(plan)
     if anchor.startswith("full-text"):
         ok = "Fulltext Index Scan" in text or "ProcedureCall" in text
@@ -450,3 +661,9 @@ def test_header(name: str):
     for k in h["indexes"], h["purpose"], h["name"]:
         assert k
     assert h["name"] == name
+
+
+def test_neighbourhood_types_match_registry():
+    """The neighbourhood template hard-codes the projection types (a type list can't be a parameter)."""
+    m = re.search(r"\[:([A-Z_|]+)\*1\.\.2\]", templates.body("neighbourhood"))
+    assert m and m.group(1).split("|") == PROJECTION_TYPES

@@ -1,0 +1,7 @@
+Aggregate
+    Filter
+        Conditional Traverse | (src)-[h:HAS_SPAN]->(s:Span)
+            Conditional Traverse | (e)<-(s:Span)
+                Project
+                    Filter
+                        Node By Index Scan | (e:Entity)

@@ -1,0 +1,21 @@
+Sort
+    Aggregate
+        Optional
+            Aggregate
+                Apply
+                    Aggregate
+                        Apply
+                            Node By Label Scan | (k:Ticket)
+                            Optional
+                                Filter
+                                    Filter
+                                        Edge By Index Scan | (k)-[ab:ABOUT]->(x:Entity)
+                                            Argument
+                    Optional
+                        Filter
+                            Filter
+                                Edge By Index Scan | (k)-[a:ASSIGNED_TO]->(p:Person)
+                                    Argument
+            Filter
+                Node By Index Scan | (st:Assertion)
+                    Argument

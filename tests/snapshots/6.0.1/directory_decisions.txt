@@ -1,0 +1,23 @@
+Sort
+    Aggregate
+        Apply
+            Aggregate
+                Optional Conditional Traverse | (old)<-[r:REPLACES]-(d)
+                    Aggregate
+                        Apply
+                            Aggregate
+                                Apply
+                                    Node By Label Scan | (d:Decision)
+                                    Optional
+                                        Filter
+                                            Filter
+                                                Edge By Index Scan | (d)-[a:AFFECTS]->(x:Entity)
+                                                    Argument
+                            Optional
+                                Filter
+                                    Filter
+                                        Edge By Index Scan | (d)-[db:DECIDED_BY]->(w:Person)
+                                            Argument
+            Optional
+                Conditional Traverse | (new)-[r2:REPLACES]->(d)
+                    Argument

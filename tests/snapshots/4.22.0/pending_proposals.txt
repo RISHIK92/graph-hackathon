@@ -1,0 +1,11 @@
+Results
+    Distinct
+        Project
+            Filter
+                Conditional Traverse | (p)->(ac:Action)
+                    Anti Semi Apply
+                        Filter
+                            Node By Label Scan | (p:Assertion)
+                        Filter
+                            Conditional Traverse | (p)->(anon_1:Assertion)
+                                Argument

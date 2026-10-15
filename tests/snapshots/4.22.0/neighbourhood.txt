@@ -1,0 +1,10 @@
+Results
+    Limit
+        Distinct
+            Project
+                Unwind
+                    Conditional Traverse | (y:Entity)->(y:Entity)
+                        Filter
+                            Conditional Variable Length Traverse | (x)-[anon_0:ABOUT|AFFECTS|ASSIGNED_TO|DECIDED_BY|DEPENDS_ON|LEADS|MEMBER_OF|OWNS|PART_OF|REPLACES|WORKS_ON*1..2]->(y)
+                                Node By Index Scan | (x:Entity)
+                                    Unwind

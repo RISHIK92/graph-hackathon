@@ -1,0 +1,3 @@
+Project
+    Filter
+        Node By Label Scan | (e:Entity)

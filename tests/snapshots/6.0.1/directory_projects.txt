@@ -1,0 +1,22 @@
+Sort
+    Aggregate
+        Apply
+            Aggregate
+                Apply
+                    Aggregate
+                        Apply
+                            Node By Label Scan | (p:Project)
+                            Optional
+                                Filter
+                                    Filter
+                                        Edge By Index Scan | (p)-[o:OWNS]->(t:Team)
+                                            Argument
+                    Optional
+                        Filter
+                            Filter
+                                Edge By Index Scan | (p)-[pp:PART_OF]->(s:System)
+                                    Argument
+            Optional
+                Filter
+                    Edge By Index Scan | (w)-[wo:WORKS_ON]->(p)
+                        Argument

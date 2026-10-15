@@ -1,0 +1,10 @@
+Sort
+    Aggregate
+        Apply
+            Filter
+                Node By Label Scan | (d:Decision)
+            Optional
+                Filter
+                    Filter
+                        Edge By Index Scan | (d)-[a:AFFECTS]->(x:Entity)
+                            Argument

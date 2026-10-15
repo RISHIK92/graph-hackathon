@@ -1,0 +1,19 @@
+Results
+    Sort
+        Aggregate
+            Optional Conditional Traverse | (d)->(new:Decision)
+                Aggregate
+                    Optional Conditional Traverse | (d)->(old:Decision)
+                        Aggregate
+                            Apply
+                                Aggregate
+                                    Apply
+                                        Node By Label Scan | (d:Decision)
+                                        Optional
+                                            Filter
+                                                Edge By Index Scan | [a:AFFECTS]
+                                                    Argument
+                                Optional
+                                    Filter
+                                        Edge By Index Scan | [db:DECIDED_BY]
+                                            Argument

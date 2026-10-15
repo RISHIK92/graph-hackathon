@@ -1,0 +1,4 @@
+Project
+    Conditional Traverse | (src)<-(ac:Action)
+        Filter
+            Node By Index Scan | (src:Source)

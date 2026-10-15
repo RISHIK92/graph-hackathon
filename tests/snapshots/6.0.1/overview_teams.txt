@@ -1,0 +1,22 @@
+Sort
+    Aggregate
+        Apply
+            Aggregate
+                Apply
+                    Aggregate
+                        Apply
+                            Node By Label Scan | (t:Team)
+                            Optional
+                                Filter
+                                    Filter
+                                        Edge By Index Scan | (p)-[l:LEADS]->(t:Team)
+                                            Argument
+                    Optional
+                        Filter
+                            Filter
+                                Edge By Index Scan | (m)-[mm:MEMBER_OF]->(t:Team)
+                                    Argument
+            Optional
+                Filter
+                    Edge By Index Scan | (x)-[o:OWNS]->(t)
+                        Argument

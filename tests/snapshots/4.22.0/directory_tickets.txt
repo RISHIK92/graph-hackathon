@@ -1,0 +1,21 @@
+Results
+    Sort
+        Aggregate
+            Apply
+                Aggregate
+                    Apply
+                        Aggregate
+                            Apply
+                                Node By Label Scan | (k:Ticket)
+                                Optional
+                                    Filter
+                                        Edge By Index Scan | [ab:ABOUT]
+                                            Argument
+                        Optional
+                            Filter
+                                Edge By Index Scan | [a:ASSIGNED_TO]
+                                    Argument
+                Optional
+                    Filter
+                        Node By Index Scan | (st:Assertion)
+                            Argument
