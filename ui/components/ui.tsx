@@ -221,13 +221,21 @@ export function Modal({ title, size, onClose, children, footer, busy }: {
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const labelId = useId();
+  // Callers pass onClose inline; reading it through a ref keeps the focus effect from re-running (and
+  // stealing focus from the field being typed in) on every render.
+  const close = useRef(onClose);
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    close.current = onClose;
+    busyRef.current = busy;
+  });
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     const el = ref.current;
     const focusables = () => Array.from(el?.querySelectorAll<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])") || []).filter((x) => !x.hasAttribute("disabled"));
     (focusables()[0] || el)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) { e.stopPropagation(); onClose(); }
+      if (e.key === "Escape" && !busyRef.current) { e.stopPropagation(); close.current(); }
       if (e.key === "Tab") {
         const f = focusables();
         if (!f.length) return;
@@ -244,7 +252,7 @@ export function Modal({ title, size, onClose, children, footer, busy }: {
       document.body.style.overflow = body;
       prev?.focus?.();
     };
-  }, [onClose, busy]);
+  }, []);
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
       <div className={`modal ${size || ""}`} role="dialog" aria-modal="true" aria-labelledby={labelId} ref={ref} tabIndex={-1}>
