@@ -20,6 +20,7 @@ interface Turn {
   answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string; lead?: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
   actions: StreamEvent[];
   turnId?: string;
+  actor: string;   // who asked: the acting person at the time, not whoever is acting now (M2)
   writeSeq: number;
   done: boolean;
   error?: string;
@@ -57,7 +58,7 @@ function Ask() {
     setBusy(true);
     setText("");
     const idx = turns.length;
-    setTurns((t) => [...t, { text: q, at: Date.now(), asOf: s.asOf, stages: [], actions: [], writeSeq: s.lastWrite?.seq || 0, done: false }]);
+    setTurns((t) => [...t, { text: q, at: Date.now(), asOf: s.asOf, stages: [], actions: [], actor: s.actingAs, writeSeq: s.lastWrite?.seq || 0, done: false }]);
     const upd = (f: (t: Turn) => Turn) => setTurns((all) => all.map((t, i) => (i === idx ? f(t) : t)));
     const ac = new AbortController();
     abortRef.current = ac;
@@ -195,7 +196,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
   const plan = t.stages.find((e) => e.event === "plan");
   const toolCalls = t.stages.filter((e) => e.event === "tool_call");
   const verification = t.stages.find((e) => e.event === "verification");
-  const me = s.people.find((p) => p.id === s.actingAs);
+  const me = s.people.find((p) => p.id === t.actor);
 
   // group lines by intent (DESIGN.md §4.2)
   const lines = useMemo(() => (t.answer?.assembled.lines || []).map((l) => ({ ...l, text: l.text.replace(/\s*\(disputed\)/gi, "") })), [t.answer]);
