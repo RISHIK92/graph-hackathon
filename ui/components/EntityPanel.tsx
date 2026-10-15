@@ -7,7 +7,7 @@ import { fmtDate, KIND_LABEL, labelOf, predicateLabel } from "@/lib/format";
 import { useApi, useOpenMode, useStore } from "@/lib/store";
 import type { EntityPanel as EntityPanelData, Pack, Path } from "@/lib/types";
 import { FactRow, PackContext } from "./Chips";
-import { collectDisputes, DisputeBlock } from "./Dispute";
+import { collectDisputes, DisputeBlock, type DisputeGroup } from "./Dispute";
 import { HistoryTimeline } from "./Timeline";
 import { Button, Chip, Empty, EntityLink, ErrorState, Placeholder, Skeleton, Tabs } from "./ui";
 
@@ -18,6 +18,14 @@ export function useEntity(id: string) {
 
 export function packsOf(data: EntityPanelData | null): Pack[] {
   return data ? ([data.owner, data.depended_on_by, data.decisions, ...Object.values(data.history || {})].filter(Boolean) as Pack[]) : [];
+}
+
+/** B2: disputes about this entity only; the impact and decision packs also carry its neighbours' disputes. */
+export function disputesOf(data: EntityPanelData | null, id: string): DisputeGroup[] {
+  return collectDisputes(packsOf(data)).filter((g) => {
+    const f = g.recorded || g.challengers[0]?.fact;
+    return !!f && (f.subject_id === id || f.object_id === id);
+  });
 }
 
 /** Entity header actions shared by the inspector peek and the page. */
@@ -37,7 +45,7 @@ export function EntityActions({ data, id, inPage }: { data: EntityPanelData | nu
 export function EntitySummary({ data, id, full }: { data: EntityPanelData; id: string; full?: boolean }) {
   const { asOf } = useStore();
   const packs = packsOf(data);
-  const disputes = collectDisputes(packs);
+  const disputes = disputesOf(data, id);
   const label = labelOf(data.labels, id);
   const ownerFacts = (data.owner?.items || []).filter((it) => it.note !== "open dispute");
   const historyEntries = Object.entries(data.history || {}).filter(([, p]) => p.items.length);
@@ -177,9 +185,9 @@ export function EntitySources({ data }: { data: EntityPanelData }) {
   );
 }
 
-export function EntityDisputes({ data }: { data: EntityPanelData }) {
+export function EntityDisputes({ data, id }: { data: EntityPanelData; id: string }) {
   const packs = packsOf(data);
-  const disputes = collectDisputes(packs);
+  const disputes = disputesOf(data, id);
   if (!disputes.length) return <Empty icon={Flag} title="No open disputes">Every recorded fact about this entity is unchallenged.</Empty>;
   return (
     <PackContext.Provider value={{ packs, fromTurn: false }}>
@@ -191,7 +199,7 @@ export function EntityDisputes({ data }: { data: EntityPanelData }) {
 /** Inspector peek: summary with the tab row (DESIGN.md §4.4). */
 export function EntityPeek({ id, tab, setTab }: { id: string; tab: string; setTab: (t: string) => void }) {
   const { data, error, reload } = useEntity(id);
-  const disputes = data ? collectDisputes(packsOf(data)).length : 0;
+  const disputes = disputesOf(data, id).length;
   return (
     <div className="inspector-body flush">
       <Tabs
@@ -210,7 +218,7 @@ export function EntityPeek({ id, tab, setTab }: { id: string; tab: string; setTa
         {data && tab === "overview" && <EntitySummary data={data} id={id} />}
         {data && tab === "history" && <EntityHistory data={data} />}
         {data && tab === "sources" && <EntitySources data={data} />}
-        {data && tab === "disputes" && <EntityDisputes data={data} />}
+        {data && tab === "disputes" && <EntityDisputes data={data} id={id} />}
       </div>
     </div>
   );

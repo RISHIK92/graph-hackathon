@@ -3,8 +3,7 @@
 import { Search } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { EntityActions, EntityDisputes, EntityHistory, EntitySources, EntitySummary, packsOf, useEntity } from "@/components/EntityPanel";
-import { collectDisputes } from "@/components/Dispute";
+import { disputesOf, EntityActions, EntityDisputes, EntityHistory, EntitySources, EntitySummary, useEntity } from "@/components/EntityPanel";
 import { PageHeader } from "@/components/PageHeader";
 import { Button, Chip, Empty, ErrorState, Skeleton, Tabs } from "@/components/ui";
 import { qs } from "@/lib/api";
@@ -24,7 +23,7 @@ function EntityInner() {
   const setTab = (t: string) => router.replace(`/e/${encodeURIComponent(id)}${qs({ tab: t === "overview" ? "" : t })}`);
   const s = useStore();
   const { data, error, reload } = useEntity(id);
-  const disputes = data ? collectDisputes(packsOf(data)).length : 0;
+  const disputes = disputesOf(data, id).length;
   const notFound = error && /404|not found/i.test(error);
 
   return (
@@ -50,7 +49,7 @@ function EntityInner() {
         {data && tab === "overview" && <EntitySummary data={data} id={id} full />}
         {data && tab === "history" && <EntityHistory data={data} />}
         {data && tab === "sources" && <EntitySources data={data} />}
-        {data && tab === "disputes" && <EntityDisputes data={data} />}
+        {data && tab === "disputes" && <EntityDisputes data={data} id={id} />}
       </div>
     </div>
   );
