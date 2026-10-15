@@ -1029,3 +1029,11 @@ def test_path_template_types_match_registry(name: str):
     """These templates hard-code the projection types (a type list can't be a parameter)."""
     m = re.search(r"\[:([A-Z_|]+)\*1\.\.\d\]", templates.body(name))
     assert m and m.group(1).split("|") == PROJECTION_TYPES
+
+
+def test_readme_cypher_section_matches_templates():
+    """The README lists the shipped Cypher (07 §3); `python -m brain.readme` regenerates it."""
+    from brain import readme
+    text = (Path(__file__).parent.parent / "README.md").read_text()
+    block = text[text.index(readme.START) + len(readme.START):text.index(readme.END)]
+    assert block.strip() == readme.section().strip(), "README Cypher section is stale: run `python -m brain.readme`"
