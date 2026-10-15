@@ -211,7 +211,9 @@ def judge_history(q: dict, ans: dict) -> dict | None:
     lines = [f"- [{l['status']}] {l['text']}" for l in ans["assembled"]["lines"]]
     body = (f"QUESTION: {q['question']}\nAS_OF: {_iso(q.get('as_of'))}"
             + (f"\nBELIEF_AT: {_iso(q['belief_at'])}" if q.get("belief_at") else "")
-            + ("\nANSWER: (abstained)" if ans["abstained"] else "\nANSWER LINES:\n" + "\n".join(lines))
+            + ("\nANSWER: (abstained)" if ans["abstained"] else
+               (f"\nANSWER: {ans['assembled']['lead']}" if ans["assembled"].get("lead") else "")
+               + "\nANSWER LINES:\n" + "\n".join(lines))
             + (f"\nEXPLANATION: {ans['assembled'].get('explanation', '')[:800]}" if ans["assembled"].get("explanation") else ""))
     try:
         res = providers.complete([{"role": "system", "content": JUDGE_RUBRIC}, {"role": "user", "content": body}],
@@ -258,7 +260,7 @@ def evaluate(agent: Agent, q: dict, as_of: int, variant: str = "D") -> dict:
     gold = {s_ for g in gold_groups for s_ in g}
     ents = _cited_entities(ans)
     texts = " ".join(sp["text"] for sid, sp in span_meta.items() if sid in cited).lower()
-    answer_text = " ".join(l["text"] for l in ans["assembled"]["lines"]) + " " + (ans["assembled"].get("explanation") or "")
+    answer_text = ((ans["assembled"].get("lead") or "") + " ").lstrip() + " ".join(l["text"] for l in ans["assembled"]["lines"]) + " " + (ans["assembled"].get("explanation") or "")
     exp = q.get("expected_entities") or []
     entity = entity_p = entity_f1 = None
     if exp:
