@@ -138,7 +138,16 @@ class Agent:
         if ver["dropped"] and not ver["abstained"] and providers.llm_available():
             answer = self.draft(text, plan, packs, errors=ver["dropped"])
             ver = verify(answer, ctx.packs)
-        trace["verification"] = {"kept": len(ver["kept"]), "dropped": ver["dropped"], "rewritten": ver["rewritten"]}
+        drafted = answer.get("drafted", "deterministic")
+        if ver["abstained"] and drafted == "llm":
+            # The LLM may rephrase, never veto (item 18): an LLM draft that abstains, comes back empty or
+            # loses over half its claims yields to the deterministic draft when that one verifies.
+            base = deterministic_draft(plan, packs, text)
+            bver = verify(base, ctx.packs)
+            if not bver["abstained"]:
+                answer, ver, drafted = base, bver, "deterministic"
+        trace["verification"] = {"kept": len(ver["kept"]), "dropped": ver["dropped"], "rewritten": ver["rewritten"],
+                                 "draft": drafted}
         yield {"event": "verification", "kept": len(ver["kept"]), "dropped": ver["dropped"],
                "rewritten": ver["rewritten"]}
         final = {"claims": ver["kept"], "abstained": ver["abstained"],
@@ -264,12 +273,14 @@ class Agent:
 
     # draft
     def draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None = None) -> dict:
-        base = deterministic_draft(plan, packs, text)
+        base = {**deterministic_draft(plan, packs, text), "drafted": "deterministic"}
         if not providers.llm_available():
             return base
         try:
             llm = self._llm_draft(text, plan, packs, errors)
         except Exception:  # noqa: BLE001
+            return base
+        if not llm["claims"]:   # an empty or abstaining LLM draft never vetoes the graph's answer (item 18)
             return base
         # Hybrid: the LLM's claims and explanation, plus any graph fact it left out. Free-tier models
         # often return no claims for large packs; the deterministic claims are always complete.
@@ -278,7 +289,7 @@ class Agent:
         extra = [c for c in base["claims"] if c.get("assertion_ids") and not set(c["assertion_ids"]) & have]
         for i, c in enumerate(extra):
             c["claim_id"] = f"d{i + 1}"
-        return {"claims": llm["claims"] + extra, "explanation": llm.get("explanation", "")}
+        return {"claims": llm["claims"] + extra, "explanation": llm.get("explanation", ""), "drafted": "llm"}
 
     def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None) -> dict:
         slim = []

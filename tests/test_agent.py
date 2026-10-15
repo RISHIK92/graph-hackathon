@@ -184,3 +184,26 @@ def test_aggregate_claim_with_a_wrong_count_is_dropped(world):
     assert verify({"claims": [claim]}, {pack["pack_id"]: pack})["kept"] == [claim]
     claim["assertion_ids"] = claim["assertion_ids"][:1]
     assert verify({"claims": [claim]}, {pack["pack_id"]: pack})["dropped"][0]["rule"] == "V10"
+
+
+def test_llm_draft_never_vetoes_a_verified_deterministic_answer(world, monkeypatch):
+    """Item 18 fix 1: an LLM draft that abstains or loses most of its claims falls back to the
+    deterministic draft when that verifies; the trace says so."""
+    from api import agent as agent_mod
+
+    def no_model(*a, **k):
+        raise RuntimeError("offline test")
+
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", no_model)
+    bogus = [{"claim_id": f"c{i}", "text": "made up", "tense": "current", "span_ids": [f"sp_missing{i}"],
+              "assertion_ids": [], "action_ids": [], "label": "text"} for i in range(4)]
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    for llm in ({"claims": bogus, "explanation": ""}, {"claims": [], "explanation": "The evidence doesn't say."}):
+        monkeypatch.setattr(Agent, "_llm_draft", lambda self, *a, llm=llm, **k: llm)
+        ev = run(agent, s, "Who owns Ledger?")
+        ans = answer_of(ev)
+        assert not ans["abstained"]
+        assert any("Payments owns Ledger" in l["text"] for l in ans["assembled"]["lines"])
+        assert agent.turn_log[ans["turn_id"]]["verification"]["draft"] == "deterministic"
