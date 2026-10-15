@@ -1,4 +1,8 @@
+from dataclasses import replace
+
+from brain import tools
 from brain.actions import Actions, Actor
+from brain.config import settings
 from brain.tools import Ctx, run_tool
 
 from .conftest import make_span
@@ -47,6 +51,31 @@ def test_past_belief_owner(world):
     assert cur["items"][0]["facts"][0]["subject_id"] == "team:infra"
     past = run_tool(Ctx(g, now=now, belief_at=t_before, as_of=60), "get_owner", {"entity_id": "system:ledger"})
     assert past["items"][0]["facts"][0]["subject_id"] == "team:payments"
+
+
+def test_cypher_engine_matches_python_on_as_of_reads(world, monkeypatch):
+    """PAST_BELIEF_ENGINE=cypher (A38, A46): the Cypher engine runs without falling back and the packs
+    equal the Python reference's, on both versions."""
+    g, clock, wp = world["g"], world["clock"], world["wp"]
+    t_before = clock()
+    clock.tick()
+    make_span(g, "sp_new", "catalog v2", 2)
+    _fact(wp, "OWNS", "team:infra", "system:ledger", 50, "sp_new")
+    now = clock.tick()
+    real, calls = tools.past_belief_cypher, []
+
+    def spy(*a):
+        calls.append(real(*a))
+        return calls[-1]
+    monkeypatch.setattr(tools, "past_belief_cypher", spy)
+    for t, v in ((t_before, 60), (now, 60), (now, 10)):
+        ctx = lambda: Ctx(g, now=now, belief_at=t, as_of=v)  # noqa: E731
+        monkeypatch.setattr(tools, "settings", replace(settings, past_belief_engine="python"))
+        ref = run_tool(ctx(), "get_owner", {"entity_id": "system:ledger"})
+        monkeypatch.setattr(tools, "settings", replace(settings, past_belief_engine="cypher"))
+        n = len(calls)
+        assert run_tool(ctx(), "get_owner", {"entity_id": "system:ledger"}) == ref
+        assert len(calls) > n and calls[-1] is not None
 
 
 def test_draft_spans_never_in_packs(world):

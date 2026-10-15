@@ -11,13 +11,14 @@ services:
       FALKOR_HOST: falkordb
       FALKOR_PORT: "6379"
       BRAIN_SCHEDULED_RESET: "on"
+      PAST_BELIEF_ENGINE: cypher                 # A46: goldens and full parity pass on the pin
     depends_on: [falkordb]
     ports: ["8000:8000"]
   mcp:
     build: { context: .., dockerfile: deploy/Dockerfile.api }
     command: ["python", "-m", "mcp_server.server", "--http", "--port", "8765"]
     env_file: ../.env
-    environment: { FALKOR_HOST: falkordb, FALKOR_PORT: "6379" }
+    environment: { FALKOR_HOST: falkordb, FALKOR_PORT: "6379", PAST_BELIEF_ENGINE: cypher }
     depends_on: [falkordb]
     ports: ["8765:8765"]
   ui:
