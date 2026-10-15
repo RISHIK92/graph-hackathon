@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  AlertCircle, BookOpen, Calendar, ChevronDown, GitBranch, Inbox, Info, KeyRound, Loader2, MessageSquare, PanelLeft, Search, Settings2, UserRound, X,
+  AlertCircle, BookOpen, LayoutGrid, Calendar, ChevronDown, GitBranch, Inbox, Info, KeyRound, Loader2, MessageSquare, PanelLeft, Search, Settings2, UserRound, X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import Inspector from "./Inspector";
 import { Button, Chip, CountBadge, Field, Modal, Notice, Popover, Segmented, Toasts } from "./ui";
 
 const NAV = [
+  { href: "/", label: "Overview", icon: LayoutGrid, key: "o" },
   { href: "/ask", label: "Ask", icon: MessageSquare, key: "a" },
   { href: "/directory", label: "Directory", icon: BookOpen, key: "d" },
   { href: "/graph", label: "Graph", icon: GitBranch, key: "g" },

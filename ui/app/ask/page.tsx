@@ -43,19 +43,31 @@ function Ask() {
   const [selected, setSelected] = useState<string>("");
   const logRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const queued = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const q = params.get("q");
-    if (q) { setText(q); taRef.current?.focus(); }
+    if (q && params.get("send") === "1") queued.current = q;   // Overview examples and "Ask about it" send at once (M9)
+    else if (q) { setText(q); taRef.current?.focus(); }
   }, [params]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [turns]);
 
+  // A question sent while the session is still connecting waits for it instead of being dropped (M22)
+  useEffect(() => {
+    if (s.session && queued.current && !busy) {
+      const q = queued.current;
+      queued.current = null;
+      void sendQ(q);
+    }
+  });
+
   const sendQ = async (q: string) => {
-    if (!s.session || !q.trim() || busy) return;
+    if (!q.trim() || busy) return;
+    if (!s.session) { queued.current = q; setText(""); return; }
     setBusy(true);
     setText("");
     const idx = turns.length;
