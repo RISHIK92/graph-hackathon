@@ -856,7 +856,8 @@ def lead_sentence(plan: dict, kept: list[dict], packs: dict[str, dict], as_of: i
                    if intent == "history" and a.get("recorded_at") and a.get("summary")),
                   key=lambda a: a.get("kind") != "route_to_owner")
     at = acts[0]["recorded_at"] if acts else as_of   # "why did you route X?" is about the action's own time
-    past = _past_lead(kept, ix, at, acts, now_statement) if at is not None else ""
+    # a ranking or a connection is asked about the date itself; its facts aren't "what changed since"
+    past = _past_lead(kept, ix, at, acts, now_statement) if at is not None and intent not in (*GLOBAL_INTENTS, "path") else ""
     return past or _intent_lead(plan, kept, ix, question, packs)
 
 
@@ -1134,7 +1135,8 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                         disputes_needed[f["assertion_id"]] = f["open_disputes"]
                     else:
                         add_fact_claim(it, f, "current")
-                elif st == "superseded" and tool in ("get_history", "explain_action", "trace_decision", "get_owner"):
+                elif st == "superseded" and tool in ("get_history", "explain_action", "trace_decision", "get_owner",
+                                                     "critical_systems", "connection_between", "key_people"):
                     add_fact_claim(it, f, "historical")
                 elif st == "proposed" and not f.get("confirmed_by"):   # a confirmed proposal is resolved (B3)
                     add_fact_claim(it, f, "proposed")

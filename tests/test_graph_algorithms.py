@@ -3,6 +3,7 @@ on both versions (never raw scores, F25), path de-duplication, and agent routing
 from api.agent import Agent, heuristic_plan
 from brain import snapshot, store
 from brain.tools import Ctx, run_tool
+from brain.write_path import Candidate
 
 from .conftest import make_span
 from .test_actions import _fact, world  # noqa: F401
@@ -128,3 +129,25 @@ def test_reset_drops_snapshot_graphs(world):
     assert snapshot.snapshots(g)
     reset_seed(g, "world/seeds/1")
     assert not snapshot.snapshots(g)
+
+
+def test_ranking_at_an_earlier_date_keeps_every_rank(world):
+    """Walk finding: as of a past date, a ranking whose supporting facts were replaced since still lists every
+    rank in order, its facts shown as history."""
+    g, wp, clock = world["g"], world["wp"], world["clock"]
+    _vault(world)
+    store.upsert_entities(g, [{"id": "system:web", "name": "Web", "aliases": []}])
+    make_span(g, "sp_w1", "web depends on vault", 1)
+    make_span(g, "sp_w2", "web depends on ledger", 1)
+    old = _fact(wp, "DEPENDS_ON", "system:web", "system:vault", JAN, "sp_w1")
+    plan = wp.new_plan()   # Web stopped depending on Vault on 1 Mar: the January fact is history now
+    wp.add_candidate(plan, Candidate("DEPENDS_ON", "system:web", "system:vault", negated=True, valid_from=MAR,
+                                     span_id="sp_w2", quote_end=5, form="structured", source_id="src:test"))
+    wp.execute(plan)
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "Which systems are most critical?", as_of=FEB))
+    lead = ans["assembled"]["lead"]
+    assert lead.startswith("Most depended-on systems as of 1 Feb 2026: 1. Vault"), lead
+    assert old
