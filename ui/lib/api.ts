@@ -66,9 +66,19 @@ async function parseResponse<T>(r: Response): Promise<T> {
   return r.json() as Promise<T>;
 }
 
-export async function get<T>(path: string): Promise<T> {
-  const r = await fetch(`${API_URL}${path}`, { headers: headers(), cache: "no-store" });
-  return parseResponse<T>(r);
+// m16: several components asking for the same thing at once (an action record's panel, chips, page)
+// share one request instead of each fetching it
+const inflight = new Map<string, Promise<unknown>>();
+
+export function get<T>(path: string): Promise<T> {
+  const key = `${path}|${getToken()}`;
+  const hit = inflight.get(key);
+  if (hit) return hit as Promise<T>;
+  const req = fetch(`${API_URL}${path}`, { headers: headers(), cache: "no-store" })
+    .then((r) => parseResponse<T>(r))
+    .finally(() => inflight.delete(key));
+  inflight.set(key, req);
+  return req;
 }
 
 export async function send<T>(method: "POST" | "PUT", path: string, body: unknown): Promise<T> {

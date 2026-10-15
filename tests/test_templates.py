@@ -562,7 +562,7 @@ def g_entity(f, rows):
 
 
 def g_entity_sources(f, rows):
-    assert rows == [{"kind": "wiki", "sources": [{"id": "src:test", "title": "src:test"}]}]
+    assert rows == [{"kind": "wiki", "sources": [{"id": "src:test", "title": "src:test", "author": None, "at": None}]}]
 
 
 def g_graph_edge_kinds(f, rows):

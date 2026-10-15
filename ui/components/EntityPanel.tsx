@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { qs } from "@/lib/api";
 import { fmtDate, labelOf } from "@/lib/format";
 import { KIND_LABEL, predicateLabel } from "@/lib/labels";
-import { useApi, useOpenMode, useStore } from "@/lib/store";
-import type { EntityPanel as EntityPanelData, Pack, Path } from "@/lib/types";
+import { useApi, useNames, useOpenMode, useStore } from "@/lib/store";
+import type { EntityPanel as EntityPanelData, NameMap, Pack, Path } from "@/lib/types";
 import { FactRow, PackContext } from "./Chips";
 import { collectDisputes, DisputeBlock, type DisputeGroup } from "./Dispute";
 import { HistoryTimeline } from "./Timeline";
@@ -165,9 +165,17 @@ export function EntityHistory({ data }: { data: EntityPanelData }) {
   );
 }
 
+/** m11: a chat message reads "#ledger · Jonah Feld · 2 Oct 2026" rather than "#ledger message". */
+function sourceTitle(kind: string, src: { id: string; title?: string; author?: string | null; at?: number | null }, names: NameMap): string {
+  if (kind !== "chat" || !src.title) return src.title || src.id;
+  const who = src.author ? names[src.author]?.name || src.author : "";
+  return [src.title.replace(/ message$/, ""), who, src.at ? fmtDate(src.at) : ""].filter(Boolean).join(" · ");
+}
+
 export function EntitySources({ data }: { data: EntityPanelData }) {
   const { openEvidence } = useStore();
   const mode = useOpenMode();
+  const names = useNames((data.sources || []).flatMap((g) => g.sources.map((x) => x.author || "")).filter(Boolean));
   if (!data.sources?.length) return <Empty title="No sources mention it" />;
   return (
     <div className="table-wrap">
@@ -176,7 +184,7 @@ export function EntitySources({ data }: { data: EntityPanelData }) {
         <tbody>
           {data.sources.flatMap((g) => g.sources.map((src) => (
             <tr key={src.id} className="clickable" onClick={() => openEvidence({ tab: "source", sourceId: src.id, title: src.title }, mode)}>
-              <td className="cell-primary wrap">{src.title || src.id}</td>
+              <td className="cell-primary wrap">{sourceTitle(g.kind, src, names)}</td>
               <td><Chip tone="neutral">{KIND_LABEL[g.kind] || g.kind}</Chip></td>
             </tr>
           )))}

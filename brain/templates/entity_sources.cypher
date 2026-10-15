@@ -8,4 +8,4 @@ MATCH (e:Entity {id:$id})
 WITH e
 MATCH (e)<-[:MENTIONS]-(s:Span)<-[h:HAS_SPAN]-(src:Source)
 WHERE src.kind <> 'draft' AND src.is_latest = true
-RETURN src.kind AS kind, collect(DISTINCT {id:src.id, title:src.title}) AS sources
+RETURN src.kind AS kind, collect(DISTINCT {id:src.id, title:src.title, author:src.author_id, at:src.created_at}) AS sources

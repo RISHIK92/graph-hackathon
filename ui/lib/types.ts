@@ -194,7 +194,7 @@ export interface EntityPanel {
   decisions?: Pack;
   lead?: Ref[];
   history: Record<string, Pack>;
-  sources: { kind: string; sources: { id: string; title: string }[] }[];
+  sources: { kind: string; sources: { id: string; title: string; author?: string | null; at?: number | null }[] }[];
 }
 
 export interface GraphEdge {
