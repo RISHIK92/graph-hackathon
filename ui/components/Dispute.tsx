@@ -73,7 +73,7 @@ export function DisputeBlock({ g }: { g: DisputeGroup }) {
   return (
     <div className="action-card">
       <div className="head">
-        <Flag className="text-error" />
+        <Flag className="text-warning" />
         <span className="t-strong">{disputeTitle(g)}</span>
         <span className="hint">A lower-ranked source challenges the recorded fact. Whoever holds it may settle it.</span>
       </div>
@@ -115,7 +115,7 @@ export function DisputeBlock({ g }: { g: DisputeGroup }) {
 export function DisputeLine({ g, onOpen }: { g: DisputeGroup; onOpen: () => void }) {
   const f = g.recorded || g.challengers[0]?.fact;
   return (
-    <Notice tone="error" title={disputeTitle(g)} actions={<button className="link-btn t-small" onClick={onOpen}>View and settle</button>}>
+    <Notice tone="warning" title={`Needs review · ${disputeTitle(g)}`} actions={<button className="link-btn t-small" onClick={onOpen}>View and settle</button>}>
       {f ? <span className="t-small">{g.recorded ? `Recorded: ${g.recorded.statement}` : f.statement}{g.challengers[0] && g.recorded ? ` · Challenger: ${g.challengers[0].fact.statement}` : ""}</span> : null}
     </Notice>
   );

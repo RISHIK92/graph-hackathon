@@ -104,7 +104,7 @@ export function FactRow({ fact, spans, label = "graph", path, showInterval = tru
         {negated && <span className="neg">Not:</span>}
         <span>{text}</span>
         {disputed && (
-          <Chip tone="error" icon={Flag} title="This fact has an open dispute">Disputed</Chip>
+          <Chip tone="warning" icon={Flag} title="This fact has an open dispute">Disputed</Chip>
         )}
         {extra}
       </div>

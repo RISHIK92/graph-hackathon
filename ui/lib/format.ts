@@ -69,7 +69,9 @@ export const STATUS_LABEL: Record<string, string> = {
 export function statusTone(st: string): { tone: "success" | "error" | "accent" | "neutral" | "warning"; dot: string; strike?: boolean } {
   switch (st) {
     case "current": case "current_then": case "confirmed": case "done": case "accepted": return { tone: "success", dot: "dot success" };
-    case "disputed": case "refused": return { tone: "error", dot: "dot error" };
+    // A dispute needs review, it isn't an error (M19): amber, the same on both sides
+    case "disputed": return { tone: "warning", dot: "dot warning" };
+    case "refused": return { tone: "error", dot: "dot error" };
     case "proposed": return { tone: "accent", dot: "dot accent" };
     case "overruled": case "withdrawn": case "retracted": case "undone": return { tone: "neutral", dot: "dot", strike: true };
     case "unknown": return { tone: "neutral", dot: "dot dashed" };

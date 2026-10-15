@@ -58,7 +58,7 @@ function InboxInner() {
                     const key = a.action_id || a.assertion_id || a.summary;
                     return (
                       <tr key={key} className={`clickable ${selKey === (a.action_id || a.assertion_id) ? "selected" : ""}`} onClick={() => s.openInspector({ kind: "inbox", actionId: a.action_id, assertionId: a.assertion_id, summary: a.summary })}>
-                        <td className="wrap"><span className="row" style={{ gap: 8 }}>{a.type === "dispute" ? <Flag className="icon-sm text-error" /> : <Zap className="icon-sm text-2" />}<span className="cell-primary">{a.summary}</span></span>
+                        <td className="wrap"><span className="row" style={{ gap: 8 }}>{a.type === "dispute" ? <Flag className="icon-sm text-warning" /> : <Zap className="icon-sm text-2" />}<span className="cell-primary">{a.summary}</span></span>
                           {a.fallback && a.missing_fact && <div className="t-small text-3">{a.missing_fact}, so any team lead may settle it.</div>}</td>
                         <td><Chip tone={a.type === "dispute" ? "error" : "accent"}>{a.type === "dispute" ? "Dispute" : actionKindLabel(a.kind)}</Chip></td>
                         <td><EligibilityBadge e={a.fallback ? "fallback" : "holder"} /></td>
