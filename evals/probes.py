@@ -170,8 +170,17 @@ def run_all(port: int) -> dict:
     return out
 
 
+def run_versions(ports: list[int]) -> dict:
+    """One document keyed by FalkorDB version (module 60001 -> "6.0.1")."""
+    out = {}
+    for port in ports:
+        r = run_all(port)
+        m = r.get("module", 0)
+        out[f"{m // 10000}.{m // 100 % 100}.{m % 100}"] = r
+    return out
+
+
 if __name__ == "__main__":
     import json
     import sys
-    for p in (sys.argv[1:] or ["6391", "6392"]):
-        print(json.dumps(run_all(int(p)), indent=1, default=str))
+    print(json.dumps(run_versions([int(p) for p in sys.argv[1:] or ["6391", "6392"]]), indent=1, default=str))

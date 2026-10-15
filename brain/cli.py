@@ -57,9 +57,12 @@ def main() -> None:
     elif a.cmd == "health":
         print(json.dumps(schema.health(Graph(), settings.pin), indent=2))
     elif a.cmd == "probes":
-        from evals.probes import run_all
-        for port in a.ports.split(","):
-            print(json.dumps(run_all(int(port)), indent=2))
+        from evals.probes import run_versions
+        doc = json.dumps(run_versions([int(p) for p in a.ports.split(",")]), indent=2, default=str)
+        out = Path("evals/results/probes.json")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(doc + "\n")
+        print(doc)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,164 @@
+{
+  "6.0.1": {
+    "port": 6391,
+    "results": [
+      {
+        "id": "F1",
+        "expect": "runtime error rolls back earlier CREATEs",
+        "observed": true
+      },
+      {
+        "id": "F2",
+        "expect": "EXISTS {} doesn't parse; pattern predicates work",
+        "observed": true
+      },
+      {
+        "id": "F5",
+        "expect": "no per-query efRuntime (5-arg queryNodes rejected)",
+        "observed": true
+      },
+      {
+        "id": "F6",
+        "expect": "typed 3-hop traversal is cheap (ms, small graph)",
+        "observed": 2.6
+      },
+      {
+        "id": "F12",
+        "expect": "two filtered comprehensions in one projection (6.0.1: first is empty)",
+        "observed": []
+      },
+      {
+        "id": "F13",
+        "expect": "uncorrelated CALL {} returns nothing on 6.0.1",
+        "observed": []
+      },
+      {
+        "id": "F14",
+        "expect": "pattern comprehension inside WHERE (4.22 fails)",
+        "observed": "works"
+      },
+      {
+        "id": "F16",
+        "expect": "pattern predicate in WHERE then MATCH (6.0.1 fails to compile)",
+        "observed": "fails: 'o' not defined"
+      },
+      {
+        "id": "F17",
+        "expect": "sentinel guard aborts and rolls back; conditional 1/0 behaviour",
+        "observed": {
+          "sentinel_aborts": true,
+          "rolled_back": true,
+          "case_1_over_0": "untaken branch not evaluated"
+        }
+      },
+      {
+        "id": "F18",
+        "expect": "a guard whose MATCH finds nothing returns zero rows silently",
+        "observed": {
+          "rows": 0,
+          "props_set": 0
+        }
+      },
+      {
+        "id": "F19",
+        "expect": "more than ~6 unit CALL {} subqueries mis-resolve variables (6.0.1)",
+        "observed": {
+          "5": "ok",
+          "7": "ok"
+        }
+      },
+      {
+        "id": "F21",
+        "expect": "UNWIND + two MATCH after count(*) silently drops rows (6.0.1)",
+        "observed": {
+          "plain_rels": 0,
+          "with_y_workaround_rels": 1
+        }
+      }
+    ],
+    "module": 60001
+  },
+  "4.22.0": {
+    "port": 6392,
+    "results": [
+      {
+        "id": "F1",
+        "expect": "runtime error rolls back earlier CREATEs",
+        "observed": true
+      },
+      {
+        "id": "F2",
+        "expect": "EXISTS {} doesn't parse; pattern predicates work",
+        "observed": true
+      },
+      {
+        "id": "F5",
+        "expect": "no per-query efRuntime (5-arg queryNodes rejected)",
+        "observed": true
+      },
+      {
+        "id": "F6",
+        "expect": "typed 3-hop traversal is cheap (ms, small graph)",
+        "observed": 2.56
+      },
+      {
+        "id": "F12",
+        "expect": "two filtered comprehensions in one projection (6.0.1: first is empty)",
+        "observed": [
+          "person:pr"
+        ]
+      },
+      {
+        "id": "F13",
+        "expect": "uncorrelated CALL {} returns nothing on 6.0.1",
+        "observed": [
+          "p"
+        ]
+      },
+      {
+        "id": "F14",
+        "expect": "pattern comprehension inside WHERE (4.22 fails)",
+        "observed": "fails: Unable to resolve filtered alias '[(a)-[:X]->(b) | b]'"
+      },
+      {
+        "id": "F16",
+        "expect": "pattern predicate in WHERE then MATCH (6.0.1 fails to compile)",
+        "observed": "works: [{'o': 'o'}]"
+      },
+      {
+        "id": "F17",
+        "expect": "sentinel guard aborts and rolls back; conditional 1/0 behaviour",
+        "observed": {
+          "sentinel_aborts": true,
+          "rolled_back": true,
+          "case_1_over_0": "untaken branch evaluated (aborts)"
+        }
+      },
+      {
+        "id": "F18",
+        "expect": "a guard whose MATCH finds nothing returns zero rows silently",
+        "observed": {
+          "rows": 0,
+          "props_set": 0
+        }
+      },
+      {
+        "id": "F19",
+        "expect": "more than ~6 unit CALL {} subqueries mis-resolve variables (6.0.1)",
+        "observed": {
+          "5": "ok",
+          "7": "ok"
+        }
+      },
+      {
+        "id": "F21",
+        "expect": "UNWIND + two MATCH after count(*) silently drops rows (6.0.1)",
+        "observed": {
+          "plain_rels": 1,
+          "with_y_workaround_rels": 1
+        }
+      }
+    ],
+    "module": 42200
+  }
+}
