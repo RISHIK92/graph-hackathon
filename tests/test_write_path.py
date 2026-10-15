@@ -103,6 +103,17 @@ def test_guard_version_race_aborts(g, clock):
     assert g.ro("MATCH (s:GuardFail) RETURN count(s) AS n")[0]["n"] == 1
 
 
+def test_guard_missing_entity_aborts(g, clock):
+    """A missing subject entity fires the guard: nothing is written (no partial write before F18)."""
+    seed_basic(g)
+    make_span(g, "s1", "Platform owns Ledger", 5)
+    wp = WritePath(g, clock)
+    with pytest.raises(GuardFailed):
+        apply(wp, owns("team:ghost", "s1", 5, "structured"))
+    assert g.ro("MATCH (a:Assertion) RETURN count(a) AS n")[0]["n"] == 0
+    assert g.ro("MATCH (c:Chain) RETURN count(c) AS n")[0]["n"] == 0
+
+
 def test_zero_row_target_is_failure(g, clock):
     """F18: a MATCH that finds nothing must not look like success."""
     seed_basic(g)

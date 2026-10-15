@@ -368,7 +368,8 @@ def test_fx_pb_rand_engines_agree_and_i6(g, events):
     current read (I6)."""
     n = next(_counter)
     sysid = f"system:pb{n}"
-    store.upsert_entities(g, [{"id": sysid, "name": f"PB{n}", "aliases": []}])
+    store.upsert_entities(g, [{"id": sysid, "name": f"PB{n}", "aliases": []},
+                              {"id": I, "name": "Infra", "aliases": []}, {"id": P, "name": "Payments", "aliases": []}])
     cid = registry.chain_id("OWNS", "", "", sysid)
     clock = Clock(1000 * (n + 1))
     wp = WritePath(g, clock)

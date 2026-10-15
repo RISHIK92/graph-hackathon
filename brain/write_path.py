@@ -472,27 +472,37 @@ def build_query(plan: Plan) -> tuple[str, dict, dict]:
     nodes += sum(1 for s in plan.chains.values() if s.version == -1)
     P["based_on"] = sorted(set(plan.based_on))
     P["elig_on"] = sorted(set(plan.elig_on))
+    # Referenced entities must exist: otherwise the SUBJECT/OBJECT/projection MATCHes find nothing
+    # and the write lands partially before the F18 counter check can object.
+    born = {e["props"]["id"] for e in plan.new_entities}
+    P["ents"] = sorted(({a["subject_id"] for a in plan.new_assertions} |
+                        {a["object_id"] for a in plan.new_assertions if a["object_id"]} |
+                        {p["from"] for p in plan.proj_create} | {p["to"] for p in plan.proj_create}) - born)
 
     # Guard (02 §4 stage 1). Every node it inspects is looked up in ONE leading UNWIND (the sentinel
     # is always in the list, so there is always a row), then every check is a pure list expression:
     # a MATCH placed after an aggregation silently drops rows on 6.0.1 (F21 family).
     lk = [{"k": "g", "id": "sentinel"}] + [{"k": "c", "id": c["id"]} for c in P["chains"]] + \
          [{"k": "a", "id": i} for i in sorted(set(P["based_on"]) | set(P["elig_on"]) |
-                                              {t["id"] for t in plan.target_status})]
+                                              {t["id"] for t in plan.target_status})] + \
+         [{"k": "e", "id": i} for i in P["ents"]]
     P["lk"] = lk
     P["tstat"] = [{"id": t["id"], "status": t["status"]} for t in plan.target_status]
     q = ["UNWIND $lk AS l\nWITH l\n"
          "OPTIONAL MATCH (c:Chain {id: l.id}) WHERE l.k = 'c'\n"
          "WITH l, c\n"
          "OPTIONAL MATCH (a:Assertion {id: l.id}) WHERE l.k = 'a'\n"
+         "WITH l, c, a\n"
+         "OPTIONAL MATCH (e:Entity {id: l.id}) WHERE l.k = 'e'\n"
          "WITH collect(CASE WHEN c IS NULL THEN null ELSE {id: c.id, version: c.version} END) AS cs, "
          "collect(CASE WHEN a IS NULL THEN null ELSE {id: a.id, status: a.status, authority: a.authority, "
-         "retracted_at: a.retracted_at} END) AS got\n"
+         "retracted_at: a.retracted_at} END) AS got, collect(e.id) AS es\n"
          "WITH all(x IN $chains WHERE coalesce(head([y IN cs WHERE y.id = x.id | y.version]), -1) = x.version) "
          "AND all(i IN $based_on WHERE any(y IN got WHERE y.id = i AND y.status = 'current' AND y.retracted_at > $now)) "
          "AND all(i IN $elig_on WHERE any(y IN got WHERE y.id = i AND y.status = 'current' AND y.retracted_at > $now "
          "AND y.authority >= 2)) "
-         "AND all(x IN $tstat WHERE any(y IN got WHERE y.id = x.id AND y.status = x.status)) AS ok\n"
+         "AND all(x IN $tstat WHERE any(y IN got WHERE y.id = x.id AND y.status = x.status)) "
+         "AND all(i IN $ents WHERE i IN es) AS ok\n"
          "FOREACH (_ IN CASE WHEN ok THEN [] ELSE [1] END | CREATE (:GuardFail {id:'sentinel'}))\n"
          "WITH count(*) AS _g\n"]
 
