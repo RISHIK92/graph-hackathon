@@ -316,6 +316,15 @@ def entity_panel(eid: str, as_of: int | None = None) -> dict:
     if label == "team":
         out["lead"] = [{"id": r["lead"], "name": r["name"], "aid": r["aid"]}
                        for r in G.q("lead_at", {"t": eid, "V": ctx.V})]
+    if label == "person":
+        # m24: title and team, what they lead and decide, and what their teams own; from the Directory's queries
+        me = next((r for r in G.q("directory_people", {"V": ctx.V}, timeout=10000) if r["id"] == eid), None) or {}
+        teams = {x["id"] for x in me.get("leads") or [] if x.get("id")} | {(me.get("team") or {}).get("id")}
+        owns = [x for t in overview(as_of)["teams"] if t["id"] in teams for x in t["owns"]]
+        out["profile"] = {"title": me.get("title"), "team": me.get("team") if (me.get("team") or {}).get("id") else None,
+                          "leads": [x for x in me.get("leads") or [] if x.get("id")],
+                          "decides": [x for x in me.get("decides") or [] if x.get("id")],
+                          "owns_via_team": list({x["id"]: x for x in owns}.values())}
     out["history"] = {}
     preds = {"system": ["OWNS", "DEPENDS_ON", "PART_OF"], "project": ["OWNS"], "team": ["LEADS", "OWNS"],
              "person": ["LEADS", "MEMBER_OF"], "ticket": ["ASSIGNED_TO", "HAS_STATE", "ABOUT"],

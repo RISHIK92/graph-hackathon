@@ -354,3 +354,13 @@ def test_graph_hides_decisions_not_made_yet(api_client):
     store.upsert_entities(world["g"], [{"id": "decision:adr-050", "name": "ADR-050", "aliases": [], "decided_at": 500}])
     assert "decision:adr-050" in {n["id"] for n in client.get("/graph").json()["nodes"]}
     assert "decision:adr-050" not in {n["id"] for n in client.get("/graph?as_of=400").json()["nodes"]}
+
+
+def test_person_panel_has_a_profile(api_client):
+    """m24: a person's panel says what they lead, what their teams own and what they decide."""
+    client, world = api_client
+    r = client.get("/entities/person:priya").json()
+    prof = r["profile"]
+    assert [x["name"] for x in prof["leads"]] == ["Payments"]
+    assert [x["name"] for x in prof["owns_via_team"]] == ["Ledger"]
+    assert prof["decides"] == []

@@ -65,6 +65,12 @@ export function EntitySummary({ data, id, full }: { data: EntityPanelData; id: s
             <dt>Type</dt><dd><Chip tone="neutral">{label}</Chip></dd>
             {data.d && <><dt>Description</dt><dd>{data.d}</dd></>}
             {data.lead && <><dt>Lead</dt><dd>{data.lead.length ? <div className="row-wrap">{data.lead.map((l) => <EntityLink key={l.id} id={l.id} name={l.name} />)}</div> : <Placeholder>No current lead</Placeholder>}</dd></>}
+            {data.profile && <>
+              {(data.profile.title || data.profile.team) && <><dt>Role</dt><dd className="row-wrap">{data.profile.title}{data.profile.title && data.profile.team ? " · " : ""}{data.profile.team && <EntityLink id={data.profile.team.id} name={data.profile.team.name} />}</dd></>}
+              {data.profile.leads.length > 0 && <><dt>Leads</dt><dd className="row-wrap">{data.profile.leads.map((x) => <EntityLink key={x.id} id={x.id} name={x.name} />)}</dd></>}
+              {data.profile.owns_via_team.length > 0 && <><dt>Owns (via team)</dt><dd className="row-wrap">{data.profile.owns_via_team.map((x) => <EntityLink key={x.id} id={x.id} name={x.name} />)}</dd></>}
+              {data.profile.decides.length > 0 && <><dt>Decides</dt><dd className="row-wrap">{data.profile.decides.map((x) => <EntityLink key={x.id} id={x.id} name={x.name} />)}</dd></>}
+            </>}
             {data.depends_on && <><dt>Depends on</dt><dd>{data.depends_on.length ? <div className="row-wrap">{data.depends_on.map((d) => <EntityLink key={d.id} id={d.id} name={d.name} />)}</div> : <Placeholder>Nothing</Placeholder>}</dd></>}
             <dt>As of</dt><dd>{asOf ? fmtDate(asOf) : "Today"}</dd>
           </dl>

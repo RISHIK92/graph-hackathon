@@ -193,6 +193,8 @@ export interface EntityPanel {
   depends_on?: Ref[];
   decisions?: Pack;
   lead?: Ref[];
+  /** A person's profile (m24). */
+  profile?: { title?: string | null; team?: Ref | null; leads: Ref[]; decides: Ref[]; owns_via_team: Ref[] };
   history: Record<string, Pack>;
   sources: { kind: string; sources: { id: string; title: string; author?: string | null; at?: number | null }[] }[];
 }
