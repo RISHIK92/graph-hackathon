@@ -1,0 +1,7 @@
+Results
+    Limit
+        Project
+            Conditional Traverse | (b:Entity)->(b:Entity)
+                Filter
+                    Conditional Variable Length Traverse | (a)-[anon_0:ABOUT|AFFECTS|ASSIGNED_TO|DECIDED_BY|DEPENDS_ON|LEADS|MEMBER_OF|OWNS|PART_OF|REPLACES|WORKS_ON*1..3]->(b)
+                        Node By Index Scan | (a:Entity)

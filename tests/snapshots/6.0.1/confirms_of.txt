@@ -1,0 +1,9 @@
+Project
+    Apply
+        Conditional Traverse | (p)<-(c:Assertion)
+            Project
+                Filter
+                    Node By Index Scan | (p:Assertion)
+        Optional
+            Conditional Traverse | (ac)->(c:Assertion)
+                Argument

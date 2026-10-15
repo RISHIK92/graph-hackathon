@@ -201,6 +201,7 @@ PARAMS = {
     "chains_for_entity": lambda f: {"e": "system:ledger", "p": "OWNS"},
     "confirmed_proposals": lambda f: {"ac": _confirm_routing(f)["action_id"]},
     "confirmed_targets": lambda f: {"ac": _confirm_routing(f)["action_id"]},
+    "confirms_of": lambda f: (_confirm_routing(f), {"ids": [f.ids["proposal"], f.ids["own"]]})[1],
     "current_in_chain": lambda f: {"c": "ch_OWNS:system:ledger"},
     "decision_status": lambda f: {"d": "decision:adr-002"},
     "decision_trace": lambda f: {"d": "decision:adr-002", "V": f.now, "T": f.now},
@@ -255,14 +256,19 @@ PARAMS = {
     "owner_previous": lambda f: {"x": "system:ledger", "V": f.now},
     "past_belief_members": lambda f: {"members": [f.ids["own"]], "T": f.now},
     "past_belief_run": lambda f: {"chain": "ch_OWNS:system:ledger", "T": f.now, "V": f.now},
+    "paths_between": lambda f: {"a": "system:ledger", "b": "person:priya", "V": f.now, "h": 2, "types": ["OWNS", "LEADS"]},
     "pending_proposals": lambda f: {},
     "people": lambda f: {"V": f.now},
+    "person_name": lambda f: {"id": "person:priya"},
     "produced_assertions": lambda f: {"id": f.ids["action"]},
     "produced_sources": lambda f: {"id": f.ids["action"]},
+    "proposal_ends": lambda f: {"p": f.ids["proposal"]},
     "proposal_links": lambda f: {"ids": [f.ids["proposal"]], "now": f.now},
     "proposals_about": lambda f: {"e": "ticket:rds-42"},
     "rationale_spans": lambda f: {"d": "decision:adr-002", "max": MAX},
+    "recent_actions": lambda f: {"u": "person:eve"},
     "replaced_by": lambda f: {"d": "decision:adr-001", "V": f.now},
+    "replaces_out": lambda f: {"d": "decision:adr-002", "V": f.now},
     "revisions": lambda f: {"k": "src:test"},
     "run_members": lambda f: {"run": f.ids["own"]},
     "search_fulltext": lambda f: {"q": "ledger"},
@@ -834,6 +840,33 @@ def g_unsupported(f, rows):
     assert rows == [{"aid": f.ids["dep2"]}]
 
 
+def g_confirms_of(f, rows):
+    assert rows == [{"proposal": f.ids["proposal"], "confirmed": f.ids["confirmed"], "status": "current",
+                     "action": f.ids["confirm"]}]                  # own is not a proposal: no row
+
+
+def g_paths_between(f, rows):
+    assert [[n["id"] for n in r["ns"]] for r in rows] == [["system:ledger", "team:payments", "person:priya"]]
+    assert [(e["type"], e["aid"], e["from"]) for e in rows[0]["es"]] == [
+        ("OWNS", f.ids["own"], "team:payments"), ("LEADS", f.ids["lead"], "person:priya")]
+
+
+def g_person_name(f, rows):
+    assert rows == [{"n": "Priya Raman"}]
+
+
+def g_proposal_ends(f, rows):
+    assert rows == [{"s": "ticket:rds-42", "o": "person:priya"}]
+
+
+def g_recent_actions(f, rows):
+    assert rows == [{"id": f.ids["action"]}]
+
+
+def g_replaces_out(f, rows):
+    assert rows == [{"o": "decision:adr-001", "aid": f.ids["replaces"]}]
+
+
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}
 
 
@@ -963,7 +996,8 @@ def test_header(name: str):
     assert h["name"] == name
 
 
-def test_neighbourhood_types_match_registry():
-    """The neighbourhood template hard-codes the projection types (a type list can't be a parameter)."""
-    m = re.search(r"\[:([A-Z_|]+)\*1\.\.2\]", templates.body("neighbourhood"))
+@pytest.mark.parametrize("name", ["neighbourhood", "paths_between"])
+def test_path_template_types_match_registry(name: str):
+    """These templates hard-code the projection types (a type list can't be a parameter)."""
+    m = re.search(r"\[:([A-Z_|]+)\*1\.\.\d\]", templates.body(name))
     assert m and m.group(1).split("|") == PROJECTION_TYPES

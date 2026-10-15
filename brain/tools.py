@@ -240,7 +240,7 @@ def action_summary(ctx: Ctx, action_id: str) -> dict:
     r = rows[0]
     ac = r["action"]
     actor = ac.get("actor", "")
-    name = ctx.g.ro("MATCH (p:Person {id:$id}) RETURN p.name AS n", {"id": actor}, template="person_name")
+    name = ctx.q("person_name", {"id": actor})
     return {"action_id": action_id, "kind": ac.get("kind"), "status": ac.get("status"),
             "actor": {"id": actor, "name": name[0]["n"] if name else actor}, "recorded_at": ac.get("recorded_at"),
             "eligibility": ac.get("eligibility"), "summary": ac.get("summary"), "based_on": r["based_on"],
@@ -259,7 +259,7 @@ def make_path(steps: list[tuple[dict, dict | None]]) -> dict:
 
 def _node(ctx: Ctx, eid: str, name: str | None = None) -> dict:
     if name is None:
-        r = ctx.g.ro("MATCH (e:Entity {id:$id}) RETURN e.name AS n", {"id": eid}, template="entity_name")
+        r = ctx.q("entity_name", {"id": eid})
         name = r[0]["n"] if r else eid
     return {"id": eid, "labels": [registry.label_of(eid)] if ":" in eid else [], "name": name}
 
@@ -407,8 +407,7 @@ def trace_decision(ctx: Ctx, decision_id: str | None = None, entity_id: str | No
         for x in r["deciders"] + r["affects"]:
             if x.get("aid"):
                 aids += run_aids(ctx, x["aid"])
-        repl = ctx.g.ro("MATCH (d:Decision {id:$d})-[r:REPLACES]->(o:Decision) WHERE r.valid_to > $V "
-                        "RETURN o.id AS o, r.aid AS aid", {"d": d, "V": V}, template="replaces_out")
+        repl = ctx.q("replaces_out", {"d": d, "V": V})
         for x in repl:
             aids += run_aids(ctx, x["aid"])
             queue.append(x["o"])
@@ -439,8 +438,7 @@ def trace_decision(ctx: Ctx, decision_id: str | None = None, entity_id: str | No
                 pb.item("text_only", 0.8, [], None, ms, note=f"rationale of {d}")
         # pending/confirmed drafts point at the new decision through proposals' SUBJECT/OBJECT
         for p in props:
-            for rr in ctx.g.ro("MATCH (a:Assertion {id:$p}) RETURN a.subject_id AS s, a.object_id AS o",
-                               {"p": p}, template="proposal_ends"):
+            for rr in ctx.q("proposal_ends", {"p": p}):
                 for e in (rr["s"], rr["o"]):
                     if e and e.startswith("decision:") and e not in seen:
                         queue.append(e)
@@ -511,16 +509,7 @@ def find_paths(ctx: Ctx, from_id: str, to_id: str | None = None, types: list[str
     V = ctx.V
     if to_id is None:
         return _impact(ctx, pb, from_id)
-    typ = "|".join(allowed)
-    q = (f"MATCH p = (a:Entity {{id:$a}})-[:{typ}*1..{h}]-(b:Entity {{id:$b}}) "
-         "WHERE all(e IN relationships(p) WHERE e.valid_from <= $V AND e.valid_to > $V) "
-         "RETURN [n IN nodes(p) | {id:n.id, name:n.name}] AS ns, "
-         "[e IN relationships(p) | {type:type(e), aid:e.aid, vf:e.valid_from, vt:e.valid_to, "
-         "from:startNode(e).id}] AS es LIMIT 20")
-    n0 = len(ctx.g.log)
-    rows = ctx.g.ro(q, {"a": from_id, "b": to_id, "V": V}, template="paths_between")
-    ctx.queries.append({"template": "paths_between", "cypher": q, "params": {"a": from_id, "b": to_id, "V": V},
-                        "rows": len(rows), "ms": round(ctx.g.log[-1].ms, 2) if len(ctx.g.log) > n0 else 0})
+    rows = ctx.q("paths_between", {"a": from_id, "b": to_id, "V": V, "h": h, "types": allowed})
     weights = {"OWNS": 1.0, "LEADS": 1.0, "DEPENDS_ON": 0.9, "MEMBER_OF": 0.8, "PART_OF": 0.8}
     for r in rows:
         steps = [({"id": r["ns"][0]["id"], "labels": [registry.label_of(r["ns"][0]["id"])], "name": r["ns"][0]["name"]},
@@ -671,10 +660,7 @@ def explain_action(ctx: Ctx, action_id: str) -> dict:
         sub = Ctx(ctx.g, now=ctx.now, as_of=t if label == "then" else ctx.now, belief_at=t, packs=ctx.packs,
                   queries=ctx.queries)
         out[label] = {"based_on": facts(sub, summary["based_on"]), "produced": facts(sub, summary["produced"])}
-    confirms = ctx.g.ro("MATCH (c:Assertion)-[:CONFIRMS]->(p:Assertion) WHERE p.id IN $ids "
-                        "OPTIONAL MATCH (ac:Action)-[:PRODUCED]->(c) "
-                        "RETURN p.id AS proposal, c.id AS confirmed, c.status AS status, ac.id AS action",
-                        {"ids": summary["produced"]}, template="confirms_of")
+    confirms = ctx.q("confirms_of", {"ids": summary["produced"]})
     changed = []
     for f_then in out["then"]["based_on"]:
         f_now = next((f for f in out["now"]["based_on"] if f["assertion_id"] == f_then["assertion_id"]), None)
@@ -705,8 +691,7 @@ def recall_session(ctx: Ctx, user_id: str, query: str, k: int = 10) -> dict:
             "span_id": r["id"], "text": r["text"], "source_id": "", "doc_key": "", "uri": "", "title": "session",
             "kind": "chat_session", "ts": r["ts"], "char_start": 0, "char_end": len(r["text"]), "live": True,
             "cites": [], "form": "chat", "authority": 1}])
-    acts = ctx.g.ro("MATCH (ac:Action) WHERE ac.client = $u OR ac.actor = $u RETURN ac.id AS id "
-                    "ORDER BY ac.recorded_at DESC LIMIT 10", {"u": user_id}, template="recent_actions")
+    acts = ctx.q("recent_actions", {"u": user_id})
     if acts:
         pb.item("graph", 0.5, [], None, [], actions=[action_summary(ctx, a["id"]) for a in acts],
                 note="your recent actions")
