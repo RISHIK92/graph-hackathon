@@ -93,7 +93,7 @@ function Ask() {
             <div className="stack-6" style={{ paddingTop: 48 }}>
               <div className="stack">
                 <h1 className="t-display">Ask the company brain</h1>
-                <p className="text-2">Every claim is checked against the graph before it is shown. Answers cite the source span they came from.</p>
+                <p className="text-2">Ask who owns what, why a decision was made, or what breaks if something goes down. Every answer shows where it came from.</p>
               </div>
               <div className="suggest-grid">
                 <div className="stack">
@@ -103,11 +103,11 @@ function Ask() {
                   </div>
                 </div>
                 <div className="stack">
-                  <span className="t-label">Actions (write)</span>
+                  <span className="t-label">Things I can do</span>
                   <div className="suggest-list">
                     {SUGGEST_A.map((q) => <button key={q} className="suggest" onClick={() => sendQ(q)} disabled={!s.session}><Zap />{q}</button>)}
                   </div>
-                  <div className="t-small text-3">Actions create a proposal or record a fact under the acting person{s.session?.anonymous ? ". In demo mode they are previewed, not stored." : "."}</div>
+                  <div className="t-small text-3">Actions are recorded as the person you&apos;re acting as.{s.session?.anonymous ? " In demo mode nothing is saved." : ""}</div>
                 </div>
               </div>
             </div>
@@ -430,7 +430,7 @@ function ActionCard({ e }: { e: StreamEvent }) {
           {res.eligibility ? <><dt>Eligibility</dt><dd><EligibilityBadge e={String(res.eligibility)} /></dd></> : null}
         </dl>
         {kind === "learn_fact" && res.status === "disputed" && (
-          <Notice tone="warning" title="Recorded at chat rank as a challenger">It disputes the recorded fact until someone eligible confirms one side.</Notice>
+          <Notice tone="warning" title="Noted from chat">The recorded fact stays current until someone who can settle it confirms the change.</Notice>
         )}
         {kind === "draft_adr_supersession" && drafted.length > 0 && (
           <div className="facts facts-host">{drafted.map((f) => <FactRow key={f.assertion_id} fact={f} />)}</div>

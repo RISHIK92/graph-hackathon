@@ -566,7 +566,9 @@ class Actions:
                 el = self.eligibility(targets)
                 undoers += el["eligible"]
         allowed = any(u["person_id"] == actor_id for u in undoers)
-        return {"allowed": allowed, "undoers": undoers, "reason": None if allowed else "not eligible to undo"}
+        others = list(dict.fromkeys(u["name"] for u in undoers[1:] if u["person_id"] != ac["actor"]))
+        who = f"{undoers[0]['name']} (who did this)" + (f" or {' or '.join(others)}" if others else "")
+        return {"allowed": allowed, "undoers": undoers, "reason": None if allowed else f"Only {who} can undo it."}
 
     def _confirmed_targets(self, action_id: str) -> list[dict]:
         rows = self.g.q("confirmed_targets", {"ac": action_id})
@@ -750,7 +752,7 @@ class Actions:
         names = self._names()
         wp = WritePath(self.g, self.clock, names)
         plan = wp.new_plan(now)
-        props = self._action_props(actor, "flag_stale_docs", now, f"Flagged {len(found)} stale span(s)")
+        props = self._action_props(actor, "flag_stale_docs", now, f"Flagged {len(found)} outdated passage{'s' if len(found) != 1 else ''}")
         acid = props["id"]
         texts, based = [], []
         for f in found[:20]:

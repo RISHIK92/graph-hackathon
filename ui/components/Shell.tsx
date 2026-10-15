@@ -111,7 +111,7 @@ function SessionStatus() {
   return (
     <button className="session-status" onClick={() => s.setSessionSheetOpen(true)} title="Session settings">
       {s.sessionError ? <AlertCircle className="icon-sm text-error" /> : !s.session ? <Loader2 className="icon-sm spin text-3" /> : anon ? <Info className="icon-sm text-warning" /> : <KeyRound className="icon-sm text-success" />}
-      <span className="truncate">{s.sessionError ? "API unreachable" : !s.session ? "Connecting…" : anon ? "Demo mode · writes off" : "Writes enabled"}</span>
+      <span className="truncate">{s.sessionError ? "API unreachable" : !s.session ? "Connecting…" : anon ? "Demo mode: nothing is saved" : "Writes enabled"}</span>
       <Settings2 className="icon-sm right" />
     </button>
   );
@@ -127,7 +127,7 @@ function AsOfPill() {
       open={open}
       onOpenChange={setOpen}
       trigger={({ toggle }) => (
-        <button className={`pill ${s.asOf ? "warn" : ""}`} onClick={toggle} aria-haspopup="dialog" aria-expanded={open} title="Valid-time date for every page">
+        <button className={`pill ${s.asOf ? "warn" : ""}`} onClick={toggle} aria-haspopup="dialog" aria-expanded={open} title="Show the organisation as it was on a date">
           <Calendar className="icon-sm" />
           {s.asOf ? `As of ${fmtDate(s.asOf)}` : "Today"}
           {s.asOf ? (
@@ -138,7 +138,7 @@ function AsOfPill() {
     >
       {(close) => (
         <div className="stack-3" style={{ padding: 8, width: 280 }}>
-          <Field label="View the organisation as of" help="Ownership, leads and membership redraw at this date. Belief time is not changed.">
+          <Field label="View the organisation as of" help="Owners, leads and teams are shown as they were on this date.">
             <input className="input" type="date" value={dateInputValue(s.asOf)} onChange={(e) => s.setAsOf(fromDateInput(e.target.value))} />
           </Field>
           <div className="row">
@@ -184,7 +184,7 @@ function ActingMenu() {
                 {me.decides.map((d) => <Chip key={d} tone="neutral">Decides {d}</Chip>)}
                 {!me.leads.length && !me.decides.length && <Chip tone="neutral">Member</Chip>}
               </div>
-              <div className="t-small text-3">Demo identity, not authentication. The graph authorisation rule decides what this person may confirm.</div>
+              <div className="t-small text-3">Demo identity, not authentication. Only the right person (for example the owner&apos;s lead) can confirm a fact.</div>
             </div>
           )}
           <div className="divider" />
@@ -236,7 +236,7 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
         <Notice tone="success" title="Writes enabled">Confirm, undo and actions are recorded under the acting person.{s.nextResetAt ? ` The graph resets to its seed at ${fmtDateTime(s.nextResetAt)}; the reset waits while sessions are active.` : ""}</Notice>
       )}
       <div className="sheet-grid">
-        <Field label="Write token" help={s.token ? "A token is set for this browser." : "Judges' token. Stored in this browser only."}>
+        <Field label="Write token" help={s.token ? "A token is set for this browser." : "Access token (for this demo). Saved in this browser only."}>
           {s.token ? (
             <div className="row"><Chip tone="success" icon={KeyRound}>Token set</Chip><Button size="sm" onClick={() => { s.setToken(""); setTok(""); }}>Remove</Button></div>
           ) : (
@@ -263,7 +263,7 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
             {s.people.map((p) => <option key={p.id} value={p.id}>{p.name}{p.leads.length ? ` · leads ${p.leads.join(", ")}` : ""}</option>)}
           </select>
         </Field>
-        <Field label="As of" help="Valid-time date for every page. Empty means today.">
+        <Field label="As of" help="Show the organisation as it was on this date. Leave empty for today.">
           <div className="row">
             <input className="input" type="date" value={dateInputValue(s.asOf)} onChange={(e) => s.setAsOf(fromDateInput(e.target.value))} />
             {s.asOf && <Button size="sm" onClick={() => s.setAsOf(null)}>Today</Button>}

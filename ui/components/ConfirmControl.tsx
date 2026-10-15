@@ -114,7 +114,7 @@ function ResultCard({ res, verb, onUndo, onDismiss }: { res: WriteResult; verb: 
   return (
     <Notice
       tone="success"
-      title={`${verb}${ac?.summary ? `: ${ac.summary}` : ""}`}
+      title={ac?.summary ? `${ac.summary}.` : verb}
       actions={
         <>
           {ac?.eligibility && <EligibilityBadge e={ac.eligibility} />}
@@ -196,7 +196,9 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
     const m = (pv.refusal || "").match(/\b(ac_[a-f0-9]+)\b/);
     return (
       <div className="row-wrap t-small text-2">
-        <span>Not confirmable: {pv.refusal}</span>
+        <span>{/^already confirmed by /.test(pv.refusal || "")
+          ? (pv.refusal || "").replace(/^already confirmed by (.+?) \(action ac_[a-f0-9]+\)$/, "Already approved by $1.")
+          : `Not confirmable: ${pv.refusal}`}</span>
         {m && <Button size="sm" variant="link" onClick={() => openAction(m[1])}>Open that action</Button>}
       </div>
     );
@@ -228,8 +230,8 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
             <div className="stack-3">
               {what && <div className="t-strong">{what}</div>}
               <div className="t-small text-2">
-                This records a confirmation as the acting person. The confirmed statement becomes current from now, and any
-                competing statement on the same subject is superseded or overruled. You can undo your own confirmation later.
+                You&apos;re confirming {what ? <>“{what}”</> : "this"} as {personName(actingAs)}. It becomes the current answer, and any
+                competing statement on the same subject is marked as replaced or overruled. You can undo this.
               </div>
               <div className="row-wrap t-small">
                 <span className="text-2">Eligibility:</span>

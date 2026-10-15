@@ -115,7 +115,7 @@ function EdgeView({ v }: { v: Extract<InspectorView, { kind: "edge" }> }) {
       )}
       {v.edgeKind === "disputed" && (
         <Notice tone="error" title="Open dispute">
-          <span className="row" style={{ gap: 4 }}><Flag className="icon-sm" />A lower-ranked source challenges the recorded fact here.</span> Open either entity to see both sides and settle it.
+          <span className="row" style={{ gap: 4 }}><Flag className="icon-sm" />A less reliable source disagrees with the recorded fact here.</span> Open either entity to see both sides and settle it.
         </Notice>
       )}
       {error && <ErrorState message={error} onRetry={reload} />}

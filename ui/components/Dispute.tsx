@@ -75,21 +75,21 @@ export function DisputeBlock({ g }: { g: DisputeGroup }) {
       <div className="head">
         <Flag className="text-warning" />
         <span className="t-strong">{disputeTitle(g)}</span>
-        <span className="hint">A lower-ranked source challenges the recorded fact. Whoever holds it may settle it.</span>
+        <span className="hint">A less reliable source disagrees with the recorded fact. The owner&apos;s lead can decide which is right.</span>
       </div>
       <div className="body">
         {g.recorded && (
           <div className="stack">
             <span className="t-label">Recorded</span>
             <div className="facts facts-host"><FactRow fact={g.recorded} spans={g.recordedSpans} /></div>
-            <ConfirmControl assertionId={g.recorded.assertion_id} label="Confirm the recorded side" what={g.recorded.statement} hideWho />
+            <ConfirmControl assertionId={g.recorded.assertion_id} label={`Keep “${g.recorded.statement}”`} what={g.recorded.statement} hideWho />
           </div>
         )}
         {g.challengers.map((c) => (
           <div key={c.fact.assertion_id} className="stack">
             <span className="t-label">Challenger</span>
             <div className="facts facts-host"><FactRow fact={c.fact} spans={c.spans} /></div>
-            <ConfirmControl assertionId={c.fact.assertion_id} label="Confirm the challenger" what={c.fact.statement} hideWho />
+            <ConfirmControl assertionId={c.fact.assertion_id} label={`Switch to “${c.fact.statement}”`} what={c.fact.statement} hideWho />
           </div>
         ))}
         {pv && !eligibleMe && (
@@ -116,7 +116,7 @@ export function DisputeLine({ g, onOpen }: { g: DisputeGroup; onOpen: () => void
   const f = g.recorded || g.challengers[0]?.fact;
   return (
     <Notice tone="warning" title={`Needs review · ${disputeTitle(g)}`} actions={<button className="link-btn t-small" onClick={onOpen}>View and settle</button>}>
-      {f ? <span className="t-small">{g.recorded ? `Recorded: ${g.recorded.statement}` : f.statement}{g.challengers[0] && g.recorded ? ` · Challenger: ${g.challengers[0].fact.statement}` : ""}</span> : null}
+      {f ? <span className="t-small">{g.recorded ? `On record: ${g.recorded.statement}.` : f.statement}{g.challengers[0] && g.recorded ? ` Another source says: ${g.challengers[0].fact.statement}.` : ""}</span> : null}
     </Notice>
   );
 }

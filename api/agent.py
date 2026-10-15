@@ -51,7 +51,7 @@ class Agent:
             return Session("anon_" + uuid.uuid4().hex[:12], user_id, acting_as, True)
         sid = "src_sess_" + uuid.uuid4().hex[:16]
         store.create_source(self.g, {"id": sid, "doc_key": f"chat_session:brain:{sid}", "kind": "chat_session",
-                                     "system": "brain", "external_id": sid, "title": f"Session {sid[-6:]}",
+                                     "system": "brain", "external_id": sid, "title": f"Chat in Company Brain · {self._entity_name(acting_as)} · {_day(self.clock())}",
                                      "uri": f"/sessions/{sid}", "created_at": self.clock(), "updated_at": self.clock(),
                                      "ingested_at": self.clock(), "is_latest": True, "status": "active",
                                      "user_id": user_id, "acting_as": acting_as})
@@ -376,7 +376,7 @@ class Agent:
             return
         if s.anonymous:
             yield {"event": "action", "kind": want, "status": "needs_token",
-                   "summary": f"I would {want.replace('_', ' ')}, but actions need the judges' token."}
+                   "summary": _preview_sentence(want, text)}
             return
         if want in ("confirm_fact", "undo_action"):
             # never executed by the agent: an action card for a person's click (A54)
@@ -639,6 +639,14 @@ def unmodelled(plan: dict, text: str) -> list[str]:
     if not rest or any(w.lower() in _VOCAB for w in rest):
         return []
     return [f"The graph has no facts about “{' '.join(rest)}” for {known[0]['text']}. {_RECORDS}"]
+
+
+def _preview_sentence(want: str, text: str) -> str:
+    """What a demo-mode (anonymous) action would have done, in the copy table's words."""
+    what = {"learn_fact": f"record “{text.strip()}”", "route_to_owner": "route that to its owner",
+            "draft_adr_supersession": "draft that ADR", "flag_stale_docs": "flag the outdated documents"}.get(
+        want, want.replace("_", " "))
+    return f"I'd {what}, but demo mode doesn't save anything. Add the access token to do it."
 
 
 def stale_docs_refusal(plan: dict) -> list[str]:
@@ -977,7 +985,7 @@ def _decision_claims(packs: dict[str, dict], question: str, claims: list[dict]) 
     why = [{"text": sp["text"][:240], "tense": "current" if sp.get("live") and not old_decision else "historical",
             "label": "text_only", "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [],
             "quote": sp["text"][:240], "disputed": False, "decision": {"name": r["name"], "status": r["status"]},
-            "context": f"{head}, because" if i == 0 else f"rationale ({sp['section']})"}
+            "context": f"{head}, because" if i == 0 else f"Reason (from {r['name']}, {sp['section']})"}
            for i, sp in enumerate([s for s in lead["spans"] if not s.get("proposed")][:3])] \
         if re.search(r"\bwhy\b|reason|rationale|based on|because|motivat|justif", low) else []
 
@@ -1080,7 +1088,7 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                     claims.append({"claim_id": f"c{len(claims) + 1}", "text": sp["text"][:240], "tense": "current",
                                    "span_ids": [sp["span_id"]], "assertion_ids": [], "action_ids": [],
                                    "label": "text_only", "quote": sp["text"][:240], "disputed": False,
-                                   "context": f"rationale ({sp['section']})"})
+                                   "context": f"Reason (from {(it.get('rationale') or {}).get('name', 'the decision')}, {sp['section']})"})
             if p["tool"] == "find_experts" and it.get("expert"):
                 ex = it["expert"]
                 quotes = [x for x in it["spans"] if not x.get("cites")]

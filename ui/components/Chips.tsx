@@ -156,7 +156,7 @@ function CopyItem({ text, onDone }: { text: string; onDone: () => void }) {
   const [done, setDone] = useState(false);
   return (
     <button className="menu-item" onClick={() => { navigator.clipboard?.writeText(text); setDone(true); setTimeout(onDone, 500); }}>
-      <ExternalLink className="icon-sm" /> {done ? "Copied" : "Copy assertion id"}
+      <ExternalLink className="icon-sm" /> {done ? "Copied" : "Copy link to this fact"}
     </button>
   );
 }

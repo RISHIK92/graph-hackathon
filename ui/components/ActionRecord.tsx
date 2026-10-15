@@ -152,7 +152,7 @@ export function ActionRecord({ id, inPage }: { id: string; inPage?: boolean }) {
             <span className="t-label">Draft</span>
             <Notice tone="warning" title={`Agent draft${withdrawn ? " (undone)" : ""}`} actions={
               <Button size="sm" variant="link" icon={FileText} onClick={() => s.openEvidence({ tab: "source", sourceId: data.draft_source!, title: "Agent draft" }, mode)}>View the draft text</Button>
-            }>Display only. A draft is never evidence and can never be cited.</Notice>
+            }>Draft written by the assistant. Shown for reference only; it isn&apos;t used as a source.</Notice>
           </section>
         )}
 

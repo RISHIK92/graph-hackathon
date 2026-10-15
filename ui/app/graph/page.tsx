@@ -104,7 +104,7 @@ function GraphInner() {
     <div className="graph">
       <PageHeader
         title="Graph"
-        description="The organisation as a graph at the chosen date. Disputes and stale documents are current belief."
+        description="Everything the brain knows, as of the chosen date. Red lines are disagreements; orange dashed lines are outdated documents."
         actions={
           <>
             <select className="select" style={{ width: "auto" }} value={layout} onChange={(e) => setLayout(e.target.value as typeof layout)} aria-label="Layout">
@@ -148,13 +148,13 @@ function GraphInner() {
           {SOURCE_KINDS.map((k) => (
             <label key={k} className="checkbox menu-item"><input type="checkbox" checked={kinds.includes(k)} onChange={() => toggle(kinds, k, setKinds)} />{KIND_LABEL[k] || k}</label>
           ))}
-          <div className="t-small text-3" style={{ padding: "4px 10px" }}>Keeps edges evidenced, and nodes mentioned, by these kinds.</div>
+          <div className="t-small text-3" style={{ padding: "4px 10px" }}>Show only facts that come from these sources.</div>
         </FilterPopover>
         <FilterPopover label="Highlights" count={(showDisputed ? 0 : 1) + (showStale ? 0 : 1) + (hideTickets ? 0 : 1)}>
           <label className="checkbox menu-item"><input type="checkbox" checked={showDisputed} onChange={() => setShowDisputed((v) => !v)} />Disputed <span className="meta">{data?.disputed.length ?? 0}</span></label>
           <label className="checkbox menu-item"><input type="checkbox" checked={showStale} onChange={() => setShowStale((v) => !v)} />Stale documents <span className="meta">{data?.stale.length ?? 0}</span></label>
           <label className="checkbox menu-item"><input type="checkbox" checked={hideTickets} onChange={() => setHideTickets((v) => !v)} />Hide tickets</label>
-          <div className="t-small text-3" style={{ padding: "4px 10px" }}>Highlights are current belief; the scrubber moves only valid time.</div>
+          <div className="t-small text-3" style={{ padding: "4px 10px" }}>Highlights always show today&apos;s view. The slider changes the date shown.</div>
         </FilterPopover>
         {labels.map((l) => <Chip key={l} tone="accent" onClick={() => toggle(labels, l, setLabels)} title="Remove">{l} <X /></Chip>)}
         {kinds.map((k) => <Chip key={k} tone="accent" onClick={() => toggle(kinds, k, setKinds)} title="Remove">{KIND_LABEL[k] || k} <X /></Chip>)}

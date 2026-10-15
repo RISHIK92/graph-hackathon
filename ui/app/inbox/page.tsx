@@ -74,7 +74,7 @@ function InboxInner() {
               </table>
             </div>
           ) : (
-            <div className="table-wrap"><Empty icon={Check} title="Nothing awaits you">Proposals routed to {me} and disputes {me} may settle will appear here.</Empty></div>
+            <div className="table-wrap"><Empty icon={Check} title="You're all caught up">Approvals and disagreements that need you will appear here.</Empty></div>
           )
         )}
         {data && tab === "mine" && (
