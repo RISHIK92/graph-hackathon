@@ -276,6 +276,10 @@ class Agent:
         elif intent == "memory" and not s.anonymous:
             calls.append(("recall_session", {"user_id": s.user_id, "query": text}))
             return calls   # the answer is in the turns; a document search only adds noise
+        elif intent == "action" and plan.get("wants_action") == "draft_adr_supersession" and \
+                any(e.startswith("decision:") for e in ents):
+            # a draft is about the decision it replaces, not the owner of what that decision affects
+            calls.append(("trace_decision", {"decision_id": next(e for e in ents if e.startswith("decision:"))}))
         elif intent == "action" and tgt:
             if tgt.startswith("ticket:"):
                 about = self.g.q("ticket_about", {"t": tgt, "m": MAX})
@@ -420,7 +424,10 @@ class Agent:
             yield {"event": "refusal", "kind": want, **r.as_dict()}
             return
         aid = res.get("action_id")
-        pack = run_tool(ctx, "explain_action", {"action_id": aid}) if aid else None
+        # read after the write: the turn's own clock predates the action, so its proposals would be "unknown at date"
+        after = Ctx(self.g, now=self.clock(), user_id=ctx.user_id, session_id=ctx.session_id, actor=ctx.actor,
+                    anonymous=ctx.anonymous)
+        pack = run_tool(after, "explain_action", {"action_id": aid}) if aid else None
         yield {"event": "action", "kind": want, "status": "done", "result": res, "action_id": aid,
                "pack": pack, "undo_handle": aid, "summary": res.get("summary", "")}
 

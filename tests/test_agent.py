@@ -721,3 +721,22 @@ def test_trace_names_the_checks_each_claim_passed(world):
     assert {"Cited in this answer's evidence", "Matches the stored fact", "Quote found in a live source",
             "True at the date asked", "Open disputes disclosed"} <= set(checks)
     assert all(n == 2 for n in checks.values())
+
+
+def test_draft_adr_turn_reads_the_decision_and_shows_proposals_as_proposed(world):
+    """Walk finding: the draft turn answers about the ADR (not the owner of what it affects), its card shows the
+    proposals as proposed (the action's pack is read after the write), and the approvers exclude the proposer."""
+    g, wp, clock = world["g"], world["wp"], world["clock"]
+    _fact(wp, "HAS_STATUS", "decision:adr-001", "", 1, "sp7", value="accepted")
+    _fact(wp, "AFFECTS", "decision:adr-001", "system:ledger", 1, "sp7")
+    _fact(wp, "DECIDED_BY", "decision:adr-001", "person:priya", 1, "sp7")
+    _fact(wp, "DECIDED_BY", "decision:adr-001", "person:bob", 1, "sp7")
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:priya")
+    ev = run(agent, s, "Draft an ADR superseding ADR-001: move Ledger to CockroachDB")
+    assert "trace_decision" in [e["name"] for e in ev if e["event"] == "tool_call"]
+    act = next(e for e in ev if e["event"] == "action")
+    statuses = {f["status"] for it in act["pack"]["items"] for f in it["facts"] if f["assertion_id"] in act["result"]["proposals"]}
+    assert statuses == {"proposed"}, statuses
+    assert "Awaiting approval from Bob Okafor (ADR-001 deciders)." in act["summary"]

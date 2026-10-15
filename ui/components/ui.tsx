@@ -235,7 +235,8 @@ export function Modal({ title, size, onClose, children, footer, busy }: {
     const prev = document.activeElement as HTMLElement | null;
     const el = ref.current;
     const focusables = () => Array.from(el?.querySelectorAll<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])") || []).filter((x) => !x.hasAttribute("disabled"));
-    (focusables()[0] || el)?.focus();
+    // m18: a field marked data-autofocus (the token field) gets focus before the first button
+    (el?.querySelector<HTMLElement>("[data-autofocus]") || focusables()[0] || el)?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busyRef.current) { e.stopPropagation(); close.current(); }
       if (e.key === "Tab") {

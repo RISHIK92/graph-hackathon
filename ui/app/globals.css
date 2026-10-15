@@ -352,8 +352,6 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; }
 
 /* ---- inspector ------------------------------------------------------------------------- */
 .inspector { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-/* m5, m26: unpinned, the panel floats over the page instead of narrowing it; pinned, it takes its own column */
-.inspector.overlay { position: fixed; top: 0; right: 0; bottom: 0; width: var(--w-inspector); max-width: 100vw; z-index: 40; box-shadow: var(--shadow-2); }
 .inspector-header { display: flex; flex-direction: column; gap: 2px; padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--border); }
 .inspector-crumb { display: flex; align-items: center; gap: 4px; color: var(--text-3); font-size: var(--fs-small); min-height: 16px; }
 .inspector-crumb button { color: var(--link); font-size: var(--fs-small); }
@@ -516,7 +514,7 @@ svg.flag { color: var(--error-700); width: 12px; height: 12px; vertical-align: -
   .sidebar .sidebar-brand span, .sidebar .nav-item span, .sidebar .nav-kbd, .sidebar .session-status span { display: none; }
   .sidebar .nav-item { justify-content: center; padding: 0; }
   .sidebar .nav-item .nav-badge { display: none; }
-  .inspector, .inspector.overlay { position: fixed; top: auto; width: auto; left: 0; right: 0; bottom: 0; height: 60vh; border-left: 0; border-top: 1px solid var(--border); box-shadow: var(--shadow-2); z-index: 40; border-radius: var(--r-3) var(--r-3) 0 0; }
+  .inspector { position: fixed; left: 0; right: 0; bottom: 0; height: 60vh; border-left: 0; border-top: 1px solid var(--border); box-shadow: var(--shadow-2); z-index: 40; border-radius: var(--r-3) var(--r-3) 0 0; }
   .search-btn { width: 200px; }
   .suggest-grid { grid-template-columns: 1fr; }
 }

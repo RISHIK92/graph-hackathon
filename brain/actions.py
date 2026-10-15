@@ -730,7 +730,8 @@ class Actions:
         self._run(wp, plan, actor, "draft_adr_supersession", [decision_id])
         self._notify_pending(plan, plan.produced_assertions)
         pv = self.confirm_preview(actor.person_id, action_id=acid)
-        who = " or ".join(dict.fromkeys(e["name"] for e in pv["eligible"] if e.get("name")))
+        who = " or ".join(dict.fromkeys(e["name"] for e in pv["eligible"]
+                                        if e.get("name") and e["person_id"] != actor.person_id))   # not the proposer (M18)
         summary = f"Drafted {new_name}: {title} (replaces {num})." + (
             f" Awaiting approval from {who} ({'any team lead' if pv['fallback'] else num + ' deciders'})." if who else "")
         return {"action_id": acid, "decision": new_id, "name": new_name, "title": title,

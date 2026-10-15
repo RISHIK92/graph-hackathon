@@ -63,7 +63,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   const past = !!s.asOf;
   return (
-    <div className={`app ${hasInspector && s.inspectorPinned ? "has-inspector" : ""} ${s.sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+    <div className={`app ${hasInspector ? "has-inspector" : ""} ${s.sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <nav className="sidebar" aria-label="Primary">
         <div className="sidebar-brand">
           <span className="mark" aria-hidden><GitBranch /></span>
@@ -83,7 +83,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-footer">
           <SessionStatus />
           <button className="session-status" onClick={() => setHelpOpen(true)} title="Use from your coding agent">
-            <HelpCircle className="icon-sm" /><span>Help: use from your coding agent</span>
+            <HelpCircle className="icon-sm" /><span>Coding agent (MCP)</span>
           </button>
           <button className="session-status" onClick={() => s.setSidebarCollapsed(!s.sidebarCollapsed)} title="Toggle sidebar  [">
             <PanelLeft className="icon-sm" /><span>Collapse</span><kbd className="right">[</kbd>
@@ -122,7 +122,7 @@ function SessionStatus() {
   return (
     <button className="session-status" onClick={() => s.setSessionSheetOpen(true)} title="Session settings">
       {s.sessionError ? <AlertCircle className="icon-sm text-error" /> : !s.session ? <Loader2 className="icon-sm spin text-3" /> : anon ? <Info className="icon-sm text-warning" /> : <KeyRound className="icon-sm text-success" />}
-      <span className="truncate">{s.sessionError ? "API unreachable" : !s.session ? "Connecting…" : anon ? "Demo mode: nothing is saved" : "Writes enabled"}</span>
+      <span>{s.sessionError ? "API unreachable" : !s.session ? "Connecting…" : anon ? "Demo mode: nothing is saved" : "Writes enabled"}</span>
       <Settings2 className="icon-sm right" />
     </button>
   );
@@ -265,7 +265,7 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
                 s.toast({ tone: "error", title: "That token wasn't accepted", body: "Check it and try again." });
               }
             }}>
-              <input className="input" type="password" placeholder="Paste token" value={tok} onChange={(e) => setTok(e.target.value)} autoComplete="off" autoFocus />
+              <input className="input" type="password" placeholder="Paste token" value={tok} onChange={(e) => setTok(e.target.value)} autoComplete="off" data-autofocus />
               <Button type="submit" size="sm" disabled={!tok.trim()}>Use</Button>
             </form>
           )}
