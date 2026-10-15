@@ -261,6 +261,8 @@ export interface SpanView {
   text: string;
   kind: string;
   ts: number;
+  author?: string;
+  role?: string;
   revisions: { source: string; title: string; uri: string; cs: number; ce: number; latest: boolean; live: boolean }[];
 }
 

@@ -4,8 +4,8 @@ import { ExternalLink, FileText, Flag, GitBranch, History, Quote } from "lucide-
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { qs } from "@/lib/api";
-import { useApi, useOpenMode, useStore, type EvidenceTarget } from "@/lib/store";
-import { fmtDate, fmtInterval, labelOf } from "@/lib/format";
+import { useApi, useNames, useOpenMode, useStore, type EvidenceTarget } from "@/lib/store";
+import { fmtDate, fmtDateTime, fmtInterval, labelOf } from "@/lib/format";
 import { edgeVerb, KIND_LABEL, predicateLabel } from "@/lib/labels";
 import type { Fact, Pack, Path, PathStep, SourceView, SpanItem, SpanView } from "@/lib/types";
 import { CitationChip } from "./Chips";
@@ -51,6 +51,7 @@ function SourceTab({ spanId, sourceId, quote }: { spanId: string; sourceId?: str
   const latestAny = revs.find((r) => r.latest);
   const rev = revs.find((r) => r.source === chosen) || latestLive || revs.find((r) => r.source === sourceId) || revs[revs.length - 1];
   const src = useApi<SourceView>(rev ? `/sources/${encodeURIComponent(rev.source)}` : null);
+  const names = useNames(span.data?.author ? [span.data.author] : []);
 
   useEffect(() => setChosen(""), [spanId]);
   useEffect(() => {
@@ -96,7 +97,15 @@ function SourceTab({ spanId, sourceId, quote }: { spanId: string; sourceId?: str
         </label>
       )}
       {src.data?.banner && <Notice tone="warning">{src.data.banner}</Notice>}
-      <div className="src-doc">
+      {span.data.kind === "chat_session" ? (
+        // m13: a message from this app's chat is shown alone, with who said it and when, not the whole transcript
+        <div className="src-doc">
+          <div className="t-small text-2" style={{ padding: "8px 12px 0" }}>
+            {span.data.role === "agent" ? "Company Brain" : names[span.data.author || ""]?.name || "Someone in this chat"} · {fmtDateTime(span.data.ts)}
+          </div>
+          <div className="src-span hit"><Quoted text={span.data.text} start={quote?.start} end={quote?.end} /></div>
+        </div>
+      ) : <div className="src-doc">
         {src.loading && !src.data && <div style={{ padding: 12 }} className="stack"><Skeleton /><Skeleton w="80%" /><Skeleton w="90%" /></div>}
         {src.data &&
           src.data.spans.map((s) =>
@@ -111,7 +120,7 @@ function SourceTab({ spanId, sourceId, quote }: { spanId: string; sourceId?: str
         {src.data && !src.data.spans.some((s) => s.span === spanId) && (
           <div className="src-span hit"><Quoted text={span.data.text} start={quote?.start} end={quote?.end} /></div>
         )}
-      </div>
+      </div>}
       <Details summary="Details">
         <dl className="kv narrow t-small">
           <dt>Span</dt><dd className="mono">{spanId}</dd>

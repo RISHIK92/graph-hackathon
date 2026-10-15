@@ -376,8 +376,8 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .fact.selected { background: var(--selection); box-shadow: inset 2px 0 0 var(--selection-bar); }
 .fact .stmt { font-weight: 500; min-width: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .fact .stmt .neg { color: var(--error-700); font-weight: 600; }
-.fact .when { font-family: var(--mono); font-size: var(--fs-mono); color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.fact .cites { display: flex; gap: 4px; justify-content: flex-end; min-width: 0; }
+.fact .when { font-family: var(--mono); font-size: var(--fs-mono); color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fact .cites { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; min-width: 0; max-width: 240px; }
 .fact .more { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: var(--r-1); color: var(--text-3); }
 .fact .more:hover { background: var(--surface-3); color: var(--text); }
 .facts.compact .fact { grid-template-columns: minmax(0, 1fr) 104px auto 28px; }

@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertCircle, AlertTriangle, CheckCircle2, ChevronRight, Flag, Info, Loader2, X, type LucideIcon } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { statusTone } from "@/lib/format";
 import { STATUS_LABEL } from "@/lib/labels";
 import { useOpenMode, useStore } from "@/lib/store";
@@ -323,19 +324,38 @@ export function Popover({ trigger, children, align = "left", open, onOpenChange 
   const isOpen = open ?? inner;
   const set = (v: boolean) => { setInner(v); onOpenChange?.(v); };
   const ref = useRef<HTMLDivElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left?: number; right?: number } | null>(null);
+  useLayoutEffect(() => {
+    // m1: positioned in a portal from the anchor's box, so a card's overflow can't clip the menu
+    const r = isOpen ? ref.current?.getBoundingClientRect() : undefined;
+    setPos(r ? (align === "right" ? { top: r.bottom + 4, right: window.innerWidth - r.right } : { top: r.bottom + 4, left: r.left }) : null);
+  }, [isOpen, align]);
   useEffect(() => {
     if (!isOpen) return;
-    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) set(false); };
+    const inside = (n: Node) => !!(ref.current?.contains(n) || pop.current?.contains(n));
+    const onDoc = (e: MouseEvent) => { if (!inside(e.target as Node)) set(false); };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") set(false); };
+    const onMove = (e: Event) => { if (!(e.target instanceof Node && pop.current?.contains(e.target))) set(false); };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
+    window.addEventListener("scroll", onMove, true);
+    window.addEventListener("resize", onMove);
+    return () => {
+      document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onMove, true); window.removeEventListener("resize", onMove);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
   return (
     <div className="popover-anchor" ref={ref}>
       {trigger({ open: isOpen, toggle: () => set(!isOpen) })}
-      {isOpen && <div className={`popover ${align}`}>{typeof children === "function" ? children(() => set(false)) : children}</div>}
+      {isOpen && pos && createPortal(
+        <div ref={pop} className={`popover ${align}`} style={{ position: "fixed", ...pos }}>
+          {typeof children === "function" ? children(() => set(false)) : children}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

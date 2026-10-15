@@ -647,7 +647,7 @@ def g_source_view(f, rows):
 
 
 def g_span_view(f, rows):
-    assert rows == [{"text": "Payments owns Ledger", "kind": "wiki", "ts": 1, "revisions": [
+    assert rows == [{"text": "Payments owns Ledger", "kind": "wiki", "ts": 1, "author": "", "role": "human", "revisions": [
         {"source": "src:test", "title": "src:test", "uri": "", "cs": 0, "ce": 20, "latest": True, "live": True}]}]
 
 
