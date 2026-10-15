@@ -1,0 +1,5 @@
+Results
+    Distinct
+        Project
+            Conditional Traverse | (src)->(a:Assertion)
+                Node By Index Scan | (src:Source)

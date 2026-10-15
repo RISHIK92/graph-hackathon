@@ -184,6 +184,7 @@ PARAMS = {
     "action_log": lambda f: {"p": "person:eve"},
     "action_read": lambda f: {"id": f.ids["action"]},
     "action_targets": lambda f: {"id": f.ids["action"]},
+    "all_entities": lambda f: {},
     "already_confirmed": lambda f: {"id": f.ids["proposal"], "now": _confirm_routing(f)["t"]},
     "any_confirmed": lambda f: {"id": f.ids["action"], "now": _confirm_routing(f)["t"]},
     "any_person": lambda f: {},
@@ -196,6 +197,7 @@ PARAMS = {
     "belief_owners_of": lambda f: {"x": "system:ledger", "now": f.now},
     "belief_parent_of": lambda f: {"x": "system:ledger", "now": f.now},
     "belief_primary_team": lambda f: {"p": "person:priya", "now": _membership(f)},
+    "chain_meta": lambda f: {"c": "ch_OWNS:system:ledger"},
     "chains_for_entity": lambda f: {"e": "system:ledger", "p": "OWNS"},
     "confirmed_proposals": lambda f: {"ac": _confirm_routing(f)["action_id"]},
     "confirmed_targets": lambda f: {"ac": _confirm_routing(f)["action_id"]},
@@ -213,6 +215,7 @@ PARAMS = {
     "dispute_chains": lambda f: {"max": MAX},
     "dispute_edge": lambda f: {"id": f.ids["chat"]},
     "disputed_run": lambda f: {"id": f.ids["chat"], "max": MAX},
+    "doc_evidence": lambda f: {"k": "src:test"},
     "draft_decision": lambda f: {"id": _draft_adr(f)},
     "draft_status": lambda f: {"id": f.g.q("action_draft", {"id": f.ids["action"]})[0]["id"]},
     "entity": lambda f: {"id": "system:ledger"},
@@ -228,6 +231,7 @@ PARAMS = {
     "graph_nodes": lambda f: {},
     "graph_ticks": lambda f: {},
     "impact_dependents": lambda f: {"x": "system:ledger", "V": f.now},
+    "latest_spans": lambda f: {"l": "src:test"},
     "lead_at": lambda f: {"t": "team:payments", "V": f.now},
     "learn_ents": lambda f: {"ids": ["team:payments", "system:ledger"]},
     "link_exact": lambda f: {"q": "ledger-service"},
@@ -264,9 +268,12 @@ PARAMS = {
     "span_view": lambda f: {"id": "sp_own", "max": MAX},
     "stale_detection": lambda f: {"max": MAX, "e": "team:platform"},
     "stale_override": lambda f: (_override(f), {"max": MAX})[1],
+    "stated_by_latest": lambda f: {"s": "src:test"},
     "statement": lambda f: {"id": f.ids["own"]},
     "strongest_member": lambda f: {"r": f.ids["own"]},
     "turn_span": lambda f: {"id": "turn1", "src": "sess1"},
+    "unsupported": lambda f: (f.g.write("MATCH (a:Assertion {id:$id})-[e:EVIDENCED_BY]->() SET e.removed_at = 1",
+                                        {"id": f.ids["dep2"]}), {"max": MAX})[1],
     "withdrawn_by": lambda f: {"id": f.ids["proposal"]},
 }
 
@@ -752,8 +759,32 @@ def g_withdrawn_by(f, rows):
     assert rows == [{"ac": f.ids["action"], "s": "done"}]
 
 
+FIXTURE_CHAINS = {"own": "ch_OWNS:system:ledger", "lead": "ch_LEADS:team:payments", "part": "ch_PART_OF:system:ledger",
+                  "own_proj": "ch_OWNS:project:commerce", "status": "ch_HAS_STATUS:decision:adr-002"}
+
+
+def g_all_entities(f, rows):
+    r = _by(rows, "id")
+    assert len(r) == 13 and r["system:ledger"]["aliases"] == ["ledger", "ledger-service"]
+
+
+def g_chain_meta(f, rows):
+    assert rows == [{"p": "OWNS", "q": "", "k": "system:ledger"}]
+
+
+def g_doc_evidence(f, rows):
+    got = {(r["span"], r["aid"]) for r in rows}
+    assert {(sid, f.ids[k]) for sid, k in [("sp_own", "own"), ("sp_chat", "chat"), ("sp_adr", "affects")]} <= got
+    assert len(got) == 13 and all(r["rm"] == MAX and r["rb"] == "" for r in rows)
+    assert f.ids["proposal"] not in {r["aid"] for r in rows}         # draft evidence carries an action_id
+
+
 def g_existing_spans(f, rows):
     assert rows == [{"id": "sp_own", "ts": 1}]
+
+
+def g_latest_spans(f, rows):
+    assert {r["id"] for r in rows} == set(TEXTS)
 
 
 def g_revisions(f, rows):
@@ -762,6 +793,15 @@ def g_revisions(f, rows):
 
 def g_source_exists(f, rows):
     assert rows == [{"ingested_at": 1, "is_latest": True}]
+
+
+def g_stated_by_latest(f, rows):
+    got = {(r["chain"], r["aid"]) for r in rows}
+    assert {(c, f.ids[k]) for k, c in FIXTURE_CHAINS.items()} <= got and len(got) == 13
+
+
+def g_unsupported(f, rows):
+    assert rows == [{"aid": f.ids["dep2"]}]
 
 
 GOLDENS = {k[2:]: v for k, v in globals().items() if k.startswith("g_") and callable(v)}

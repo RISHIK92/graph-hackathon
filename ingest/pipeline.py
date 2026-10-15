@@ -127,8 +127,7 @@ class Ingestor:
                          {"rows": rows[i:i + 100]}, template="entity_embeddings")
 
     def _load_entities(self) -> None:
-        rows = self.g.ro("MATCH (e:Entity) RETURN e.id AS id, e.name AS name, e.aliases AS aliases",
-                         template="all_entities", timeout=10000)
+        rows = self.g.q("all_entities", timeout=10000)
         self.entities = {r["id"]: {"name": r["name"], "aliases": r["aliases"] or []} for r in rows}
         self.index = AliasIndex([{"id": k, **v} for k, v in self.entities.items()])
 
@@ -314,17 +313,10 @@ class Ingestor:
             return
         # chains the latest revision states, through the spans it contains (shared spans included)
         stated: dict[str, set[str]] = defaultdict(set)
-        for r in g.ro("MATCH (:Source {id:$s})-[:HAS_SPAN]->(sp:Span)<-[:EVIDENCED_BY]-(a:Assertion) "
-                      "RETURN DISTINCT a.chain_id AS chain, a.id AS aid", {"s": latest}, template="stated_by_latest"):
+        for r in g.q("stated_by_latest", {"s": latest}):
             stated[r["chain"]].add(r["aid"])
-        rows = g.ro(
-            "MATCH (src:Source {doc_key:$k})-[:HAS_SPAN]->(sp:Span)<-[e:EVIDENCED_BY]-(a:Assertion) "
-            "WHERE e.form <> 'confirmation' AND e.action_id = '' "
-            "WITH DISTINCT sp, a, e RETURN sp.id AS span, a.id AS aid, a.chain_id AS chain, "
-            "e.removed_at AS rm, e.replaced_by AS rb",
-            {"k": doc_key, "max": MAX}, template="doc_evidence", timeout=10000)
-        latest_spans = {r["id"] for r in g.ro("MATCH (:Source {id:$l})-[:HAS_SPAN]->(sp:Span) RETURN sp.id AS id",
-                                              {"l": latest}, template="latest_spans")}
+        rows = g.q("doc_evidence", {"k": doc_key}, timeout=10000)
+        latest_spans = {r["id"] for r in g.q("latest_spans", {"l": latest})}
         reopen, replace, remove = [], [], []
         for r in rows:
             if r["span"] in latest_spans:
@@ -357,8 +349,7 @@ class Ingestor:
     def _recompute(self, chains: list[str]) -> None:
         wp = WritePath(self.g, self.clock, {k: v["name"] for k, v in self.entities.items()})
         for c in chains:
-            row = self.g.ro("MATCH (c:Chain {id:$c}) RETURN c.predicate AS p, c.qualifier AS q, c.key_id AS k",
-                            {"c": c}, template="chain_meta")
+            row = self.g.q("chain_meta", {"c": c})
             if not row:
                 continue
             plan = wp.new_plan()
@@ -369,12 +360,7 @@ class Ingestor:
     def _retract_unsupported(self) -> None:
         """End of a run: an assertion with no live evidence of rank >= 1 and no proposal provenance is
         retracted (A14a). Deferred to the end so closures can be re-synced freely during the run."""
-        rows = self.g.ro(
-            "MATCH (a:Assertion) WHERE a.retracted_at = $max AND a.extractor <> 'confirm_fact' "
-            "AND NOT a.extractor STARTS WITH 'draft' "
-            "WITH a, [(a)-[e:EVIDENCED_BY]->() WHERE e.removed_at = $max | e] AS live "
-            "WITH a WHERE size(live) = 0 "
-            "RETURN a.id AS aid", {"max": MAX}, template="unsupported", timeout=10000)
+        rows = self.g.q("unsupported", {"max": MAX}, timeout=10000)
         if not rows:
             return
         wp = WritePath(self.g, self.clock, {k: v["name"] for k, v in self.entities.items()})

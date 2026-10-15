@@ -1,0 +1,8 @@
+Project
+    Distinct
+        Project
+            Filter
+                Conditional Traverse | (sp)<-[e:EVIDENCED_BY]-(a:Assertion)
+                    Conditional Traverse | (src)->(sp:Span)
+                        Filter
+                            Node By Index Scan | (src:Source)

@@ -1,0 +1,11 @@
+Project
+    Filter
+        Project
+            Project
+                Apply
+                    Filter
+                        Node By Label Scan | (a:Assertion)
+                    Aggregate
+                        Filter
+                            Conditional Traverse | (a)-[e:EVIDENCED_BY]->(anon_0)
+                                Argument
