@@ -1,0 +1,73 @@
+{
+ "judge": [
+  "microsoft/microsoft-decision-1",
+  "openai/gpt-6-luna-decisions"
+ ],
+ "judge2": [
+  "nvidia/nemotron-3-ultra-550b-a55b",
+  "z-ai/glm-5.2"
+ ],
+ "answer_models": {
+  "planner": [
+   "deepseek/deepseek-v4.1-flash",
+   "anthropic/claude-haiku-5.5"
+  ],
+  "drafter": [
+   "deepseek/deepseek-v4.1-flash",
+   "anthropic/claude-haiku-5.5"
+  ],
+  "checker": [
+   "typesafe/jev-1.14",
+   "nace-ai/drex-v2.0"
+  ],
+  "escalation": [
+   "anthropic/claude-haiku-5.5"
+  ]
+ },
+ "agreement": 0.7142857142857143,
+ "agreement_n": 35,
+ "cost_per_answer_usd": 0.000378,
+ "role_calls": {
+  "planner": {
+   "calls": 96,
+   "errors": 1
+  },
+  "drafter": {
+   "calls": 241,
+   "errors": 31
+  },
+  "checker": {
+   "calls": 373,
+   "errors": 10
+  },
+  "judge": {
+   "calls": 90,
+   "errors": 0
+  },
+  "judge2": {
+   "calls": 35,
+   "errors": 0
+  },
+  "screen": {
+   "calls": 3,
+   "errors": 0
+  },
+  "extractor": {
+   "calls": 3,
+   "errors": 0
+  }
+ },
+ "aborted": null,
+ "cost_usd": {
+  "planner:deepseek/deepseek-v4.1-flash": 0.003452,
+  "drafter:deepseek/deepseek-v4.1-flash": 0.120674,
+  "checker:typesafe/jev-1.14": 0.009315,
+  "judge:microsoft/microsoft-decision-1": 0.001586,
+  "judge2:nvidia/nemotron-3-ultra-550b-a55b": 0.007861,
+  "checker:nace-ai/drex-v2.0": 0.000235,
+  "drafter:anthropic/claude-haiku-5.5": 0.001122,
+  "screen:typesafe/jev-1.14": 4.4e-05,
+  "planner:anthropic/claude-haiku-5.5": 6.5e-05,
+  "extractor:anthropic/claude-haiku-5.5": 0.000421
+ }
+}
