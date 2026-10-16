@@ -204,8 +204,51 @@ def _session_user_spans(g: Graph, sid: str) -> list[str]:
     return [r["id"] for r in rows]
 
 
+JUDGE_QUESTIONS = {
+    "rubric": {"type": "noul", "instructions": JUDGE_RUBRIC.rsplit(" Return JSON", 1)[0],
+               "criteria": "Yes only if all of (a)-(d) hold."},
+    "reference": {"type": "score", "instructions": "How closely does the ANSWER agree with the REFERENCE on the facts "
+                                                   "and on when each held?",
+                  "criteria": "1 = the same facts with the same timing; 0.5 = partly; 0 = contradicts or misses it."}}
+LOW_CONFIDENCE = (0.3, 0.7)
+
+
+def _sampled(q: dict) -> bool:
+    """The fixed 20% of judged questions that both judges score (an agreement rate, item 20 step 0)."""
+    return int(hashlib.sha256(f"{q.get('_seed')}:{q['id']}".encode()).hexdigest(), 16) % 5 == 0
+
+
+def _second_judge(body: str) -> dict | None:
+    try:
+        res = providers.complete([{"role": "system", "content": JUDGE_RUBRIC.replace('{\"score\": 0 or 1', '{\"verdict\": 0 or 1')
+                                   + " Give the verdict first."}, {"role": "user", "content": body}],
+                                 schema={"type": "object", "properties": {"verdict": {"type": "integer"},
+                                                                          "reason": {"type": "string"}},
+                                         "required": ["verdict"]}, role="judge2")
+    except Exception:  # noqa: BLE001
+        return None
+    j = res.get("json") or {}
+    try:
+        return {"score": 1.0 if int(j.get("verdict", 0)) >= 1 else 0.0, "reason": str(j.get("reason", ""))[:200],
+                "model": res.get("model")}
+    except (TypeError, ValueError):
+        return None
+
+
+def judge_agreement(rows: list[dict]) -> tuple[float | None, int]:
+    both = [r for r in rows if r.get("judge1_score") is not None and r.get("judge2_score") is not None]
+    return (sum(r["judge1_score"] == r["judge2_score"] for r in both) / len(both) if both else None), len(both)
+
+
+def cost_per_answer(n: int) -> float:
+    """usage.cost of the answering roles (not the judges), per question, this process."""
+    return sum(c for (role, _), c in providers.COSTS.items() if role not in ("judge", "judge2")) / n if n else 0.0
+
+
 def judge_history(q: dict, ans: dict) -> dict | None:
-    """History-phrasing LLM judge (06 §4): fixed rubric, cached by prompt hash. None when the LLM is off."""
+    """History-phrasing judge (06 §4), item 20 step 0: the decision judge scores the fixed rubric and agreement
+    with the question's reference answer; a low-confidence rubric verdict is decided by the second (chat)
+    judge, and a fixed 20% sample goes to both. Cached by prompt. None when the LLM is off."""
     if q["category"] not in JUDGE_CATS or not providers.llm_available():
         return None
     lines = [f"- [{l['status']}] {l['text']}" for l in ans["assembled"]["lines"]]
@@ -214,19 +257,27 @@ def judge_history(q: dict, ans: dict) -> dict | None:
             + ("\nANSWER: (abstained)" if ans["abstained"] else
                (f"\nANSWER: {ans['assembled']['lead']}" if ans["assembled"].get("lead") else "")
                + "\nANSWER LINES:\n" + "\n".join(lines))
-            + (f"\nEXPLANATION: {ans['assembled'].get('explanation', '')[:800]}" if ans["assembled"].get("explanation") else ""))
+            + (f"\nEXPLANATION: {ans['assembled'].get('explanation', '')[:800]}" if ans["assembled"].get("explanation") else "")
+            + (f"\nREFERENCE: {q['reference_answer']}" if q.get("reference_answer") else ""))
+    out = {"judge": None, "p": None, "reference_match": None, "judge1_score": None, "judge2": None,
+           "judge2_score": None, "low_confidence": False, "sampled": _sampled(q)}
     try:
-        res = providers.complete([{"role": "system", "content": JUDGE_RUBRIC}, {"role": "user", "content": body}],
-                                 schema={"type": "object", "properties": {"score": {"type": "integer"},
-                                                                          "reason": {"type": "string"}},
-                                         "required": ["score"]})
-    except Exception:  # noqa: BLE001
+        res = providers.decide("judge", body, JUDGE_QUESTIONS)
+        out["p"] = providers.decision_p(res, "rubric")
+        out["reference_match"] = providers.decision_p(res, "reference")
+        out["judge"] = res["model"]
+        if out["p"] is not None:
+            out["judge1_score"] = 1.0 if out["p"] >= 0.5 else 0.0
+    except Exception:  # noqa: BLE001 - both decision judges down: the second judge alone
+        pass
+    out["low_confidence"] = out["p"] is None or LOW_CONFIDENCE[0] < out["p"] < LOW_CONFIDENCE[1]
+    second = _second_judge(body) if out["low_confidence"] or out["sampled"] else None
+    if second:
+        out["judge2"], out["judge2_score"] = second["model"], second["score"]
+    score = second["score"] if out["low_confidence"] and second else out["judge1_score"]
+    if score is None:
         return None
-    j = res.get("json") or {}
-    try:
-        return {"score": 1.0 if int(j.get("score", 0)) >= 1 else 0.0, "reason": str(j.get("reason", ""))[:200]}
-    except (TypeError, ValueError):
-        return None
+    return {**out, "score": score, "reason": second["reason"] if out["low_confidence"] and second else ""}
 
 
 def evaluate(agent: Agent, q: dict, as_of: int, variant: str = "D") -> dict:
@@ -332,6 +383,8 @@ def evaluate(agent: Agent, q: dict, as_of: int, variant: str = "D") -> dict:
             "aggregate_correct": None if agg is None else (1.0 if agg == "correct" else 0.0),
             "history_judge": None if judge is None else judge["score"],
             "history_judge_reason": None if judge is None else judge["reason"],
+            **({k: judge[k] for k in ("judge", "p", "reference_match", "judge1_score", "judge2", "judge2_score",
+                                      "low_confidence", "sampled")} if judge else {}),
             "claim_labels": labels, "gold_action_ids": gold_actions, "answer": answer_text[:400], **stages}
 
 
@@ -397,6 +450,13 @@ def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None =
     for v in variants:
         (out / f"answer-{v}.jsonl").write_text("\n".join(json.dumps(r) for r in rows_by_v[v]))
     (out / "answer-setup.json").write_text(json.dumps(setup_log, indent=1))
+    n = sum(len(r) for r in rows_by_v.values())
+    agree, both = judge_agreement([r for v in variants for r in rows_by_v[v]])
+    (out / "judges.json").write_text(json.dumps({
+        "judge": providers.role_models("judge"), "judge2": providers.role_models("judge2"),
+        "answer_models": {r: providers.role_models(r) for r in ("planner", "drafter", "checker", "escalation")},
+        "agreement": agree, "agreement_n": both, "cost_per_answer_usd": round(cost_per_answer(n), 6),
+        "cost_usd": {f"{r}:{m}": round(c, 6) for (r, m), c in providers.COSTS.items()}}, indent=1))
     text = summary(rows_by_v, variants, seeds, per_cat, setup_log)
     (out / "answer-summary.md").write_text(text)
     return text
@@ -441,6 +501,9 @@ def summary(rows_by_v: dict[str, list[dict]], variants: list[str], seeds: list[i
             lines.append(f"| {st} p50/p95 ({v}) | {_pct(xs, .5):.0f} / {_pct(xs, .95):.0f} |" + " |" * (len(variants) - 1))
         lines.append(f"| draft citations, final ({v}) | {sum(r['draft_citations'] for r in rs)} (must be 0) |"
                      + " |" * (len(variants) - 1))
+        agree, both = judge_agreement(rs)
+        if both:
+            lines.append(f"| judge agreement ({v}) | {agree:.2f} (n={both}) |" + " |" * (len(variants) - 1))
         failed = [r["id"] for r in rows_by_v[v] if "setup_failed" in r]
         if failed:
             lines.append(f"| setup failed, skipped ({v}) | {len(failed)}: {', '.join(failed[:8])} |" + " |" * (len(variants) - 1))

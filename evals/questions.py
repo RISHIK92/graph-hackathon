@@ -3,6 +3,7 @@ computed by a chain function. Phrasings come from 3–5 templates per category."
 from __future__ import annotations
 
 import random
+import time
 from collections import defaultdict
 
 from brain.db import Graph
@@ -10,6 +11,11 @@ from brain.db import Graph
 from .gold import ChainGold, SpanGold, World, chain_key
 
 DAY = 86_400_000
+
+
+def _day(ms: int) -> str:
+    d = time.gmtime(ms / 1000)
+    return f"{d.tm_mday} {time.strftime('%b %Y', d)}"
 
 
 def _pick(rnd: random.Random, xs: list, k: int) -> list:
@@ -87,6 +93,9 @@ class Generator:
                 if st["disputes"]:
                     d = st["disputes"][0]
                     self.out[8].append(self.q(8, tmpl.format(x=n[x]), expected_entities=[st["value"], d["challenger"]],
+                                              reference_answer=f"Recorded: {n[st['value']]} owns {n[x]}; disputed by a "
+                                                               f"source saying {n[d['challenger']]} owns {n[x]}. It is "
+                                                               "open until someone with authority settles it.",
                                               expected_fact={"subject_id": st["value"], "predicate": "OWNS", "object_id": x},
                                               groups=[self.group(key, st["value"]), self.group(key, d["challenger"])],
                                               dispute={"recorded": st["value"], "challenger": d["challenger"]},
@@ -172,17 +181,21 @@ class Generator:
             if not st or not c["to"] or st["value"] != c["to"]:
                 continue
             k = c["key"]
+            to, frm, at = n.get(c["to"], c["to"]), n.get(c["from"], c["from"]) if c["from"] else "", _day(c["at"])
             if c["predicate"] == "OWNS":
                 texts = [f"Who owns {n.get(k, k)} now?", f"Which team currently owns {n.get(k, k)}?"]
                 fact = {"subject_id": c["to"], "predicate": "OWNS", "object_id": k}
+                ref = f"{to} owns {n.get(k, k)} now" + (f"; {frm} owned it until {at}." if frm else ".")
             elif c["predicate"] == "LEADS":
                 texts = [f"Who leads {n.get(k, k)} now?", f"Who is the current lead of {n.get(k, k)}?"]
                 fact = {"subject_id": c["to"], "predicate": "LEADS", "object_id": k}
+                ref = f"{to} leads {n.get(k, k)} now" + (f"; {frm} led it until {at}." if frm else ".")
             else:
                 texts = [f"Which team is {n.get(k, k)} on now?", f"What is {n.get(k, k)}'s primary team today?"]
                 fact = {"subject_id": k, "predicate": "MEMBER_OF", "object_id": c["to"]}
+                ref = f"{n.get(k, k)} is on {to} now" + (f"; they were on {frm} until {at}." if frm else ".")
             for txt in texts:
-                self.out[5].append(self.q(5, txt, expected_entities=[c["to"]], expected_fact=fact,
+                self.out[5].append(self.q(5, txt, expected_entities=[c["to"]], expected_fact=fact, reference_answer=ref,
                                           groups=[self.group(key, c["to"])],
                                           forbidden=self.stale_spans(key, c["from"], c["at"]),
                                           change_id=c["change_id"], rel=[c["predicate"]]))
@@ -253,8 +266,8 @@ class Generator:
                 continue
             ref = f"route:{t['id']}"
             routes.append({"op": "route_to_owner", "ticket": t["id"], "as": demo, "ref": ref})
-            route_q.append(({"ticket": t, "target": target, "team": team, "x": x, "groups": groups, "rel": rel,
-                             "ref": ref}, own))
+            route_q.append(({"ticket": t, "target": target, "team": team, "x": x, "owned": x_owned, "groups": groups,
+                             "rel": rel, "ref": ref}, own))
         tmpls7 = ["Why did you route {t} to {p} on {date}?",
                   "On {date} you routed {t} to {p}. What was that based on?",
                   "Earlier you routed {t} to {p}. Which facts did you rely on?"]
@@ -265,6 +278,11 @@ class Generator:
                     7, tmpl.format(t=t["key"], p=n.get(r["target"], r["target"]), date="{date}"),
                     expected_entities=[r["target"], r["team"]],
                     expected_fact={"subject_id": r["team"], "predicate": "OWNS", "object_id": r["x"]},
+                    reference_answer=f"At the time of routing, {n.get(r['team'], r['team'])} owned "
+                                     f"{n.get(r['owned'], r['owned'])}"
+                                     + (f" and {n.get(r['target'], r['target'])} led {n.get(r['team'], r['team'])}"
+                                        if r["target"] != r["team"] else "")
+                                     + f", so {t['key']} went to {n.get(r['target'], r['target'])}.",
                     groups=r["groups"], rel=r["rel"], setup_script=routes, gold_action_refs=[r["ref"]],
                     belief_at_from_action=True, session="token", acting_as=demo, expected_tense="current",
                     gold_action_ids=[], tmpl=ti))
