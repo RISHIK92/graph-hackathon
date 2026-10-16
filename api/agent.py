@@ -219,7 +219,8 @@ class Agent:
                     {"role": "user", "content": text}],
                     schema={"type": "object", "properties": {
                         "intent": {"type": "string", "enum": INTENTS}, "wants_action": {"type": "string"},
-                        "as_of": {"type": "string"}}, "required": ["intent", "wants_action"]}, role="planner")
+                        "as_of": {"type": "string"}}, "required": ["intent", "wants_action"]}, role="planner",
+                    timeout=PLAN_TIMEOUT_S)
                 j = res.get("json") or {}
                 h = heuristic_plan(text)
                 # Heuristic-first: the rules recognise the named intents and the explicit action verbs
@@ -350,7 +351,8 @@ class Agent:
                 any(it["label"] == "aggregate" or it.get("rationale") for p in packs.values() for it in p["items"]):
             return base
         try:
-            llm = self._llm_draft(text, plan, packs, errors, timeout=timeout, **({"role": role} if role != "drafter" else {}))
+            llm = self._llm_draft(text, plan, packs, errors, timeout=timeout or DRAFT_TIMEOUT_S,
+                                  **({"role": role} if role != "drafter" else {}))
         except httpx.TimeoutException:
             return {**base, "llm_error": "timeout"}
         except Exception:  # noqa: BLE001
@@ -632,6 +634,8 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
 
 REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first verified draft stands
 ESCALATION_TIMEOUT_S = 5   # the escalation redraft after a failed check (item 20 step 0)
+PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
+DRAFT_TIMEOUT_S = 10
 CHECK_TIMEOUT_S = 5
 CHECK_QUESTIONS = {
     "supported": {"type": "noul", "instructions": "Is everything the CLAIM says stated by the EVIDENCE?",

@@ -65,7 +65,7 @@ def test_a_passing_check_keeps_the_drafted_answer(world, live):
 def test_a_failed_check_escalates_once_and_a_passing_recheck_keeps_it(world, live):
     seen, drafts = live([0.1, 0.9])
     ans, trace = _turn(world)
-    assert drafts == [("drafter", None), ("escalation", agent_mod.ESCALATION_TIMEOUT_S)] and agent_mod.ESCALATION_TIMEOUT_S <= 5
+    assert drafts == [("drafter", agent_mod.DRAFT_TIMEOUT_S), ("escalation", agent_mod.ESCALATION_TIMEOUT_S)] and agent_mod.ESCALATION_TIMEOUT_S <= 5
     assert trace["check"]["result"] == "pass after escalation" and len(seen) == 2
     assert ans["assembled"]["explanation"] == "escalated"
     assert any(m["role"] == "escalation" for m in trace["models"])
@@ -102,3 +102,20 @@ def test_no_checker_model_keeps_the_answer_and_says_skipped(world, live):
 def test_offline_answers_record_the_check_as_skipped(world):
     ans, trace = _turn(world)
     assert trace["check"] == {"result": "skipped", "reason": "offline"} and trace["models"] == []
+
+
+def test_planner_and_drafter_calls_are_bounded(world, monkeypatch):
+    """A/B finding (item 20): an unbounded drafter call with retries took up to 94 s. Interactive model calls
+    get one bounded attempt per model, then the graph's draft."""
+    seen = []
+
+    def complete(messages, schema=None, role=None, timeout=None, **kw):
+        seen.append((role, timeout))
+        raise httpx.ReadTimeout("slow")
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", complete)
+    monkeypatch.setattr(agent_mod.providers, "decide", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    ans, trace = _turn(world)
+    assert ("planner", agent_mod.PLAN_TIMEOUT_S) in seen and ("drafter", agent_mod.DRAFT_TIMEOUT_S) in seen, seen
+    assert agent_mod.PLAN_TIMEOUT_S <= 6 and agent_mod.DRAFT_TIMEOUT_S <= 10
+    assert not ans["abstained"] and trace["verification"]["draft"] == "deterministic"
