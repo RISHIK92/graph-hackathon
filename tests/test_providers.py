@@ -127,3 +127,11 @@ def test_decision_p_reads_scores_and_booleans():
     assert providers.decision_p({"answers": {"q": {"answer": False}}}, "q") == 0.0
     assert providers.decision_p({"answers": {"q": {"answer": "yes", "probability": 0.8}}}, "q") == pytest.approx(0.8)
     assert providers.decision_p({"answers": {}}, "q") is None
+
+
+def test_the_cache_folder_can_be_moved_for_a_cold_run(tmp_path):
+    import subprocess
+    import sys
+    out = subprocess.run([sys.executable, "-c", "from brain import providers; print(providers.CACHE_DIR)"],
+                         env={**__import__("os").environ, "BRAIN_LLM_CACHE": str(tmp_path)}, capture_output=True, text=True)
+    assert out.stdout.strip() == str(tmp_path)

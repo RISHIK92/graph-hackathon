@@ -20,7 +20,7 @@ import httpx
 
 from .config import LEGACY_ROLES, ROLE_MODELS, ROOT, settings
 
-CACHE_DIR = ROOT / ".cache" / "llm"
+CACHE_DIR = Path(os.environ.get("BRAIN_LLM_CACHE") or ROOT / ".cache" / "llm")   # a fresh one for a cold-cache eval
 CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
 DECISIONS_URL = "https://openrouter.ai/api/alpha/decisions"   # alpha: Jev, Drex and the decision judges
 DECISION_STATE_MAX = 32_000   # bytes per request
