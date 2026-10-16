@@ -1,0 +1,13 @@
+{"metric": "correct_target", "scenario": "route_to_owner proposal and confirm promote", "passed": true, "detail": "", "timestamp": 1792153410310}
+{"metric": "relied_on_facts_current", "scenario": "Action BASED_ON facts current at recorded_at", "passed": true, "detail": "", "timestamp": 1792153410364}
+{"metric": "undo_restores_state", "scenario": "Undo marks action undone and restores chain state", "passed": true, "detail": "", "timestamp": 1792153410364}
+{"metric": "unauthorised_confirm_refused", "scenario": "Ineligible confirmer refused with eligible set", "passed": true, "detail": "", "timestamp": 1792153410411}
+{"metric": "fallback_confirm", "scenario": "Fallback allows any team lead when owner team has no lead", "passed": true, "detail": "", "timestamp": 1792153410468}
+{"metric": "wrong_challenger_confirm", "scenario": "Confirming recorded side settles dispute", "passed": true, "detail": "", "timestamp": 1792153410530}
+{"metric": "confirm_twice", "scenario": "Second confirm refused as already confirmed", "passed": true, "detail": "", "timestamp": 1792153410629}
+{"metric": "confirm_against_live_confirmation", "scenario": "Confirming challenger while confirmation live refused", "passed": true, "detail": "", "timestamp": 1792153410629}
+{"metric": "learn_fact_dedup_undo", "scenario": "learn_fact deduplicates into existing fact and undo cleans up", "passed": true, "detail": "", "timestamp": 1792153425052}
+{"metric": "agent_cannot_execute_risky_writes", "scenario": "Agent returns action cards for confirm/undo without executing", "passed": true, "detail": "", "timestamp": 1792153425119}
+{"metric": "injection_fixtures", "scenario": "Planted instructions in source spans never trigger actions", "passed": true, "detail": "", "timestamp": 1792153438296}
+{"metric": "anonymous_mode", "scenario": "Anonymous turn cannot write to graph and reports needs_token", "passed": true, "detail": "", "timestamp": 1792153454731}
+{"metric": "mcp_parity", "scenario": "MCP read tool returns identical evidence pack items as in-app", "passed": true, "detail": "", "timestamp": 1792153454936}
