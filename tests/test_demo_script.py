@@ -59,12 +59,10 @@ def test_demo_sequence(seed):
     acts = Actions(g)
     s = agent.create_session("judge", JONAH)
 
-    # (1) owner is Payments, no dispute
+    # Beat 1, the risk of a wrong answer: Payments owns Ledger, and a ticket is routed on that answer
     ev = list(agent.turn(s, "Who owns Ledger?"))
     lines = shown(next(e for e in ev if e["event"] == "answer"))
     assert lines[0]["text"].startswith("Payments owns Ledger.") and lines[0]["status"] == "current", lines
-
-    # (2) routing RDS-42 proposes the Payments lead; she is eligible as holder, Jonah is not
     ev = list(agent.turn(s, "Route RDS-42 to the owner"))
     act = next(e for e in ev if e["event"] == "action")
     assert act["result"]["target"] == PRIYA
@@ -77,28 +75,19 @@ def test_demo_sequence(seed):
     assert g.ro("MATCH (:Ticket {id:$t})-[a:ASSIGNED_TO]->(p) WHERE a.valid_to = $m RETURN p.id AS p",
                 {"t": RDS42, "m": MAX}) == [{"p": PRIYA}]
 
-    # (3) MCP get_owner(ledger-service) returns the same pack as in-app (except pack_id)
-    mcp.G = g
-    linked = json.loads(mcp.link_entities(["ledger-service"]))["pack"]["items"][0]["rows"][0]["entity_id"]
-    assert linked == LEDGER
-    a = json.loads(mcp.get_owner(LEDGER))["pack"]
-    b = run_tool(Ctx(g), "get_owner", {"entity_id": LEDGER})
-    strip = lambda p: [[f["assertion_id"] for f in it["facts"]] for it in p["items"]]  # noqa: E731
-    assert strip(a) == strip(b)
-
-    # (4) learn_fact on "Infra owns Ledger now": one rank-1 OWNS, disputed against Payments' run
+    # Beat 2, a chat claim becomes a dispute: one rank-1 OWNS, disputed against Payments' run
     ev = list(agent.turn(s, "Infra owns Ledger now"))
     lf = next(e for e in ev if e["event"] == "action")
     assert lf["result"]["outcome"] == "new" and lf["result"]["status"] == "disputed"
     challenger = lf["result"]["assertion_id"]
-
-    # (5) get_owner: Payments plus that open dispute; only the Payments lead may confirm
     f = owner_facts(g)
     assert f["subject_id"] == PAYMENTS and f["open_disputes"] == [challenger]
+    lead = shown(next(e for e in agent.turn(s, "Who owns Ledger?") if e["event"] == "answer"))[0]["text"]
+    assert lead.startswith("Recorded: Payments owns Ledger") and lead.endswith("Priya Raman can settle it."), lead
+
+    # Beat 3, the wrong person can't confirm (Bob leads Infra, the team the claim favours); the right one does
     el = acts.confirm_preview(BOB, assertion_id=challenger)
     assert {e["person_id"] for e in el["eligible"]} == {PRIYA} and not el["actor_eligible"]
-
-    # (6) she confirms the challenger: Infra current from the turn's ts, Payments superseded at it
     turn_ts = g.ro("MATCH (a:Assertion {id:$a}) RETURN a.valid_from AS v", {"a": challenger})[0]["v"]
     conf = acts.confirm_fact(Actor(PRIYA, client="judge", session_source_id=s.id), assertion_id=challenger)
     assert conf["eligibility"] == "holder"
@@ -108,19 +97,39 @@ def test_demo_sequence(seed):
                "RETURN DISTINCT a.valid_to AS vt", {"p": PAYMENTS, "l": LEDGER})
     assert {r["vt"] for r in pay} == {turn_ts}
 
-    # (7) the routing's action view: then Payments owned Ledger, now Infra does
-    it = run_tool(Ctx(g), "explain_action", {"action_id": route_id})["items"][0]
-    then = {x["subject_id"]: x["status"] for x in it["then_now"]["then"]["based_on"] if x["predicate"] == "OWNS"}
-    now = {x["subject_id"]: x["status"] for x in it["then_now"]["now"]["based_on"] if x["predicate"] == "OWNS"}
-    assert then[PAYMENTS] == "current" and now[PAYMENTS] == "superseded"
-
-    # (8) graph at D_reorg - 1 day vs D_reorg: Platform then Payments
+    # Beat 4, time travel: the graph at D_reorg - 1 day vs D_reorg (Platform then Payments), and the
+    # critical-systems ranking on the snapshot of each date
     d = 1775001600000
     owners = lambda V: {r["o"] for r in g.ro("MATCH (o)-[e:OWNS]->(:System {id:$l}) WHERE e.valid_from <= $V AND "  # noqa: E731
                                               "e.valid_to > $V RETURN o.id AS o", {"l": LEDGER, "V": V})}
     assert owners(d - 86_400_000) == {PLATFORM} and owners(d) == {PAYMENTS}
+    for V, when in ((d - 86_400_000, "as of 31 Mar 2026"), (None, "now")):
+        r = run_tool(Ctx(g, as_of=V), "critical_systems", {"k": 5})["items"][0]["ranking"]
+        assert r["rank"] == 1 and r["when"] == when
 
-    # (9) not filmed: undo the confirm; disputed again
+    # Beat 5, then/now on the earlier routing: Payments owned Ledger then, Infra does now
+    it = run_tool(Ctx(g), "explain_action", {"action_id": route_id})["items"][0]
+    then = {x["subject_id"]: x["status"] for x in it["then_now"]["then"]["based_on"] if x["predicate"] == "OWNS"}
+    now = {x["subject_id"]: x["status"] for x in it["then_now"]["now"]["based_on"] if x["predicate"] == "OWNS"}
+    assert then[PAYMENTS] == "current" and now[PAYMENTS] == "superseded"
+    lead = shown(next(e for e in agent.turn(s, "Why did you route RDS-42 to Priya?") if e["event"] == "answer"))[0]["text"]
+    assert "Payments owned Ledger" in lead and "(changed to Infra on " in lead, lead
+
+    # Beat 6, blast radius: what breaks names the new owner's lead to tell
+    lead = shown(next(e for e in agent.turn(s, "What breaks if Ledger goes down, and who do I tell?")
+                      if e["event"] == "answer"))[0]["text"]
+    assert "would be affected if Ledger goes down" in lead and "Bob Lindqvist" in lead, lead
+
+    # Not filmed: MCP get_owner(ledger-service) returns the same pack as in-app (except pack_id)
+    mcp.G = g
+    linked = json.loads(mcp.link_entities(["ledger-service"]))["pack"]["items"][0]["rows"][0]["entity_id"]
+    assert linked == LEDGER
+    a = json.loads(mcp.get_owner(LEDGER))["pack"]
+    b = run_tool(Ctx(g), "get_owner", {"entity_id": LEDGER})
+    strip = lambda p: [[f["assertion_id"] for f in it["facts"]] for it in p["items"]]  # noqa: E731
+    assert strip(a) == strip(b)
+
+    # Not filmed: undo the confirm; disputed again
     acts.undo_action(Actor(PRIYA, client="judge", session_source_id=s.id), conf["action_id"])
     f = owner_facts(g)
     assert f["subject_id"] == PAYMENTS and f["open_disputes"] == [challenger]
