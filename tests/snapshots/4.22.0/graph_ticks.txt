@@ -2,5 +2,5 @@ Results
     Sort
         Aggregate
             Filter
-                Conditional Traverse | (anon_0)-[e]->(anon_1)
-                    All Node Scan | (anon_0)
+                Conditional Traverse | (anon_0)-[e]->(anon_1:Entity)
+                    Node By Label Scan | (anon_0:Entity)
