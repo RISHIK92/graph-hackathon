@@ -365,10 +365,8 @@ class Agent:
         if not llm["claims"]:   # an empty or abstaining LLM draft never vetoes the graph's answer (item 18)
             return base
         ix = index_packs(packs)
-        for c in llm["claims"]:   # gate C10: a dropped or invented citation means the verified draft
-            cites = [*(c.get("span_ids") or []), *(c.get("assertion_ids") or [])]
-            if not cites or any(x not in ix.spans and x not in ix.facts for x in cites):
-                return {**base, "llm_error": "citation"}
+        if any(_uncited(c, ix) for c in llm["claims"]):   # gate C10: a dropped or invented citation
+            return {**base, "llm_error": "citation"}
         # Hybrid: the LLM's claims and explanation, plus any graph fact it left out. Free-tier models
         # often return no claims for large packs; the deterministic claims are always complete.
         kept = verify({"claims": [dict(c) for c in llm["claims"]]}, packs)["kept"]   # only survivors count as covered
@@ -538,6 +536,16 @@ _TENSE = {"present": "current", "now": "current", "current": "current", "past": 
           "historical": "historical", "former": "historical", "proposed": "proposed", "pending": "proposed"}
 
 
+def _uncited(c: dict, ix) -> bool:
+    """A claim citing nothing, or an id the packs don't hold (gate C10). An action or a path is a citation."""
+    ids = [*(c.get("span_ids") or []), *(c.get("assertion_ids") or [])]
+    acts, path = c.get("action_ids") or [], c.get("path_id")
+    if not ids and not acts and not path:
+        return True
+    return any(x not in ix.spans and x not in ix.facts for x in ids) or any(a not in ix.actions for a in acts) \
+        or bool(path and path not in ix.paths)
+
+
 def normalise_claims(claims: list, packs: dict[str, dict]) -> list[dict]:
     """Coerce LLM claims into the claim schema (03 §3) so the verifier judges substance, not field names:
     tense vocabulary, label, the fact copied from the cited assertion, a quote from a cited span."""
@@ -563,6 +571,8 @@ def normalise_claims(claims: list, packs: dict[str, dict]) -> list[dict]:
         a = facts.get(c["assertion_ids"][0]) if c["assertion_ids"] else None
         if c.get("label") not in ("graph", "text_only", "unverified_path"):
             c["label"] = "graph" if a else "text_only"
+        if not isinstance(c.get("fact"), dict):   # a model sometimes writes the fact as a sentence
+            c["fact"] = None
         if a and not c.get("fact"):
             c["fact"] = {"subject_id": a["subject_id"], "predicate": a["predicate"], "object_id": a["object_id"],
                          "object_value": a["object_value"], "negated": a["negated"]}
@@ -925,7 +935,8 @@ def relevant_claims(plan: dict, claims: list[dict]) -> list[dict]:
     keep = _INTENT_PREDS.get(plan.get("intent", ""))
     if not keep:
         return claims
-    return [c for c in claims if c.get("label") != "graph" or (c.get("fact") or {}).get("predicate") in keep]
+    return [c for c in claims if c.get("label") != "graph"
+            or (c["fact"] if isinstance(c.get("fact"), dict) else {}).get("predicate") in keep]
 
 
 _PRESENT = {"OWNS": " owns ", "LEADS": " leads ", "ASSIGNED_TO": " is assigned to ", "MEMBER_OF": " is a member of ",

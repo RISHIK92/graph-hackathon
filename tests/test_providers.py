@@ -150,7 +150,7 @@ def test_deepseek_only_settings_stay_off_other_models(live, monkeypatch):
 def test_planner_drafter_and_second_judge_have_a_default_pinned_provider(live, monkeypatch):
     """Gate A1: the serving provider is a pinned one. DeepSeek's own endpoint for the planner and drafter,
     DeepInfra (which serves both nemotron and GLM) for the second judge; MODEL_<ROLE>_PROVIDER overrides."""
-    for role, pin in (("planner", "DeepSeek"), ("drafter", "DeepSeek"), ("judge2", "DeepInfra")):
+    for role, pin in (("planner", "DeepInfra"), ("drafter", "DeepInfra"), ("judge2", "DeepInfra")):
         body = providers._role_body(role, providers.role_models(role)[0])
         assert body["provider"] == {"require_parameters": True, "order": [pin], "allow_fallbacks": False}, role
     monkeypatch.setenv("MODEL_PLANNER_PROVIDER", "Fireworks")

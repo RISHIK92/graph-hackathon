@@ -21,7 +21,7 @@ def test_the_guard_waits_for_fifteen_answers():
 
 
 def test_the_guard_stops_on_deterministic_fallbacks():
-    rows = [_row(i) for i in range(13)] + [_row(13, "deterministic"), _row(14, "deterministic")]
+    rows = [_row(i) for i in range(12)] + [_row(12 + i, "deterministic") for i in range(3)]
     assert "fell back" in ev.Guard().reason(rows, {}, 0.0)
     fixed = [_row(i) for i in range(13)] + [_row(13, "deterministic", "4"), _row(14, "deterministic", "10")]
     assert ev.Guard().reason(fixed, {}, 0.0) is None   # decision traces and counts never use the drafter
@@ -137,3 +137,13 @@ def test_checker_blocks_are_not_fallbacks():
                                             "verified draft"} for i in range(3)]
     assert ev.Guard().reason(rows, {}, 0.0) is None
     assert ev.fell_back({**_row(1, "deterministic"), "label": "4-pending"}) is False
+
+
+def test_the_guard_needs_three_events_before_it_aborts():
+    """Re-run finding: on a 29-question arm one fallback (1 of 9) or one drafter error (1 of 14) tripped the
+    10% and 5% rules. An abort needs at least 3 fallbacks or 3 errors as well as the rate."""
+    rows = [_row(i) for i in range(16)] + [_row(16, "deterministic"), _row(17, "deterministic")]
+    assert ev.Guard().reason(rows, {}, 0.0) is None
+    assert ev.Guard().reason(rows + [_row(18, "deterministic")], {}, 0.0)
+    assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 14, "errors": 2}}, 0.0) is None
+    assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 30, "errors": 3}}, 0.0)

@@ -70,6 +70,7 @@ ROLE_MODELS = {
     "judge2": ("nvidia/nemotron-3-ultra-550b-a55b", "z-ai/glm-5.2"),   # user decision, Oct 16
 }
 LEGACY_ROLES = ("planner", "drafter", "extractor")
-# Pinned OpenRouter providers (gate A1), from each model's /endpoints list: DeepSeek's own endpoint, and
-# DeepInfra, which serves both second-judge models.
-ROLE_PROVIDERS = {"planner": "DeepSeek", "drafter": "DeepSeek", "judge2": "DeepInfra"}
+# Pinned OpenRouter providers (gate A1), from each model's /endpoints list. DeepSeek's own endpoint is blocked by
+# the account's data policy ("paid model training"), so DeepInfra, which honours require_parameters and also
+# serves both second-judge models.
+ROLE_PROVIDERS = {"planner": "DeepInfra", "drafter": "DeepInfra", "judge2": "DeepInfra"}

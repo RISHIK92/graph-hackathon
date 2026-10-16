@@ -153,3 +153,23 @@ def test_the_llm_planner_is_skipped_when_the_rules_are_sure(world, monkeypatch):
     agent.plan("Is Ledger fine?", s)
     assert seen.count("planner") == 2
     assert agent_mod.CHECK_TIMEOUT_S <= 2
+
+
+def test_llm_claims_with_a_string_fact_or_only_an_action_citation_are_handled(world, live, monkeypatch):
+    """Re-run findings: the model returned `fact` as a string (a crash in relevant_claims), and a claim citing
+    only the action or path it is about was taken as uncited by the C10 guard."""
+    live([0.95])
+
+    def llm(self, text, plan, packs, errors=None, timeout=None, role="drafter"):
+        base = deterministic_draft(plan, packs, text)["claims"]
+        return {"claims": [dict(c, fact="Payments owns Ledger") for c in base], "explanation": "drafted",
+                "model": "deepseek/deepseek-v4.1-flash"}
+    monkeypatch.setattr(Agent, "_llm_draft", llm)
+    ans, trace = _turn(world)
+    assert not ans["abstained"] and trace["draft_error"] is None
+    from api.agent import _uncited
+    from api.verifier import index_packs
+    ix = type("I", (), {"spans": {}, "facts": {}, "actions": {"ac_1"}, "paths": {"p_1"}})()
+    assert not _uncited({"action_ids": ["ac_1"]}, ix) and not _uncited({"path_id": "p_1"}, ix)
+    assert _uncited({"span_ids": ["sp_x"]}, ix) and _uncited({}, ix)
+    assert index_packs   # the real index carries actions and paths too

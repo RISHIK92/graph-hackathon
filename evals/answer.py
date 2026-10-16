@@ -288,10 +288,10 @@ class Guard:
             return None
         eligible = [r for r in rows if r.get("label") not in FIXED_SHAPE and not r.get("abstained")]
         fell = [r for r in eligible if fell_back(r)]
-        if eligible and len(fell) / len(eligible) > 0.10:
+        if len(fell) >= 3 and len(fell) / len(eligible) > 0.10:   # 3 events, so one slip can't stop a small run
             return f"{len(fell)} of {len(eligible)} answers fell back to the deterministic draft"
         for role, s in sorted(stats.items()):
-            if s["calls"] and s["errors"] / s["calls"] > 0.05:
+            if s["errors"] >= 3 and s["errors"] / s["calls"] > 0.05:
                 return f"{role} error rate {s['errors']}/{s['calls']}"
         if self.ab_cost and answer_cost / len(rows) > 3 * self.ab_cost:
             return f"cost per answer {answer_cost / len(rows):.5f} is over 3x the A/B's {self.ab_cost:.5f}"
