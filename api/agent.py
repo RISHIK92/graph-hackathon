@@ -384,13 +384,18 @@ class Agent:
             not re.search(r"\s[A-Z][a-z0-9]+", text)   # "Who leads Nimbus Vault?" names something unknown
         if plan["intent"] != "help" and not (plan["intent"] == "other" and names_nothing):
             return []
-        systems = sorted(r["name"] for r in self.g.q("all_entities") if r["id"].startswith("system:") and r["name"])
-        x = "Ledger" if "Ledger" in systems else (systems[0] if systems else "a system")
+        ents = {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
+        # examples spread over several real systems, not one (user feedback: "Ledger" was in every example)
+        systems = [ents[i] for i in ("system:reporting", "system:aurora", "system:checkout", "system:ledger") if i in ents] \
+            or sorted(n for i, n in ents.items() if i.startswith("system:")) or ["a system"]
+        a, b = systems[0], systems[1 % len(systems)]
+        adr = ents.get("decision:adr-007") or next((n for i, n in sorted(ents.items()) if i.startswith("decision:")), "")
+        why = f"“Why was {adr} accepted?”" if adr else f"“Why is {b} on its current setup?”"
         head = [] if plan["intent"] == "help" else ["I couldn't tie that to anything in the graph."]
         return head + [
             "I answer questions about your company from its graph, and every answer cites where it came from.",
-            f"Try: “Who owns {x}?”, “Why is {x} on its current setup?”, “What breaks if {x} goes down, and who do I "
-            f"tell?”, “Who knows about {x}?”, “Which systems are most critical?” or “Where are our knowledge gaps?”.",
+            f"Try: “Who owns {a}?”, {why}, “What breaks if {b} goes down, and who do I tell?”, “Who knows about "
+            f"{a}?”, “Which systems are most critical?” or “Where are our knowledge gaps?”.",
             "With the access token I can also act: route a ticket to its owner, record a fact you tell me "
             "(“Infra owns Ledger now”), draft an ADR change or flag outdated docs. A change waits for the right "
             "person to confirm it."]

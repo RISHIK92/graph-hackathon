@@ -113,7 +113,7 @@ def test_questions_about_the_assistant_get_a_help_reply(fx):  # noqa: F811
         ans = answer_of(run(agent, s, q))
         assert ans.get("help") and not ans["claims"], q
         text = " ".join(ans["missing"])
-        assert "Who owns Ledger?" in text and "cites" in text, (q, text)
+        assert re.search(r"Who owns (Ledger|Reporting|Aurora|Checkout)\?", text) and "cites" in text, (q, text)
 
 
 def test_a_question_that_names_nothing_and_fits_no_intent_quotes_nothing(fx):  # noqa: F811

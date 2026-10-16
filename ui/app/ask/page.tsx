@@ -18,11 +18,11 @@ import type { Claim, Directory, Fact, Pack, Path, Refusal, SpanItem } from "@/li
 
 // The empty state (design brief addendum, AskStart board): six questions on keys 1-6, each saying what it returns
 const SUGGEST_Q = [
-  { kind: "OWNERSHIP", tone: "per", text: "Who owns Ledger?", returns: "a cited path · team and lead" },
+  { kind: "OWNERSHIP", tone: "per", text: "Who owns Reporting?", returns: "a cited path · team and lead" },
   { kind: "THEN AND NOW", tone: "then", text: "Who owned Ledger before the reorg?", returns: "the earlier owner, dated and cited" },
-  { kind: "BLAST RADIUS", tone: "sys", text: "What breaks if Ledger goes down, and who do I tell?", returns: "affected systems · who to tell" },
-  { kind: "DECISION", tone: "rec", text: "Why is Ledger on Aurora?", returns: "the decision, its reasons, its sources" },
-  { kind: "EXPERTS", tone: "per", text: "Who knows about Ledger?", returns: "people ranked by evidence" },
+  { kind: "BLAST RADIUS", tone: "sys", text: "What breaks if Aurora goes down, and who do I tell?", returns: "affected systems · who to tell" },
+  { kind: "DECISION", tone: "rec", text: "Why was ADR-007 accepted?", returns: "the decision, its reasons, its sources" },
+  { kind: "EXPERTS", tone: "per", text: "Who knows about Reporting?", returns: "people ranked by evidence" },
   { kind: "PENDING", tone: "now", text: "Is anything pending for ADR-007?", returns: "open proposals and who can confirm" },
 ];
 const SUGGEST_A = [

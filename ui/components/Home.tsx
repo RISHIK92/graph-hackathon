@@ -9,10 +9,10 @@ import type { Directory, Pack } from "@/lib/types";
 import { CodingAgentHelp } from "./CodingAgentHelp";
 
 // Every value below is from the seed-1 demo company (captured from the API on a fresh seed), never invented:
-// the catalogue entry behind "Payments owns Ledger", Platform as the owner before the reorg on 1 Apr 2026,
+// the catalogue entry behind "Platform owns Reporting", Platform as Ledger's owner before the reorg on 1 Apr 2026,
 // the stale "Ledger overview" wiki page, and the real impact and dispute answers (item 19 design brief).
 const ask = (q: string) => `/ask${qs({ q, send: "1" })}`;
-const SAMPLES = ["Who owns Ledger?", "Who owned Ledger before the reorg?", "Why is Ledger on Aurora?"];
+const SAMPLES = ["Who owns Reporting?", "Who owned Ledger before the reorg?", "Why was ADR-007 accepted?"];
 const WORDS = ["owns", "decided", "changed"];
 
 function useReducedMotion(): boolean {
@@ -87,7 +87,7 @@ function Hero({ still }: { still: boolean }) {
         <p className="hero-sub nx-rise nx-d2">Nodus reads Slack, docs and tickets into a graph of dated facts. Every answer is a path through that graph, with the sentence it came from.</p>
         <form className="hero-ask nx-rise nx-d3" onSubmit={(e) => { e.preventDefault(); if (q.trim()) router.push(ask(q.trim())); }}>
           <label htmlFor="hero-q" className="sr-only">Ask a question</label>
-          <input id="hero-q" type="text" value={q} onChange={(e) => setQ(e.target.value)} placeholder="What breaks if Ledger goes down?" autoComplete="off" />
+          <input id="hero-q" type="text" value={q} onChange={(e) => setQ(e.target.value)} placeholder="What breaks if Aurora goes down?" autoComplete="off" />
           <button type="submit">Ask</button>
         </form>
         <div className="hero-try nx-rise nx-d4">
@@ -98,20 +98,20 @@ function Hero({ still }: { still: boolean }) {
 
       <div className="hero-card nx-rise nx-d2" aria-live="polite">
         <div className="hero-card-top">
-          <span>YOU ASKED · WHO OWNS LEDGER?</span>
+          <span>YOU ASKED · WHO OWNS REPORTING?</span>
           <button type="button" className="home-btn" onClick={replay} aria-label="Replay the answer">Replay</button>
         </div>
         {phase === 1 && <span className="nx-think">Walking the graph · OWNS, LEADS…</span>}
         {phase >= 2 && (
-          <p className="hero-answer nx-rise"><span className="e-per">Payments</span> owns <span className="e-sys">Ledger</span>. <span className="e-per">Priya Raman</span> leads Payments.<sup className="nx-cite">[1]</sup></p>
+          <p className="hero-answer nx-rise"><span className="e-per">Platform</span> owns <span className="e-sys">Reporting</span>.<sup className="nx-cite">[1]</sup> <span className="e-per">Tomas Reyes</span> leads Platform.<sup className="nx-cite">[2]</sup></p>
         )}
         {phase >= 3 && (
           <div className="hero-path">
-            <span className="nx-chip sys nx-rise">Ledger</span>
+            <span className="nx-chip sys nx-rise">Reporting</span>
             <span className="nx-rel nx-rise nx-d1">← OWNS</span>
-            <span className="nx-chip per nx-rise nx-d2">Payments</span>
+            <span className="nx-chip per nx-rise nx-d2">Platform</span>
             <span className="nx-rel nx-rise nx-d3">← LEADS</span>
-            <span className="nx-chip per nx-rise nx-d4">Priya Raman</span>
+            <span className="nx-chip per nx-rise nx-d4">Tomas Reyes</span>
             <span className="nx-meta nx-rise nx-d5">2 hops · 2 sources</span>
           </div>
         )}
@@ -120,13 +120,13 @@ function Hero({ still }: { still: boolean }) {
             <div className="hero-source nx-rise">
               <span className="nx-cite">[1]</span>
               <div className="stack" style={{ gap: 4 }}>
-                <q>owner: team:payments · owner_from: 2026-04-01</q>
-                <span className="src-meta">Service catalogue · Ledger entry · valid since 1 Apr 2026</span>
+                <q>owner: team:platform · owner_from: 2025-01-01</q>
+                <span className="src-meta">Service catalogue · Reporting entry · valid since 1 Jan 2025</span>
               </div>
             </div>
             <div className="hero-links nx-rise nx-d1">
-              <Link href={ask("Who owns Ledger?")} className="home-link">Show how I answered</Link>
-              <Link href={ask("Who owns Ledger?")} className="home-link">See the Cypher</Link>
+              <Link href={ask("Who owns Reporting?")} className="home-link">Show how I answered</Link>
+              <Link href={ask("Who owns Reporting?")} className="home-link">See the Cypher</Link>
             </div>
           </>
         )}
@@ -183,7 +183,7 @@ function Problem({ still }: { still: boolean }) {
 }
 
 const MOMENTS = [
-  { label: "CITED ANSWERS", title: "Every answer shows its path", body: "Not a summary of documents: a walk through the graph, with the source sentence behind each step.", cta: "Ask who owns Ledger →", href: ask("Who owns Ledger?") },
+  { label: "CITED ANSWERS", title: "Every answer shows its path", body: "Not a summary of documents: a walk through the graph, with the source sentence behind each step.", cta: "Ask who owns Reporting →", href: ask("Who owns Reporting?") },
   { label: "TIME TRAVEL", title: "Rewind the company to any date", body: "Facts keep the dates they held. Ask about the time before the reorg and get that time's answer, cited.", cta: "Compare then and now →", href: ask("Who owned Ledger before the reorg?") },
   { label: "DISPUTES", title: "Contradictions get settled, not buried", body: "When a chat message contradicts the record, Nodus keeps both and asks the one person the graph says can decide.", cta: "Settle a dispute →", href: "/inbox" },
   { label: "CODING AGENTS", title: "Claude Code asks it too", body: "An MCP server gives agents the same cited answers: who owns this service, and what breaks if I change it.", cta: "Connect over MCP →", href: "" },
@@ -194,10 +194,10 @@ function Moments({ onMcp }: { onMcp: () => void }) {
   const [hover, setHover] = useState(false);
   const [paused, setPaused] = useState(false);
   const demo = (i: number) => [
-    <span key="p" className="nx-demo"><span className="e-sys">Ledger</span><span className="nx-rel">←</span><span className="e-per">Payments</span><span className="nx-rel">←</span><span className="e-per">Priya Raman</span><span className="nx-meta" style={{ marginLeft: "auto" }}>2 hops · each cited</span></span>,
+    <span key="p" className="nx-demo"><span className="e-sys">Reporting</span><span className="nx-rel">←</span><span className="e-per">Platform</span><span className="nx-rel">←</span><span className="e-per">Tomas Reyes</span><span className="nx-meta" style={{ marginLeft: "auto" }}>2 hops · each cited</span></span>,
     <span key="t" className="nx-thennow"><span className="then"><span className="tag">THEN · TO 31 MAR 2026</span>Platform owned Ledger</span><span className="now"><span className="tag">NOW · SINCE 1 APR 2026</span>Payments owns Ledger</span></span>,
     <span key="d" className="nx-demo col"><span className="row" style={{ gap: 8 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--dispute)" }} />A chat message says “Infra owns Ledger now”</span><span style={{ color: "var(--text-label)" }}>Can settle: <span className="e-per">Priya Raman</span>, lead of the owning team</span></span>,
-    <span key="m" className="nx-demo col home-mono" style={{ fontSize: 12.5 }}><span style={{ color: "var(--text-label)" }}>› get_owner(&quot;system:ledger&quot;)</span><span>Payments · Priya Raman <span style={{ color: "var(--primary)" }}>[cited]</span></span></span>,
+    <span key="m" className="nx-demo col home-mono" style={{ fontSize: 12.5 }}><span style={{ color: "var(--text-label)" }}>› get_owner(&quot;system:checkout&quot;)</span><span>Payments · Priya Raman <span style={{ color: "var(--primary)" }}>[cited]</span></span></span>,
   ][i];
   return (
     <section className="home-section" aria-labelledby="moments-title">
@@ -251,6 +251,7 @@ const N: Record<string, { name: string; x: number; y: number; k: Kind }> = {
 const E = [
   { id: "lead", a: "priya", b: "payments", label: "LEADS" },
   { id: "owns", a: "payments", b: "ledger", label: "OWNS" },
+  { id: "owns2", a: "payments", b: "checkout", label: "OWNS" },
   { id: "d1", a: "checkout", b: "ledger", label: "DEPENDS_ON" },
   { id: "d2", a: "reporting", b: "ledger", label: "DEPENDS_ON" },
   { id: "d3", a: "statements", b: "reporting", label: "DEPENDS_ON" },
@@ -260,11 +261,11 @@ const E = [
   { id: "then", a: "platform", b: "ledger", label: "OWNED · THEN", kind: "then" },
 ];
 const F = [
-  { title: "Answers with receipts", body: "Every claim links to the sentence it came from. You get a path through the graph, not a paragraph.", nodes: ["priya", "payments", "ledger"], edges: ["lead", "owns"], caption: "Who owns Ledger? → Ledger ← OWNS ← Payments ← LEADS ← Priya Raman · 2 hops · each hop cited" },
+  { title: "Answers with receipts", body: "Every claim links to the sentence it came from. You get a path through the graph, not a paragraph.", nodes: ["priya", "payments", "checkout"], edges: ["lead", "owns2"], caption: "Who owns Checkout? → Checkout ← OWNS ← Payments ← LEADS ← Priya Raman · 2 hops · each hop cited" },
   { title: "A memory with dates", body: "Facts keep when they started and stopped being true, so you can ask about any day.", nodes: ["platform", "payments", "ledger"], edges: ["then", "owns"], caption: "As of 31 Mar 2026: Platform owned Ledger. From 1 Apr 2026: Payments. Both answers cited." },
   { title: "Disagreements, settled by the org chart", body: "Conflicts are kept and flagged, then routed to the one person the graph says can decide.", nodes: ["infra", "ledger", "payments", "priya"], edges: ["disp", "lead", "owns"], caption: "Someone says “Infra owns Ledger now” in chat. Who can settle it? Priya Raman: she LEADS Payments, which OWNS Ledger." },
-  { title: "Blast radius in one question", body: "Graph algorithms on a dated snapshot (PageRank, betweenness, shortest paths) find what breaks and who to tell.", nodes: ["ledger", "checkout", "reporting", "statements"], edges: ["d1", "d2", "d3"], caption: "What breaks if Ledger goes down? Checkout, Reporting and Statements. Tell Priya Raman, Tomas Reyes and Bob Lindqvist." },
-  { title: "Decisions you can trace", body: "Why something is the way it is: the decision, who made it, and what it changed.", nodes: ["adr", "ledger", "aurora"], edges: ["aff", "runs"], caption: "Why is Ledger on Aurora? → ADR-007 (10 Feb 2026), because “Postgres Main could not sustain Ledger write volume during month-end close”." },
+  { title: "Blast radius in one question", body: "Graph algorithms on a dated snapshot (PageRank, betweenness, shortest paths) find what breaks and who to tell.", nodes: ["aurora", "ledger", "checkout", "reporting", "statements"], edges: ["runs", "d1", "d2", "d3"], caption: "What breaks if Aurora goes down? Ledger, Checkout, Reporting and Statements. Tell Bob Lindqvist, Priya Raman and Tomas Reyes." },
+  { title: "Decisions you can trace", body: "Why something is the way it is: the decision, who made it, and what it changed.", nodes: ["adr", "ledger", "aurora"], edges: ["aff", "runs"], caption: "Why was ADR-007 accepted? → it moved Ledger to Aurora (10 Feb 2026), because “Postgres Main could not sustain Ledger write volume during month-end close”." },
   { title: "Built for coding agents", body: "Claude Code asks the same graph over MCP. Writes follow the same permissions, and every one can be undone.", nodes: ["priya", "payments", "ledger", "checkout", "reporting", "statements"], edges: ["lead", "owns", "d1", "d2", "d3"], caption: "get_owner · critical_systems · connection_between · knowledge_gaps: 16 read tools, 6 write tools" },
 ];
 const KC: Record<Kind, [string, string, string]> = { s: ["#10302A", "#74D9C3", "#1E4A40"], p: ["#241D3D", "#BBA6FF", "#3A2F63"], d: ["#1E2321", "#C9D2CE", "#3A4440"] };
