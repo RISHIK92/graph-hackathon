@@ -289,3 +289,77 @@ def test_decision_choice_reads_the_label_and_confidence():
     assert providers.decision_choice({"answers": {"q": {"type": "choice", "choice": "impact", "confidence": 0.8}}}, "q") \
         == ("impact", 0.8)
     assert providers.decision_choice({"answers": {}}, "q") == (None, 0.0)
+
+
+def _reply_world(world, monkeypatch, answers, slow=False):
+    """A faked Jev router returning `answers` (question -> {name: (label, confidence)}) for each message."""
+    import time as _t
+    seen = []
+
+    def decide(role, state, questions, timeout=None):
+        seen.append((role, state, questions))
+        if slow:
+            _t.sleep(2)
+        q = state.split("QUESTION: ", 1)[1].split("\n")[0]
+        got = answers.get(q, {})
+        return {"model": "typesafe/jev-1.14", "answers": {
+            k: {"type": "choice", "choice": v[0], "confidence": v[1]} for k, v in got.items()}}
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "decide", decide)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no LLM")))
+    agent = Agent(world["g"], world["clock"])
+    return agent, agent.create_session("judge", "person:eve"), seen
+
+
+def _reply(agent, s, q):
+    ev = list(agent.turn(s, q))
+    return next(e for e in ev if e["event"] == "answer")
+
+
+def test_router_knows_the_assistants_scope_and_picks_a_fixed_reply(world, monkeypatch):
+    """User decision (deployed site: "hlo" and "can u create tasks on slack?" got "I couldn't tie that to anything
+    in the graph" and the full help block): the router reads a fixed SCOPE and picks a reply kind; the text is
+    always ours, never the model's."""
+    agent, s, seen = _reply_world(world, monkeypatch, {
+        "hlo": {"intent": ("help", 0.4), "reply": ("greeting", 0.93), "action": ("none", 0.9)},
+        "can u create tasks on slack?": {"intent": ("help", 0.6), "reply": ("capability_no", 0.88), "action": ("none", 0.8)},
+        "can you route tickets?": {"intent": ("help", 0.7), "reply": ("capability_yes", 0.9), "action": ("route_to_owner", 0.86)},
+        "what's the weather": {"intent": ("fact", 0.5), "reply": ("off_topic", 0.91), "action": ("none", 0.9)},
+    })
+    a = _reply(agent, s, "hlo")
+    assert a["reply"] == "greeting" and a["missing"][0].startswith("Hi Eve.") and len(a["missing"]) == 1, a["missing"]
+    role, state, qs = seen[-1]
+    assert role == "router" and state.startswith("SCOPE") and {"intent", "reply", "action"} <= set(qs)
+    assert "Slack" in state and len(state) < 2000
+    a = _reply(agent, s, "can u create tasks on slack?")
+    assert a["reply"] == "capability_no" and a["missing"][0].startswith("No, that's outside what I can do.")
+    a = _reply(agent, s, "can you route tickets?")
+    assert a["reply"] == "capability_yes" and a["missing"][0].startswith("Yes. Say it like “Route RDS-42 to the owner”")
+    a = _reply(agent, s, "what's the weather")
+    assert a["reply"] == "off_topic" and a["missing"] == ["That's outside what I know. I only know this company's graph."]
+    # the router's state names the previous reply's kind, so a repeat can be told apart
+    assert "PREVIOUS REPLY KIND: capability_yes" in seen[-1][1]
+
+
+def test_a_repeated_reply_kind_gets_one_short_line(world, monkeypatch):
+    agent, s, _ = _reply_world(world, monkeypatch, {
+        "hlo": {"reply": ("greeting", 0.9)}, "hey there": {"reply": ("greeting", 0.9)}})
+    first = _reply(agent, s, "hlo")["missing"]
+    again = _reply(agent, s, "hey there")["missing"]
+    assert len(again) == 1 and again != first and len(again[0]) < len(" ".join(first)) + 40
+
+
+def test_an_unsure_or_slow_router_keeps_the_old_reply(world, monkeypatch):
+    agent, s, _ = _reply_world(world, monkeypatch, {"hlo": {"reply": ("greeting", 0.3)}})
+    a = _reply(agent, s, "hlo")
+    assert "reply" not in a and a["missing"][0] == "I couldn't tie that to anything in the graph."
+    agent, s, _ = _reply_world(world, monkeypatch, {"hlo": {"reply": ("greeting", 0.9)}}, slow=True)
+    a = _reply(agent, s, "hlo")
+    assert "reply" not in a and a["missing"][0] == "I couldn't tie that to anything in the graph."
+
+
+def test_a_message_naming_the_graph_never_gets_a_canned_reply(world, monkeypatch):
+    """A reply kind applies only to a message that names nothing in the graph: cited answers are unchanged."""
+    agent, s, _ = _reply_world(world, monkeypatch, {"Is Ledger fine?": {"intent": ("fact", 0.9), "reply": ("off_topic", 0.95)}})
+    a = _reply(agent, s, "Is Ledger fine?")
+    assert "reply" not in a

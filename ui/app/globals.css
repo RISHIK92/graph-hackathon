@@ -602,3 +602,5 @@ svg.flag { color: var(--error-700); width: 12px; height: 12px; vertical-align: -
 @media (hover: none) {
   .composer .hint { display: none; }
 }
+.nodus-tag { align-self: flex-start; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--primary); border: 1px solid var(--accent-100); border-radius: 999px; padding: 1px 8px; }
+.reply-text p { margin: 0; font-size: 16px; line-height: 1.6; }

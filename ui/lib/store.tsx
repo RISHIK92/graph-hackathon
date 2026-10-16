@@ -44,7 +44,9 @@ export interface Turn {
     lead_claims?: string[]; more?: number; status?: { kind: string; text: string } | null; next?: string | null;
   }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[];
     /** A reply about the assistant itself (what it can do), not an answer about the graph. */
-    help?: boolean };
+    help?: boolean;
+    /** The router's reply kind (greeting, capability_yes, capability_no, off_topic, feedback): a fixed reply. */
+    reply?: string };
   actions: StreamEvent[];
   turnId?: string;
   actor: string;   // who asked: the acting person at the time, not whoever is acting now (M2)

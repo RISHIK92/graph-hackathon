@@ -354,7 +354,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
           </div>
         </div>
 
-        <StatusLine t={t} plan={plan} toolCalls={toolCalls} verification={verification} onProof={() => openProof("cypher")} />
+        {t.answer?.help ? <span className="nodus-tag">Nodus</span> : <StatusLine t={t} plan={plan} toolCalls={toolCalls} verification={verification} onProof={() => openProof("cypher")} />}
 
         {limited ? (
           <Notice tone="info" title="That's this hour's questions">This public demo limits how many questions each visitor can ask per hour. Wait a few minutes and ask again; nothing you asked is lost.</Notice>
@@ -368,11 +368,14 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
         {t.answer && (
           <div className="answer">
             {t.answer.abstained ? (
-              <div className="stack-3" style={{ padding: 16 }}>
+              <div className="stack-3">
                 {t.answer.help ? (
-                  <Notice tone="info" title="What I can do">
-                    <div className="stack">{(t.answer.missing || []).map((m) => <span key={m}>{m}</span>)}</div>
-                  </Notice>
+                  <div className="stack-3">
+                    <div className="stack reply-text">{(t.answer.missing || []).map((m) => <p key={m}>{m}</p>)}</div>
+                    <div className="row-wrap">
+                      {SUGGEST_Q.map((q) => <button key={q.text} type="button" className="composer-chip" onClick={() => onFill(q.text)}>{q.text}</button>)}
+                    </div>
+                  </div>
                 ) : (
                   <Notice tone="info" title="No verified answer">{t.answer.missing?.length ? t.answer.missing.join(" ") : "Nothing in the graph supported a claim the verifier would keep."}</Notice>
                 )}

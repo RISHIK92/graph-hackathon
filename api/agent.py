@@ -41,6 +41,7 @@ class Session:
     acting_as: str
     anonymous: bool = False
     transcript: list[dict] = field(default_factory=list)
+    last_reply: str = ""          # the kind of the last fixed reply, so a repeat gets one short line
 
 
 class Agent:
@@ -120,7 +121,7 @@ class Agent:
 
         # tool phase: read tools only (A54 §8 i). A question about an attribute the graph doesn't model
         # gets no tools: any fact the tools found about the entity would verify but not answer it.
-        help_text = self._help(plan, text)
+        help_text = self._help(plan, text, s)
         gap = help_text or unmodelled(plan, text) or stale_docs_refusal(plan)
         calls = [] if gap else self.tool_calls(plan, text, ctx, s)
         for name, args in calls[:6]:
@@ -189,6 +190,8 @@ class Agent:
             final["missing"] = gap or missing(plan, text)
             if help_text:
                 final["help"] = True
+                if plan.get("reply"):
+                    final["reply"] = plan["reply"]
         yield {"event": "answer", "turn_id": turn_id, **final}
 
         # act: write tools only now, arguments from the current user turn (A54)
@@ -212,12 +215,18 @@ class Agent:
             if key.lower() not in [x["text"].lower() for x in mentions]:
                 mentions.append({"text": key, "entity_id": ""})
         h = heuristic_plan(text)
+        if h["wants_action"] != "none" and not mentions and _CAN_YOU.search(text):
+            h = {**h, "intent": "other", "wants_action": "none"}   # "can you route tickets?" asks, it doesn't act
         # Jev routes what the rules can't place (user idea, deployed site): one `choice` question within a hard
         # budget. A question naming a date still goes to the planner model, which also reads the date.
         if providers.llm_available() and h["intent"] in ("fact", "other") and not _DATED.search(text):
-            routed = self._route(text)
-            if routed:
-                return {**h, "intent": routed[0], "mentions": mentions, "models": [routed[1]]}
+            routed = self._route(text, s.last_reply)
+            if routed and routed.get("reply") and not mentions:
+                # a greeting, a capability question or an off-topic message that names nothing in the graph
+                return {**h, "intent": "help", "reply": routed["reply"], "reply_action": routed.get("action"),
+                        "mentions": mentions, "models": [routed["model"]]}
+            if routed and routed.get("intent"):
+                return {**h, "intent": routed["intent"], "mentions": mentions, "models": [routed["model"]]}
             return {**h, "mentions": mentions}
         # The LLM's intent is used only where the rules say fact/other, and its date only when one is named
         # (gate C12): a confident rule plan with no date skips the call.
@@ -339,22 +348,37 @@ class Agent:
         """M17: raw ids in shown text ("person:priya commented ...") read as names."""
         return _RAW_ID.sub(lambda m: self._entity_name(m.group(0)), text)
 
-    def _route(self, text: str) -> tuple[str, dict] | None:
-        """The router's intent for a question, or None if it is slow, unsure or unavailable."""
+    def _route(self, text: str, prev: str = "") -> dict | None:
+        """The router's intent and reply kind for a message, each only when confident; None if it is slow or
+        unavailable. Jev picks labels against a fixed SCOPE; the reply text is always ours (user decision)."""
+        state = SCOPE + (f"PREVIOUS REPLY KIND: {prev}\n" if prev else "") + f"QUESTION: {text}\n"
+
         def ask() -> dict:
-            return providers.decide("router", f"QUESTION: {text}\n", ROUTER_QUESTION, timeout=ROUTER_BUDGET_S)
+            return providers.decide("router", state, ROUTER_QUESTION, timeout=ROUTER_BUDGET_S)
         try:
             res = _CHECKS.submit(ask).result(timeout=ROUTER_BUDGET_S)
         except Exception:  # noqa: BLE001 - over budget or no router model: the rule plan stands
             return None
         label, conf = providers.decision_choice(res, "intent")
-        if label not in ROUTABLE or label == "fact" or conf < 0.5:
-            return None
-        return label, {"role": "router", "model": res["model"], "provider": res.get("provider")}
+        reply, rconf = providers.decision_choice(res, "reply")
+        action, aconf = providers.decision_choice(res, "action")
+        return {"intent": label if label in ROUTABLE and label != "fact" and conf >= 0.5 else None,
+                "reply": reply if reply in REPLY_KINDS and reply != "graph" and rconf >= 0.5 else None,
+                "action": action if action in REPLY_ACTIONS and aconf >= 0.5 else None,
+                "model": {"role": "router", "model": res["model"], "provider": res.get("provider")}}
 
-    def _help(self, plan: dict, text: str) -> list[str]:
+    def _help(self, plan: dict, text: str, s: Session | None = None) -> list[str]:
         """What Nodus answers, with examples about real entities, for a question about the assistant or one that
-        names nothing and fits no intent (deployed-site feedback: "what can u do" quoted a random chat line)."""
+        names nothing and fits no intent (deployed-site feedback: "what can u do" quoted a random chat line).
+        A router reply kind gets its fixed reply, and a repeat of the same kind one short line."""
+        kind = plan.get("reply")
+        if kind:
+            prev = s.last_reply if s else ""
+            if s:
+                s.last_reply = kind
+            if kind == prev:
+                return [REPEAT_LINE]
+            return self._reply_lines(kind, plan.get("reply_action"), s)
         names_nothing = not any(m.get("entity_id") for m in plan.get("mentions") or []) and \
             not any(m.get("text") for m in plan.get("mentions") or []) and \
             not re.search(r"\s[A-Z][a-z0-9]+", text)   # "Who leads Nimbus Vault?" names something unknown
@@ -370,6 +394,29 @@ class Agent:
             "With the access token I can also act: route a ticket to its owner, record a fact you tell me "
             "(“Infra owns Ledger now”), draft an ADR change or flag outdated docs. A change waits for the right "
             "person to confirm it."]
+
+    def _reply_lines(self, kind: str, action: str | None, s: Session | None) -> list[str]:
+        ents = {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
+        x = ents.get("system:ledger") or next((n for i, n in sorted(ents.items()) if i.startswith("system:")), "a system")
+        ticket = ents.get("ticket:rds-42") or next((n for i, n in sorted(ents.items()) if i.startswith("ticket:")), "a ticket")
+        if kind == "greeting":
+            who = (self._entity_name(s.acting_as) if s and s.acting_as else "").split(" ")[0]
+            return [f"Hi{' ' + who if who and ':' not in who else ''}. Ask me who owns what, why it was decided, "
+                    "or what breaks if it fails."]
+        if kind == "capability_yes":
+            ex = {"route_to_owner": f"Route {ticket} to the owner", "record_fact": f"Infra owns {x} now",
+                  "draft_adr": f"Draft an ADR superseding ADR-007: move {x} to CockroachDB",
+                  "flag_stale_docs": f"Flag stale docs about {x}"}.get(action or "")
+            return [f"Yes. Say it like “{ex}”. It waits for the right person to confirm." if ex else
+                    "Yes, with the access token: route a ticket to its owner, record a fact you tell me, draft an "
+                    "ADR change or flag outdated docs. Each waits for the right person to confirm."]
+        if kind == "capability_no":
+            return ["No, that's outside what I can do. I work only from this company's graph. I can say who owns "
+                    "what, why it was decided and what breaks if it fails, and with the access token route a ticket, "
+                    "record a fact, draft an ADR change or flag outdated docs."]
+        if kind == "off_topic":
+            return ["That's outside what I know. I only know this company's graph."]
+        return ["Thanks for telling me."]
 
     def _entity_name(self, eid: str) -> str:
         r = self.g.q("entity_name", {"id": eid}) if eid else []
@@ -743,8 +790,39 @@ ROUTABLE = {
     "memory": "something said earlier in this conversation",
     "help": "about the assistant itself: what it can do or how to use it",
     "fact": "any other single fact about something (its status, project or team)"}
-ROUTER_QUESTION = {"intent": {"type": "choice", "instructions": "What is this question about a company's systems, "
-                                                               "teams and decisions asking for?", "criteria": ROUTABLE}}
+# What Nodus is, fixed so the router's cache key stays stable (user decision): Jev reads it to tell a company
+# question from a greeting, a capability question or something out of scope.
+SCOPE = ("SCOPE\n"
+         "Nodus is an assistant over one company's graph: its systems, teams, people, decisions (ADRs) and tickets, "
+         "with dated facts, each cited to the document, roster, ticket or chat message it came from.\n"
+         "It answers: who owns or leads something; who knows about it; why a decision was made; what was true "
+         "earlier or on a given date; what breaks if something fails and who to tell; how two things are "
+         "connected; how many or which has the most; an overview of one thing; and what was said earlier in "
+         "this conversation.\n"
+         "With an access token it can also: route a ticket to its owner, record a fact the user states, draft an "
+         "ADR that supersedes another, and flag outdated documents. Each change waits for the right person to "
+         "confirm it, and can be undone.\n"
+         "It cannot: do anything outside the graph, such as creating tasks in Slack or Jira, sending messages or "
+         "emails, using external tools or the web, or answering general-knowledge questions.\n\n")
+REPLY_KINDS = {
+    "graph": "a question or statement about the company's systems, teams, people, decisions or tickets",
+    "greeting": "a hello or small talk, typos included (\"hlo\", \"hey\", \"how are you\")",
+    "capability_yes": "asks whether Nodus can do something that is in its scope",
+    "capability_no": "asks Nodus to do something outside its scope",
+    "off_topic": "a general-knowledge or unrelated question",
+    "feedback": "thanks, praise or a complaint about Nodus"}
+REPLY_ACTIONS = {
+    "route_to_owner": "route a ticket to its owner", "record_fact": "record a fact the user states",
+    "draft_adr": "draft an ADR that supersedes another", "flag_stale_docs": "flag outdated documents",
+    "none": "none of these"}
+_CAN_YOU = re.compile(r"^\s*(can|could|will|would) (you|u|nodus)\b|\b(are you able|is it possible) to\b", re.I)
+REPEAT_LINE = "Ask me about who owns what, why it was decided, or what breaks if it fails."
+ROUTER_QUESTION = {
+    "intent": {"type": "choice", "instructions": "If this is a question about the company, what is it asking for?",
+               "criteria": ROUTABLE},
+    "reply": {"type": "choice", "instructions": "What kind of message is this, given the SCOPE?", "criteria": REPLY_KINDS},
+    "action": {"type": "choice", "instructions": "If it asks whether Nodus can do something, which action?",
+               "criteria": REPLY_ACTIONS}}
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
 DRAFT_TIMEOUT_S = 15   # laguna's multi-hop drafts took about 12 s in the full run (user decision)
 CHECK_BUDGET_S = 0.8   # the whole checker stage, fallback included (user decision): a safety layer, not a wait
