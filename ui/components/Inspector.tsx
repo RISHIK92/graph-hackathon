@@ -65,7 +65,7 @@ export default function Inspector() {
               </span>
             ))
           ) : (
-            <span>{top.kind === "entity" ? "Entity" : top.kind === "evidence" ? "Evidence" : top.kind === "action" ? "Action record" : top.kind === "trace" ? "Trace" : top.kind === "edge" ? "Edge" : "Inbox item"}</span>
+            <span>{top.kind === "entity" ? "Entity" : top.kind === "evidence" ? "Evidence" : top.kind === "action" ? "Action record" : top.kind === "trace" ? "Proof" : top.kind === "edge" ? "Edge" : "Inbox item"}</span>
           )}
         </div>
         <div className="inspector-title-row">
@@ -78,7 +78,7 @@ export default function Inspector() {
       {top.kind === "entity" && <EntityPeek id={top.id} tab={entityTab} setTab={setEntityTab} />}
       {top.kind === "evidence" && <EvidencePanel target={top.target} />}
       {top.kind === "action" && <div className="inspector-body flush"><ActionRecord id={top.id} /></div>}
-      {top.kind === "trace" && <TraceView turnId={top.turnId} />}
+      {top.kind === "trace" && <TraceView turnId={top.turnId} path={top.path} spans={top.spans} tab={top.tab} />}
       {top.kind === "edge" && <EdgeView v={top} />}
       {top.kind === "inbox" && <InboxItemView v={top} />}
     </aside>

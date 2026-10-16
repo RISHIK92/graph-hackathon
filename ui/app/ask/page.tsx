@@ -1,22 +1,36 @@
 "use client";
 
-import { ArrowUp, FileText, Flag, GitBranch, Info, ListTree, MessageSquare, Search, Square, UserRound, Zap } from "lucide-react";
+import { FileText, Flag, GitBranch, Info, ListTree, MessageSquare, Square, UserRound, Zap } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { ActionChip, CitationChip, EligibilityBadge, FactRow, PackContext } from "@/components/Chips";
+import { ActionChip, EligibilityBadge, FactRow, PackContext } from "@/components/Chips";
 import { ConfirmControl, RefusalCard, WhoCan } from "@/components/ConfirmControl";
 import { collectDisputes, DisputeLine } from "@/components/Dispute";
+import { nodeTone } from "@/components/TraceView";
 import { Button, Chip, Notice, Placeholder } from "@/components/ui";
-import { streamTurn, type StreamEvent } from "@/lib/api";
-import { fmtDate, fmtDateTime, initials, plural } from "@/lib/format";
+import { get, qs, streamTurn, type StreamEvent } from "@/lib/api";
+import { fmtDate, fmtDateTime, plural } from "@/lib/format";
 import { actionKindLabel, displayText, intentLabel, predicateLabel } from "@/lib/labels";
-import { type Turn, useStore } from "@/lib/store";
-import type { Claim, Fact, Pack, Path, Refusal, SpanItem } from "@/lib/types";
+import { type Turn, useApi, useStore } from "@/lib/store";
+import type { Claim, Directory, Fact, Pack, Path, Refusal, SpanItem, Trace } from "@/lib/types";
 
 
-const SUGGEST_Q = ["Who owns Ledger?", "Who knows about Ledger?", "Why is Ledger on Aurora?", "What breaks if Ledger goes down, and who do I tell?", "Is anything pending for ADR-007?"];
-const SUGGEST_A = ["Route RDS-42 to the owner", "Infra owns Ledger now",
-  "Draft an ADR superseding ADR-007: move Ledger to CockroachDB for multi-region writes", "Flag stale docs about Ledger"];
+// The empty state (design brief addendum, AskStart board): six questions on keys 1-6, each saying what it returns
+const SUGGEST_Q = [
+  { kind: "OWNERSHIP", tone: "per", text: "Who owns Ledger?", returns: "a cited path · team and lead" },
+  { kind: "THEN AND NOW", tone: "then", text: "Who owned Ledger before the reorg?", returns: "the earlier owner, dated and cited" },
+  { kind: "BLAST RADIUS", tone: "sys", text: "What breaks if Ledger goes down, and who do I tell?", returns: "affected systems · who to tell" },
+  { kind: "DECISION", tone: "rec", text: "Why is Ledger on Aurora?", returns: "the decision, its reasons, its sources" },
+  { kind: "EXPERTS", tone: "per", text: "Who knows about Ledger?", returns: "people ranked by evidence" },
+  { kind: "PENDING", tone: "now", text: "Is anything pending for ADR-007?", returns: "open proposals and who can confirm" },
+];
+const SUGGEST_A = [
+  { kind: "ROUTE TO OWNER", text: "Route RDS-42 to the owner" },
+  { kind: "RECORD A FACT", text: "Infra owns Ledger now" },
+  { kind: "DRAFT ADR", text: "Draft an ADR superseding ADR-007: move Ledger to CockroachDB for multi-region writes" },
+  { kind: "FLAG STALE DOCS", text: "Flag stale docs about Ledger" },
+];
 
 export default function AskPage() {
   return <Suspense fallback={null}><Ask /></Suspense>;
@@ -56,18 +70,19 @@ function Ask() {
     }
   });
 
-  const sendQ = async (q: string) => {
+  const sendQ = async (q: string, then?: { asOf: number; of: number }) => {
     if (!q.trim() || busy) return;
     if (!s.session) { queued.current = q; setText(""); return; }
     setBusy(true);
     setText("");
     const idx = turns.length;
-    setTurns((t) => [...t, { text: q, at: Date.now(), asOf: s.asOf, stages: [], actions: [], actor: s.actingAs, writeSeq: s.lastWrite?.seq || 0, done: false }]);
+    const asOf = then ? then.asOf : s.asOf;
+    setTurns((t) => [...t, { text: q, at: Date.now(), asOf, stages: [], actions: [], actor: s.actingAs, writeSeq: s.lastWrite?.seq || 0, done: false, thenOf: then?.of }]);
     const upd = (f: (t: Turn) => Turn) => setTurns((all) => all.map((t, i) => (i === idx ? f(t) : t)));
     const ac = new AbortController();
     abortRef.current = ac;
     try {
-      await streamTurn(s.session.id, { text: q, as_of: s.asOf }, (e) => {
+      await streamTurn(s.session.id, { text: q, as_of: asOf }, (e) => {
         if (e.event === "answer") upd((t) => ({ ...t, answer: e as unknown as Turn["answer"], turnId: String(e.turn_id) }));
         else if (e.event === "action" || e.event === "refusal") upd((t) => ({ ...t, actions: [...t.actions, e] }));
         else if (e.event === "error") upd((t) => ({ ...t, error: String(e.message) }));
@@ -87,72 +102,131 @@ function Ask() {
   };
 
   const stop = () => abortRef.current?.abort();
+  const fill = (q: string, caret = q.length) => { setText(q); requestAnimationFrame(() => { taRef.current?.focus(); taRef.current?.setSelectionRange(caret, caret); }); };
 
+  // 1-6 ask the empty state's questions, unless the person is typing
+  const empty = !turns.length;
+  useEffect(() => {
+    if (!empty) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.metaKey || e.ctrlKey || e.altKey || ["INPUT", "TEXTAREA", "SELECT"].includes(el?.tagName) || el?.isContentEditable) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= SUGGEST_Q.length) { e.preventDefault(); void sendQ(SUGGEST_Q[n - 1].text); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
+
+  const composer = (
+    <form className={`composer ${empty ? "centred" : ""}`} onSubmit={(e) => { e.preventDefault(); sendQ(text); }}>
+      <label htmlFor="ask-box" className="sr-only">Ask a question or describe an action</label>
+      <textarea
+        id="ask-box"
+        ref={taRef}
+        rows={2}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={empty ? "Ask a question, or tell Nodus something new…" : "Ask a follow-up, or tell Nodus something new…"}
+        disabled={!s.session}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendQ(text); }
+          if ((e.metaKey || e.ctrlKey) && e.key === ".") { e.preventDefault(); stop(); }
+        }}
+      />
+      <div className="composer-bar">
+        <button type="button" className={`composer-chip ${s.asOf ? "then" : ""}`} onClick={() => s.setSessionSheetOpen(true)} title="Change the date in Session settings">
+          {s.asOf ? `As of ${fmtDate(s.asOf)}` : "As of today"}
+        </button>
+        <button type="button" className="composer-chip" onClick={() => s.setSessionSheetOpen(true)} title="Demo identity, not authentication">
+          Acting as <span className="who">{s.personName(s.actingAs) || "…"}</span>
+        </button>
+        <span className="hint"><kbd>Enter</kbd> send · <kbd>Shift</kbd> <kbd>Enter</kbd> new line{busy ? <> · <kbd>⌘</kbd> <kbd>.</kbd> stop</> : null}</span>
+        <span className="grow" />
+        {busy ? (
+          <Button type="button" variant="secondary" icon={Square} onClick={stop} aria-label="Stop">Stop</Button>
+        ) : (
+          <button type="submit" className="composer-send" disabled={!s.session || !text.trim()}>Ask <span aria-hidden>↵</span></button>
+        )}
+      </div>
+    </form>
+  );
+
+  if (empty) return <AskStart composer={composer} onAsk={(q) => sendQ(q)} onFill={fill} />;
   return (
     <div className="ask">
       <div className="conv" ref={logRef}>
         <div className="conv-inner">
-          {!turns.length && (
-            <div className="stack-6" style={{ paddingTop: 48 }}>
-              <div className="stack">
-                <h1 className="t-display">Ask Nodus</h1>
-                <p className="text-2">Ask who owns what, why a decision was made, or what breaks if something goes down. Every answer shows where it came from.</p>
-              </div>
-              <div className="suggest-grid">
-                <div className="stack">
-                  <span className="t-label">Questions</span>
-                  <div className="suggest-list">
-                    {SUGGEST_Q.map((q) => <button key={q} className="suggest" onClick={() => sendQ(q)} disabled={!s.session}><Search />{q}</button>)}
-                  </div>
-                </div>
-                <div className="stack">
-                  <span className="t-label">Things I can do</span>
-                  <div className="suggest-list">
-                    {SUGGEST_A.map((q) => <button key={q} className="suggest" onClick={() => sendQ(q)} disabled={!s.session}><Zap />{q}</button>)}
-                  </div>
-                  <div className="t-small text-3">Actions are recorded as the person you&apos;re acting as.{s.session?.anonymous ? " In demo mode nothing is saved." : ""}</div>
-                </div>
-              </div>
-            </div>
-          )}
           {turns.map((t, i) => (
-            <TurnView key={i} t={t} idx={i} selected={selected} onSelect={setSelected} priorDisputes={disputeKeysBefore(turns, i)} onAskAgain={sendQ} />
+            <TurnView key={i} t={t} idx={i} selected={selected} onSelect={setSelected} priorDisputes={disputeKeysBefore(turns, i)} onAskAgain={sendQ}
+              nowTurn={t.thenOf !== undefined ? turns[t.thenOf] : undefined}
+              onThen={(asOf) => sendQ(t.text, { asOf, of: i })} onFill={fill} />
           ))}
         </div>
       </div>
-      <div className="composer-wrap">
-        <form
-          className="composer"
-          onSubmit={(e) => { e.preventDefault(); sendQ(text); }}
-        >
-          <div className="box">
-            <textarea
-              ref={taRef}
-              rows={2}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Ask a question or describe an action…"
-              aria-label="Your question"
-              disabled={!s.session}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendQ(text); }
-                if ((e.metaKey || e.ctrlKey) && e.key === ".") { e.preventDefault(); stop(); }
-              }}
-            />
-            {busy ? (
-              <Button type="button" variant="secondary" icon={Square} onClick={stop} aria-label="Stop">Stop</Button>
-            ) : (
-              <Button type="submit" variant="primary" icon={ArrowUp} disabled={!s.session || !text.trim()} aria-label="Ask">Ask</Button>
-            )}
+      <div className="composer-wrap">{composer}</div>
+    </div>
+  );
+}
+
+function AskStart({ composer, onAsk, onFill }: { composer: React.ReactNode; onAsk: (q: string) => void; onFill: (q: string) => void }) {
+  const s = useStore();
+  const [tab, setTab] = useState<"ask" | "do">("ask");
+  const dir = useApi<Directory>(`/directory${qs({ as_of: s.asOf })}`);
+  const d = dir.data;
+  const ro = !!s.session?.anonymous;
+  return (
+    <div className="ask-start">
+      <div className="ask-start-inner">
+        <div className="stack nx-rise" style={{ gap: 10 }}>
+          <span className="eyebrow">ASK THE DEMO COMPANY</span>
+          <h1 className="ask-start-title">What do you want to know?</h1>
+          <p className="text-2" style={{ margin: 0, fontSize: 16 }}>Ask in plain words. Every answer is a path through the graph, with the sentence it came from.</p>
+        </div>
+        <div className="nx-rise nx-d1">{composer}</div>
+        <div className="stack-3 nx-rise nx-d2">
+          <div className="row-wrap" style={{ justifyContent: "space-between" }}>
+            <div className="seg" role="tablist" aria-label="Suggestions">
+              <button type="button" role="tab" aria-selected={tab === "ask"} className={tab === "ask" ? "on" : ""} onClick={() => setTab("ask")}>Ask a question <span className="n">{SUGGEST_Q.length}</span></button>
+              <button type="button" role="tab" aria-selected={tab === "do"} className={tab === "do" ? "on" : ""} onClick={() => setTab("do")}>Do something <span className="n">{SUGGEST_A.length}</span></button>
+            </div>
+            <span className="t-small text-3">{tab === "ask" ? "Click to ask, or press 1–6" : ro ? "Changes the graph · needs a token on this demo" : "Changes the graph · recorded as the person you're acting as"}</span>
           </div>
-          <div className="hint">
-            <span><kbd>Enter</kbd> to send</span>
-            <span><kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line</span>
-            {busy && <span><kbd>⌘</kbd> + <kbd>.</kbd> to stop</span>}
-            {!s.session && !s.sessionError && <span className="right">Connecting…</span>}
-            {s.asOf && <span className="right text-warning">Asking as of {fmtDate(s.asOf)}</span>}
-          </div>
-        </form>
+          {tab === "ask" ? (
+            <div className="start-grid">
+              {SUGGEST_Q.map((q, i) => (
+                <button key={q.text} type="button" className="start-card" onClick={() => onAsk(q.text)} disabled={!s.session}>
+                  <span className="row" style={{ justifyContent: "space-between" }}>
+                    <span className={`kind ${q.tone}`}><i />{q.kind}</span>
+                    <kbd>{i + 1}</kbd>
+                  </span>
+                  <span className="text">{q.text}</span>
+                  <span className="returns">returns: {q.returns}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="stack" style={{ gap: 0 }}>
+              {SUGGEST_A.map((a) => (
+                <button key={a.text} type="button" className="start-row" onClick={() => onFill(a.text)}>
+                  <span className="kind">{a.kind}</span>
+                  <span className="text">{a.text}</span>
+                  {ro && <span className="token">Needs a token</span>}
+                </button>
+              ))}
+              <p className="start-note">Picking one fills the box so you can edit it first. Writes are recorded as the person you&apos;re acting as, the graph decides who may confirm them, and every one can be undone.</p>
+            </div>
+          )}
+        </div>
+        <div className="start-foot nx-rise nx-d3">
+          <span className="eyebrow">THE GRAPH KNOWS</span>
+          <span><b>{d?.teams.length ?? "–"}</b> teams</span>
+          <span><b>{d?.systems.length ?? "–"}</b> systems</span>
+          <span><b>{d?.decisions.length ?? "–"}</b> decisions</span>
+          <span><b className="disp">{d ? d.systems.filter((x) => x.disputed).length : "–"}</b> open disputes</span>
+          <span className="grow" />
+          <Link href="/directory" className="home-link">Browse everything</Link>
+        </div>
       </div>
     </div>
   );
@@ -174,10 +248,15 @@ function disputeKey(g: ReturnType<typeof collectDisputes>[number]): string {
   return g.recorded?.run_id || g.recorded?.assertion_id || g.challengers[0]?.fact.assertion_id || "";
 }
 
-function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
+function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTurn, onThen, onFill }: {
   t: Turn; idx: number; selected: string; onSelect: (k: string) => void; priorDisputes: Set<string>; onAskAgain: (q: string) => void;
+  nowTurn?: Turn; onThen: (asOf: number) => void; onFill: (q: string, caret?: number) => void;
 }) {
   const s = useStore();
+  const [trace, setTrace] = useState<Trace | null>(null);
+  useEffect(() => {
+    if (t.done && t.turnId && !t.error) get<Trace>(`/turns/${encodeURIComponent(t.turnId)}/trace`).then(setTrace).catch(() => setTrace(null));
+  }, [t.done, t.turnId, t.error]);
   const packs = useMemo(() => Object.values(t.answer?.packs || {}), [t.answer]);
   const spanIndex = useMemo(() => {
     const m = new Map<string, SpanItem>();
@@ -241,6 +320,22 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
   const answerLead = t.answer?.assembled.lead;
   const leadSpans = useMemo(() => [...new Set((t.answer?.assembled.lead_claims || []).flatMap((id) => claims.get(id)?.span_ids || []))]
     .map((id) => spanIndex.get(id)).filter((sp): sp is SpanItem => sp !== undefined).slice(0, 3), [t.answer, claims, spanIndex]);
+  const leadFact = useMemo(() => (t.answer?.assembled.lead_claims || []).map((id) => claims.get(id)?.assertion_ids?.[0])
+    .map((a) => (a ? factIndex.get(a) : undefined)).find((f) => !!f), [t.answer, claims, factIndex]);
+  // entity names in the answer, coloured by kind: systems and projects teal, teams and people violet, records grey
+  const entities = useMemo(() => {
+    const m = new Map<string, string>();
+    packs.forEach((p) => p.items.forEach((it) => it.path?.steps.forEach((st) => m.set(st.node.name, nodeTone(st.node.labels)))));
+    s.people.forEach((p) => m.has(p.name) || m.set(p.name, "per"));
+    return m;
+  }, [packs, s.people]);
+  const proofPath = connectPath || (t.answer?.assembled.lead_claims || []).map((id) => claims.get(id)?.path_id).map((pid) => (pid ? pathIndex.get(pid) : undefined)).find((p) => !!p && p.steps.length > 1);
+  const allSpans = useMemo(() => [...new Set((t.answer?.claims || []).flatMap((c) => c.span_ids))], [t.answer]);
+  const openProof = (tab?: string) => t.turnId && s.openInspector({ kind: "trace", turnId: t.turnId, path: proofPath || null, spans: leadSpans.length ? leadSpans : allSpans.map((id) => spanIndex.get(id)).filter((sp): sp is SpanItem => !!sp).slice(0, 6), tab });
+  const ms = trace ? trace.tool_calls.flatMap((c) => c.queries).reduce((a, q) => a + (Number(q.ms) || 0), 0) : null;
+  const pastAt = leadFact && leadFact.valid_from > 86_400_000 && !t.asOf && t.thenOf === undefined ? leadFact.valid_from - 86_400_000 : null;
+  const disputable = leadFact && /^(.+?) (owns|leads) (.+)$/.exec(leadFact.statement);
+  const limited = !!t.error && /429|rate limited/i.test(t.error);
   const lead = useMemo(() => {
     if (answerLead) return answerLead;   // a lead that states every claim leaves no lines (item 20 contract)
     if (!lines.length) return "";
@@ -257,19 +352,18 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
     <PackContext.Provider value={{ packs, fromTurn: true }}>
       <div className="turn">
         <div className="turn-user">
-          <span className="avatar">{me ? initials(me.name) : "?"}</span>
-          <div className="stack" style={{ gap: 2 }}>
-            <div className="q">{t.text}</div>
-            <div className="meta">
-              <span>{me?.name || "You"}</span><span>·</span><span className="tnum">{fmtDateTime(t.at)}</span>
-              {t.asOf && <Chip tone="warning">As of {fmtDate(t.asOf)}</Chip>}
-            </div>
+          <div className="q">{t.text}</div>
+          <div className="meta">
+            <span>{me?.name || "You"}</span><span>·</span><span className="tnum">{fmtDateTime(t.at)}</span>
+            {t.asOf && <Chip tone="warning">As of {fmtDate(t.asOf)}</Chip>}
           </div>
         </div>
 
-        <StatusLine t={t} plan={plan} toolCalls={toolCalls} verification={verification} />
+        <StatusLine t={t} plan={plan} toolCalls={toolCalls} verification={verification} onProof={() => openProof("cypher")} />
 
-        {t.error && <Notice tone={t.error === "Stopped." ? "info" : "error"} title={t.error === "Stopped." ? "Stopped" : "The turn failed"}>{t.error !== "Stopped." ? t.error : null}</Notice>}
+        {limited ? (
+          <Notice tone="info" title="That's this hour's questions">This public demo limits how many questions each visitor can ask per hour. Wait a few minutes and ask again; nothing you asked is lost.</Notice>
+        ) : t.error && <Notice tone={t.error === "Stopped." ? "info" : "error"} title={t.error === "Stopped." ? "Stopped" : "The turn failed"}>{t.error !== "Stopped." ? t.error : null}</Notice>}
 
         {t.answer && t.done && s.lastWrite && s.lastWrite.seq > t.writeSeq && (
           <Notice tone="info" title="Updated since this answer" actions={<Button size="sm" onClick={() => onAskAgain(t.text)}>Ask again</Button>}>
@@ -300,7 +394,43 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
               </div>
             ) : (
               <>
-                {lead && <div className="answer-lead">{displayText(lead)} {leadSpans.map((sp) => <CitationChip key={sp.span_id} span={sp} />)}</div>}
+                {t.thenOf !== undefined && nowTurn?.answer?.assembled.lead && t.asOf ? (
+                  <div className="thennow">
+                    <div className="then"><span className="tag">THEN · AS OF {fmtDate(t.asOf).toUpperCase()}</span><span>{displayText(lead || "Nothing in the graph for that date.")}</span></div>
+                    <div className="now"><span className="tag">NOW</span><span>{displayText(nowTurn.answer.assembled.lead)}</span></div>
+                  </div>
+                ) : lead && (
+                  <p className="answer-lead">
+                    <Entities text={displayText(lead)} names={entities} />
+                    {leadSpans.map((sp, i) => (
+                      <button key={sp.span_id} type="button" className="cite" title={`${sp.title || "Source"}. Open the source.`}
+                        onClick={() => s.openEvidence({ tab: "source", spanId: sp.span_id, sourceId: sp.source_id, quote: { start: sp.quote_start, end: sp.quote_end }, title: sp.title, packs, fromTurn: true })}>[{i + 1}]</button>
+                    ))}
+                  </p>
+                )}
+                {t.done && t.turnId && (
+                  <button type="button" className="evidence-line" onClick={() => openProof()} aria-label="Show proof for this answer">
+                    {proofPath ? proofPath.steps.map((st, i) => (
+                      <span key={`${st.node.id}-${i}`} className="row" style={{ gap: 8 }}>
+                        {st.edge && <span className="rel">{st.edge.dir === "backward" ? "←" : "→"} {st.edge.type.replace(/_/g, " ")} {st.edge.dir === "backward" ? "←" : "→"}</span>}
+                        <span className={`e-${nodeTone(st.node.labels)}`}>{st.node.name}</span>
+                      </span>
+                    )) : <span>How I answered</span>}
+                    <span className="meta">
+                      {proofPath ? `${plural(proofPath.steps.length - 1, "hop")} · ` : ""}{ms !== null ? `${ms.toFixed(0)} ms · ` : ""}{plural(allSpans.length, "source")}
+                    </span>
+                  </button>
+                )}
+                {t.done && (
+                  <div className="row-wrap">
+                    {pastAt && <Button size="sm" onClick={() => onThen(pastAt)}>See it as of {fmtDate(pastAt)}</Button>}
+                    {disputable && (
+                      <Button size="sm" disabled={!!s.session?.anonymous} title={s.session?.anonymous ? "Writes need a token" : "Write who it really is, then send"}
+                        onClick={() => onFill(` ${disputable[2]} ${disputable[3]} now`, 0)}>Dispute this</Button>
+                    )}
+                    <Button size="sm" onClick={() => { void navigator.clipboard?.writeText([lead, ...lines.map((l) => l.text)].filter(Boolean).join("\n")); s.toast({ tone: "info", title: "Copied" }); }}>Copy</Button>
+                  </div>
+                )}
                 {t.answer.assembled.status && (
                   <div className="row t-small" style={{ gap: 6 }}>
                     <Chip tone={t.answer.assembled.status.kind === "disputed" ? "warning" : "neutral"}>{t.answer.assembled.status.kind === "disputed" ? "Disputed" : t.answer.assembled.status.kind === "pending" ? "Pending" : "As of"}</Chip>
@@ -344,13 +474,6 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
                     </div>
                   </div>
                 ))}
-                {connectPath && (
-                  <div>
-                    <Button size="sm" variant="link" icon={GitBranch} onClick={() => s.openEvidence({ tab: "path", path: connectPath, packs, fromTurn: true, title: "How this connects" })}>
-                      Show how this connects
-                    </Button>
-                  </div>
-                )}
                 {(t.answer.assembled.next || !!t.answer.assembled.more) && (
                   <div className="t-small text-2">
                     {t.answer.assembled.next && <><strong>Next:</strong> {displayText(t.answer.assembled.next)} </>}
@@ -377,6 +500,14 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
 }
 
 function uniq<T>(xs: T[]): T[] { return Array.from(new Set(xs)); }
+
+/** The answer's text with each known entity name as a chip coloured by its kind. */
+function Entities({ text, names }: { text: string; names: Map<string, string> }) {
+  const keys = [...names.keys()].filter((k) => k.length > 2).sort((a, b) => b.length - a.length);
+  if (!keys.length) return <>{text}</>;
+  const re = new RegExp(`\\b(${keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "g");
+  return <>{text.split(re).map((part, i) => (i % 2 ? <span key={i} className={`ent ${names.get(part)}`}>{part}</span> : part))}</>;
+}
 function timelineKeyOf(f: Fact) {
   const ent = ["OWNS", "LEADS", "AFFECTS"].includes(f.predicate) && f.object_id ? f.object_id : f.subject_id;
   return { entityId: ent, predicate: f.predicate };
@@ -388,8 +519,7 @@ const TOOL_LABEL: Record<string, string> = {
 };
 
 /** Replaces the raw trace: a human status while streaming, a summary line with a Trace button when done. */
-function StatusLine({ t, plan, toolCalls, verification }: { t: Turn; plan?: StreamEvent; toolCalls: StreamEvent[]; verification?: StreamEvent }) {
-  const s = useStore();
+function StatusLine({ t, plan, toolCalls, verification, onProof }: { t: Turn; plan?: StreamEvent; toolCalls: StreamEvent[]; verification?: StreamEvent; onProof: () => void }) {
   if (!t.done) {
     const last = toolCalls[toolCalls.length - 1];
     const phase = verification ? "Assembling the answer…" : last ? `${TOOL_LABEL[String(last.name)] || String(last.name)}…` : plan ? "Reading the graph…" : "Planning…";
@@ -409,7 +539,7 @@ function StatusLine({ t, plan, toolCalls, verification }: { t: Turn; plan?: Stre
       {plan?.wants_action && plan.wants_action !== "none" ? <Chip tone="accent" icon={Zap}>{actionKindLabel(String(plan.wants_action))}</Chip> : null}
       {kept !== undefined && <><span className="sep">·</span><span>checked {plural(kept, "fact")} against {plural(sources, "source")}</span></>}
       {dropped !== undefined && dropped > 0 && <><span className="sep">·</span><span className="text-warning">{dropped} dropped</span></>}
-      {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" onClick={() => s.openInspector({ kind: "trace", turnId: t.turnId! })}>How I answered</Button>}
+      {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" onClick={onProof}>How I answered</Button>}
     </div>
   );
 }

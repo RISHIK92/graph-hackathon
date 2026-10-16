@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { fetchNames, get, getToken, send, setToken as saveToken, type StreamEvent } from "./api";
-import type { Claim, Line, NameMap, Pack, Path, Person } from "./types";
+import type { Claim, Line, NameMap, Pack, Path, Person, SpanItem } from "./types";
 
 // inspector views (DESIGN.md §2.3: one panel, one level, breadcrumb inside)
 
@@ -29,7 +29,7 @@ export type InspectorView =
   | { kind: "evidence"; target: EvidenceTarget }
   | { kind: "action"; id: string }
   | { kind: "edge"; aid: string; source: string; target: string; type: string; edgeKind: "normal" | "disputed" | "stale"; label?: string }
-  | { kind: "trace"; turnId: string }
+  | { kind: "trace"; turnId: string; path?: Path | null; spans?: SpanItem[]; tab?: string }
   | { kind: "inbox"; actionId?: string; assertionId?: string; summary: string };
 
 /** One Ask turn as the page shows it. */
@@ -51,6 +51,8 @@ export interface Turn {
   writeSeq: number;
   done: boolean;
   error?: string;
+  /** "See it as of a past date": the index of the turn this one is the "then" of. */
+  thenOf?: number;
 }
 
 export interface Toast {
