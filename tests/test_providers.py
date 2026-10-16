@@ -135,3 +135,13 @@ def test_the_cache_folder_can_be_moved_for_a_cold_run(tmp_path):
     out = subprocess.run([sys.executable, "-c", "from brain import providers; print(providers.CACHE_DIR)"],
                          env={**__import__("os").environ, "BRAIN_LLM_CACHE": str(tmp_path)}, capture_output=True, text=True)
     assert out.stdout.strip() == str(tmp_path)
+
+
+def test_deepseek_only_settings_stay_off_other_models(live, monkeypatch):
+    """A/B finding (item 20): legacy LLM_MODEL=laguna got DeepSeek's reasoning-off and require_parameters
+    settings, and every laguna call failed, so that arm measured the graph's deterministic draft only."""
+    monkeypatch.setenv("LLM_MODEL", "poolside/laguna-xs-2.1")
+    fake = live({"poolside/laguna-xs-2.1": chat("ok")})
+    providers.complete([{"role": "user", "content": "q"}], role="planner")
+    body = fake.calls[0][1]
+    assert "reasoning" not in body and "provider" not in body, body

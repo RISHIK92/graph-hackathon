@@ -74,13 +74,15 @@ def role_models(role: str) -> list[str]:
 
 def _role_body(role: str, model: str) -> dict:
     """Per-role request settings: planner and drafter run DeepSeek with reasoning off on a pinned provider
-    that must honour every parameter; Haiku runs at low effort except as the extractor (medium)."""
+    that must honour every parameter; Haiku runs at low effort except as the extractor (medium); any other
+    model (legacy LLM_MODEL) gets a plain request."""
     body: dict[str, Any] = {}
     if model.startswith("anthropic/claude-haiku"):
         body["reasoning"] = {"effort": "medium" if role == "extractor" else "low"}
-    elif role in ("planner", "drafter"):
+    elif role in ("planner", "drafter") and model.startswith("deepseek/"):
         body["reasoning"] = {"enabled": False}
-    if role in ("planner", "drafter", "judge2") and not model.startswith("anthropic/"):   # Haiku 404s under it
+    # DeepSeek and the second judge only: Haiku 404s under require_parameters, and so did legacy laguna
+    if (role in ("planner", "drafter") and model.startswith("deepseek/")) or role == "judge2":
         pin = os.environ.get(f"MODEL_{role.upper()}_PROVIDER")
         body["provider"] = {"require_parameters": True, **({"order": [pin], "allow_fallbacks": False} if pin else {})}
     if role == "judge2":
