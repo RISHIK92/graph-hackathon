@@ -1,0 +1,29 @@
+{
+ "judge": [
+  "microsoft/microsoft-decision-1",
+  "openai/gpt-6-luna-decisions"
+ ],
+ "judge2": [
+  "z-ai/glm-5.2",
+  "nvidia/nemotron-3-ultra-550b-a55b"
+ ],
+ "answer_models": {
+  "planner": [
+   "poolside/laguna-xs-2.1"
+  ],
+  "drafter": [
+   "poolside/laguna-xs-2.1"
+  ],
+  "checker": [
+   "typesafe/jev-1.14",
+   "nace-ai/drex-v2.0"
+  ],
+  "escalation": [
+   "anthropic/claude-haiku-5.5"
+  ]
+ },
+ "agreement": 0.5,
+ "agreement_n": 4,
+ "cost_per_answer_usd": 0.0,
+ "cost_usd": {}
+}

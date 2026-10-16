@@ -1,0 +1,74 @@
+[
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_f996c5f3a9",
+  "steps": 6,
+  "questions": 1,
+  "refused": {},
+  "seconds": 9.0
+ },
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_9ebf485ae0",
+  "steps": 24,
+  "questions": 1,
+  "refused": {},
+  "seconds": 9.5
+ },
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_97d170e155",
+  "steps": 0,
+  "questions": 1,
+  "refused": {},
+  "seconds": 8.8
+ },
+ {
+  "seed": 2,
+  "graph": "eval_scratch_2_e096d2892e",
+  "steps": 6,
+  "questions": 1,
+  "refused": {},
+  "seconds": 9.3
+ },
+ {
+  "seed": 2,
+  "graph": "eval_scratch_2_570bb7bcd5",
+  "steps": 40,
+  "questions": 1,
+  "refused": {},
+  "seconds": 7.9
+ },
+ {
+  "seed": 2,
+  "graph": "eval_scratch_2_97d170e155",
+  "steps": 0,
+  "questions": 1,
+  "refused": {},
+  "seconds": 8.8
+ },
+ {
+  "seed": 3,
+  "graph": "eval_scratch_3_02bc3eb76c",
+  "steps": 6,
+  "questions": 1,
+  "refused": {},
+  "seconds": 9.4
+ },
+ {
+  "seed": 3,
+  "graph": "eval_scratch_3_58e4bab760",
+  "steps": 31,
+  "questions": 1,
+  "refused": {},
+  "seconds": 8.4
+ },
+ {
+  "seed": 3,
+  "graph": "eval_scratch_3_97d170e155",
+  "steps": 0,
+  "questions": 1,
+  "refused": {},
+  "seconds": 8.7
+ }
+]
