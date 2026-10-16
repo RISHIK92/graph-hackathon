@@ -275,7 +275,7 @@ def fell_back(r: dict) -> bool:
 
 class Guard:
     """Abort a live run early (item 20 gate B3): after min_n answers, stop when more than 10% of the answers
-    the drafter should have written fell back to the graph's draft, any role's error rate passes 5%, the cost
+    the drafter should have written fell back to the graph's draft, any role's error rate passes 15%, the cost
     per answer passes 3x the A/B figure, or p95 latency passes 15 s."""
 
     def __init__(self, ab_cost_per_answer: float = 0.0, min_n: int = 15):
@@ -289,7 +289,9 @@ class Guard:
         if len(fell) >= 3 and len(fell) / len(eligible) > 0.10:   # 3 events, so one slip can't stop a small run
             return f"{len(fell)} of {len(eligible)} answers fell back to the deterministic draft"
         for role, s in sorted(stats.items()):
-            if s["errors"] >= 3 and s["errors"] / s["calls"] > 0.05:
+            # 15% (user decision, Oct 16): laguna's harmless redraft timeouts put the drafter at 10% while 1 in 30
+            # answers changed
+            if s["errors"] >= 3 and s["errors"] / s["calls"] > 0.15:
                 return f"{role} error rate {s['errors']}/{s['calls']}"
         if self.ab_cost and answer_cost / len(rows) > 3 * self.ab_cost:
             return f"cost per answer {answer_cost / len(rows):.5f} is over 3x the A/B's {self.ab_cost:.5f}"

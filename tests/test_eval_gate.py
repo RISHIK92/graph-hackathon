@@ -37,8 +37,8 @@ def test_the_guard_stops_on_deterministic_fallbacks():
 
 def test_the_guard_stops_on_role_errors_cost_and_latency():
     rows = [_row(i) for i in range(20)]
-    assert "planner" in ev.Guard().reason(rows, {"planner": {"calls": 40, "errors": 3}}, 0.0)
-    assert ev.Guard().reason(rows, {"planner": {"calls": 40, "errors": 2}}, 0.0) is None
+    assert "planner" in ev.Guard().reason(rows, {"planner": {"calls": 40, "errors": 7}}, 0.0)
+    assert ev.Guard().reason(rows, {"planner": {"calls": 40, "errors": 6}}, 0.0) is None
     assert "cost" in ev.Guard(ab_cost_per_answer=0.001).reason(rows, {}, 0.0031 * 20)   # over 3x the A/B
     slow = rows[:-2] + [_row(98, latency=20_000), _row(99, latency=21_000)]
     assert "p95" in ev.Guard().reason(slow, {}, 0.0)
@@ -155,7 +155,8 @@ def test_the_guard_needs_three_events_before_it_aborts():
     assert ev.Guard().reason(rows, {}, 0.0) is None
     assert ev.Guard().reason(rows + [_row(18, "deterministic")], {}, 0.0)
     assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 14, "errors": 2}}, 0.0) is None
-    assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 30, "errors": 3}}, 0.0)
+    assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 29, "errors": 3}}, 0.0) is None   # 10%: under 15%
+    assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 30, "errors": 5}}, 0.0)
 
 
 def test_offline_runs_are_never_aborted_for_deterministic_drafts(monkeypatch):
