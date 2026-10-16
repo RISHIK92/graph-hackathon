@@ -6,6 +6,8 @@ with no host port. A t3.medium costs roughly $1 a day while it runs (plus the El
 
 ## 1. AWS (profile `rishik-personal`, region ap-south-1, every resource tagged `project=company-brain`)
 
+Run this block in **bash** (`bash`, then paste): zsh doesn't split `$P` into words.
+
 ```bash
 P="--profile rishik-personal --region ap-south-1"
 TAG='ResourceType=%s,Tags=[{Key=project,Value=company-brain}]'
@@ -39,9 +41,12 @@ certificate on first start and retries until DNS resolves.
 ## 3. First boot
 
 ```bash
+# from your machine: the code goes over as a git bundle (nothing needs pushing)
+git bundle create /tmp/company-brain.bundle main
+scp -i ~/.ssh/company-brain-key.pem /tmp/company-brain.bundle ubuntu@<elastic-ip>:
 ssh -i ~/.ssh/company-brain-key.pem ubuntu@<elastic-ip>
 curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker ubuntu && exit   # log in again after this
-git clone https://github.com/RISHIK92/graph-hackathon.git && cd graph-hackathon
+git clone company-brain.bundle graph-hackathon && cd graph-hackathon
 cp deploy/.env.prod.example deploy/.env
 sed -i "s/^BRAIN_DOMAIN=.*/BRAIN_DOMAIN=<subdomain>/" deploy/.env
 sed -i "s/^PUBLIC_WRITE_TOKEN=.*/PUBLIC_WRITE_TOKEN=$(openssl rand -hex 24)/" deploy/.env
@@ -70,7 +75,8 @@ docker compose -f deploy/docker-compose.prod.yml ps
 ## 6. Rollback
 
 ```bash
-git log --oneline -5 && git checkout <previous-commit>
+git fetch ~/company-brain.bundle main && git log --oneline -5 FETCH_HEAD   # a newer bundle, scp'd as above
+git checkout <commit>
 docker compose -f deploy/docker-compose.prod.yml up -d --build api ui
 ```
 
