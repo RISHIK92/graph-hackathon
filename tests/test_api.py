@@ -171,7 +171,8 @@ def test_anonymous_turn_read_allowed_but_writes_restricted(api_client):
     events = r_read.json()["events"]
     ans = next(e for e in events if e["event"] == "answer")
     assert not ans["abstained"]
-    assert any("Payments owns Ledger" in line["text"] for line in ans["assembled"]["lines"])
+    assert "Payments owns Ledger" in ans["assembled"]["lead"] or \
+        any("Payments owns Ledger" in line["text"] for line in ans["assembled"]["lines"])
 
     # Anonymous user asking for a write: agent refuses and marks status 'needs_token'
     r_write = client.post(f"/sessions/{sid}/turns/sync", json={"text": "Route RDS-42 to the owner"})

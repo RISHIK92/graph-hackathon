@@ -20,6 +20,15 @@ def answer_of(events):
     return next(e for e in events if e["event"] == "answer")
 
 
+def shown(ans):
+    """What the answer displays (item 20): the lead, with its first claim's status, then the supporting lines."""
+    a = ans["assembled"]
+    claims = {c["claim_id"]: c for c in ans["claims"]}
+    backing = [claims[c] for c in a.get("lead_claims") or [] if c in claims]
+    status = "disputed" if any(c.get("disputed") for c in backing) else (backing[0]["tense"] if backing else "current")
+    return ([{"text": a["lead"], "status": status}] if a.get("lead") else []) + a["lines"]
+
+
 def test_plans():
     assert heuristic_plan("Who owns Ledger?")["intent"] == "ownership"
     assert heuristic_plan("What breaks if Ledger goes down, and who do I tell?")["intent"] == "impact"
@@ -40,7 +49,7 @@ def test_who_owns_then_learn_fact_then_confirm(world):
     ev = run(agent, s, "Who owns Ledger?")
     ans = answer_of(ev)
     assert not ans["abstained"]
-    assert any("Payments owns Ledger" in l["text"] and l["status"] == "current" for l in ans["assembled"]["lines"])
+    assert any("Payments owns Ledger" in l["text"] and l["status"] == "current" for l in shown(ans))
     assert [e for e in ev if e["event"] == "tool_call"][0]["name"] == "link_entities"
     clock.tick()
     ev = run(agent, s, "Infra owns Ledger now")
@@ -48,14 +57,14 @@ def test_who_owns_then_learn_fact_then_confirm(world):
     assert act["event"] == "action" and act["result"]["status"] == "disputed"
     clock.tick()
     ans = answer_of(run(agent, s, "Who owns Ledger?"))
-    statuses = {l["status"] for l in ans["assembled"]["lines"]}
+    statuses = {l["status"] for l in shown(ans)}
     assert "disputed" in statuses                                            # disclosure (V7, D5)
     ch = act["result"]["assertion_id"]
     clock.tick()
     Actions(g, clock).confirm_fact(Actor("person:priya"), assertion_id=ch)
     clock.tick()
     ans = answer_of(run(agent, s, "Who owns Ledger?"))
-    assert any("Infra owns Ledger" in l["text"] and l["status"] == "current" for l in ans["assembled"]["lines"])
+    assert any("Infra owns Ledger" in l["text"] and l["status"] == "current" for l in shown(ans))
 
 
 def test_agent_never_confirms_or_undoes(world):
@@ -171,7 +180,7 @@ def test_counting_questions_answer_with_a_verified_count(world):
                     ("Which team has the most people?", "Payments has the most primary members (2); next is Platform (1).")]:
         ans = answer_of(run(agent, s, q))
         assert not ans["abstained"], q
-        assert [l["text"] for l in ans["assembled"]["lines"]] == [want], q
+        assert [l["text"] for l in shown(ans)] == [want], q
         assert ans["claims"][0]["label"] == "aggregate" and ans["claims"][0]["assertion_ids"], q
 
 
@@ -208,7 +217,7 @@ def test_llm_draft_never_vetoes_a_verified_deterministic_answer(world, monkeypat
         ev = run(agent, s, "Who owns Ledger?")
         ans = answer_of(ev)
         assert not ans["abstained"]
-        assert any("Payments owns Ledger" in l["text"] for l in ans["assembled"]["lines"])
+        assert any("Payments owns Ledger" in l["text"] for l in shown(ans))
         assert agent.turn_log[ans["turn_id"]]["verification"]["draft"] == "deterministic"
 
 
@@ -238,7 +247,7 @@ def test_conversation_recall_routes_to_the_session_without_the_llm(world, monkey
     assert [e["name"] for e in ev if e["event"] == "tool_call"] == ["recall_session"]
     ans = answer_of(ev)
     assert not ans["abstained"]
-    assert any("Ledger" in l["text"] for l in ans["assembled"]["lines"])
+    assert any("Ledger" in l["text"] for l in shown(ans))
     assert not called
 
 
@@ -284,7 +293,7 @@ def test_counting_answers_keep_the_tool_sentence_with_an_llm(world, monkeypatch)
     agent = Agent(world["g"], world["clock"])
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "How many systems does Payments own?"))
-    assert [l["text"] for l in ans["assembled"]["lines"]] == ["Payments owns 2 systems: Checkout and Ledger."]
+    assert [l["text"] for l in shown(ans)] == ["Payments owns 2 systems: Checkout and Ledger."]
     assert not called
 
 
@@ -295,7 +304,7 @@ def test_primary_team_is_a_modelled_question(world):
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "What is Priya Raman's primary team today?"))
     assert not ans["abstained"] and not ans.get("missing")
-    assert any("Payments" in l["text"] for l in ans["assembled"]["lines"])
+    assert any("Payments" in l["text"] for l in shown(ans))
 
 
 def _decision_world(world):
@@ -338,11 +347,11 @@ def test_decision_answer_leads_with_the_cited_rationale(world):
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "Why did we move Ledger to Aurora?"))
     assert not ans["abstained"]
-    lines = [l["text"] for l in ans["assembled"]["lines"]]
+    lines = [l["text"] for l in shown(ans)]
     assert lines[0].startswith("Move Ledger to Aurora (ADR-002, 1 Jan 2026), replacing ADR-001 (Run Ledger on Postgres), because")
     assert "Postgres could not sustain Ledger write volume" in lines[0]
-    first = next(c for c in ans["claims"] if c["claim_id"] == ans["assembled"]["lines"][0]["claim_id"])
-    assert first["span_ids"] == ["sp_why"]
+    claims = {c["claim_id"]: c for c in ans["claims"]}
+    assert "sp_why" in {sp for cid in ans["assembled"]["lead_claims"] for sp in claims[cid]["span_ids"]}
     graph_lines = [l for l in lines[1:] if not l.startswith("“") and "“" not in l]
     assert len(graph_lines) <= 3, lines
     assert "ADR-002 replaces ADR-001" in lines and not any("affects" in l for l in lines)
@@ -364,7 +373,7 @@ def test_decision_lead_survives_an_llm_draft_that_drops_the_rationale(world, mon
     agent = Agent(world["g"], world["clock"])
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "Why did we move Ledger to Aurora?"))
-    assert ans["assembled"]["lines"][0]["text"].startswith("Move Ledger to Aurora (ADR-002, 1 Jan 2026)")
+    assert shown(ans)[0]["text"].startswith("Move Ledger to Aurora (ADR-002, 1 Jan 2026)")
 
 
 def test_decision_named_in_the_question_leads(world):
@@ -377,7 +386,7 @@ def test_decision_named_in_the_question_leads(world):
     agent = Agent(g, world["clock"])
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "What was the reasoning behind ADR-001?"))
-    assert ans["assembled"]["lines"][0]["text"].startswith("Run Ledger on Postgres (ADR-001, 1 Jan 1970), because")
+    assert shown(ans)[0]["text"].startswith("Run Ledger on Postgres (ADR-001, 1 Jan 1970), because")
 
 
 def test_decision_state_questions_answer_with_the_status_not_the_rationale(world):
@@ -385,8 +394,8 @@ def test_decision_state_questions_answer_with_the_status_not_the_rationale(world
     _decision_world(world)
     agent = Agent(world["g"], world["clock"])
     s = agent.create_session("judge", "person:eve")
-    lines = [l["text"] for l in answer_of(run(agent, s, "What is the status of ADR-002?"))["assembled"]["lines"]]
-    assert lines[0] == "ADR-002 is accepted" and not any("“" in l for l in lines), lines
+    lines = [l["text"] for l in shown(answer_of(run(agent, s, "What is the status of ADR-002?")))]
+    assert lines[0] == "ADR-002 is accepted." and not any("“" in l for l in lines), lines
 
 
 def test_claims_are_kept_only_for_what_the_intent_asks():
@@ -468,7 +477,7 @@ def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "Who owns Ledger?"))
     assert calls == [None, agent_mod.REDRAFT_TIMEOUT_S] and agent_mod.REDRAFT_TIMEOUT_S <= 5
-    assert not ans["abstained"] and any("Payments owns Ledger" in l["text"] for l in ans["assembled"]["lines"])
+    assert not ans["abstained"] and any("Payments owns Ledger" in l["text"] for l in shown(ans))
     assert agent.turn_log[ans["turn_id"]]["verification"]["redraft"] == "timed out; kept the first verified draft"
 
 
@@ -567,12 +576,11 @@ def test_expertise_reads_in_plain_language_and_flags_outdated_quotes(fx):  # noq
     agent = Agent(g, Clock(fx.now + 10))
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "Who knows about Ledger?"))
-    lines = [l["text"] for l in ans["assembled"]["lines"]]
+    lines = [l["text"] for l in shown(ans)]
     assert not any("score" in l or "×" in l for l in lines), lines
+    assert lines[0].startswith("Ask Eve Lin first. Wrote 1 item about Ledger; quote outdated (wiki, before "), lines
     bob = next(l for l in lines if l.startswith("Bob Okafor ("))
     assert "wrote 1 item about Ledger" in bob and "“Payments owns Ledger”" in bob
-    eve = next(l for l in lines if l.startswith("Eve Lin ("))
-    assert "quote outdated (wiki, before " in eve
     c = next(c for c in ans["claims"] if c.get("expert") and c["quote"] == "Platform owns Ledger")
     assert c["tense"] == "historical" and c["expert"]["score"] > 0
 

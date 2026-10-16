@@ -38,7 +38,11 @@ export interface Turn {
   at: number;
   asOf: number | null;
   stages: StreamEvent[];
-  answer?: { claims: Claim[]; abstained: boolean; assembled: { lines: Line[]; explanation: string; lead?: string }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
+  answer?: { claims: Claim[]; abstained: boolean; assembled: {
+    lines: Line[]; explanation: string; lead?: string;
+    /** The answer contract (item 20): the claims line 1 states, lines left out, a status line and a next step. */
+    lead_claims?: string[]; more?: number; status?: { kind: string; text: string } | null; next?: string | null;
+  }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
   actions: StreamEvent[];
   turnId?: string;
   actor: string;   // who asked: the acting person at the time, not whoever is acting now (M2)

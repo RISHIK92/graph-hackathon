@@ -15,6 +15,8 @@ from brain.db import Graph
 from brain.tools import Ctx, run_tool
 from mcp_server import server as mcp
 
+from .test_agent import shown
+
 LEDGER, PAYMENTS, INFRA, PLATFORM = "system:ledger", "team:payments", "team:infra", "team:platform"
 PRIYA, BOB, JONAH = "person:priya-raman", "person:bob-lindqvist", "person:jonah-feld"
 RDS42 = "ticket:rds-42"
@@ -59,8 +61,8 @@ def test_demo_sequence(seed):
 
     # (1) owner is Payments, no dispute
     ev = list(agent.turn(s, "Who owns Ledger?"))
-    lines = next(e for e in ev if e["event"] == "answer")["assembled"]["lines"]
-    assert any(l["text"] == "Payments owns Ledger" and l["status"] == "current" for l in lines)
+    lines = shown(next(e for e in ev if e["event"] == "answer"))
+    assert lines[0]["text"].startswith("Payments owns Ledger.") and lines[0]["status"] == "current", lines
 
     # (2) routing RDS-42 proposes the Payments lead; she is eligible as holder, Jonah is not
     ev = list(agent.turn(s, "Route RDS-42 to the owner"))

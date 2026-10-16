@@ -3,7 +3,7 @@
 import { ArrowUp, FileText, Flag, GitBranch, Info, ListTree, MessageSquare, Search, Square, UserRound, Zap } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { ActionChip, EligibilityBadge, FactRow, PackContext } from "@/components/Chips";
+import { ActionChip, CitationChip, EligibilityBadge, FactRow, PackContext } from "@/components/Chips";
 import { ConfirmControl, RefusalCard, WhoCan } from "@/components/ConfirmControl";
 import { collectDisputes, DisputeLine } from "@/components/Dispute";
 import { Button, Chip, Notice, Placeholder } from "@/components/ui";
@@ -239,6 +239,8 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
   }, [lines, claims, factIndex, pathIndex, plan]);
 
   const answerLead = t.answer?.assembled.lead;
+  const leadSpans = useMemo(() => [...new Set((t.answer?.assembled.lead_claims || []).flatMap((id) => claims.get(id)?.span_ids || []))]
+    .map((id) => spanIndex.get(id)).filter((sp): sp is SpanItem => sp !== undefined).slice(0, 3), [t.answer, claims, spanIndex]);
   const lead = useMemo(() => {
     if (!lines.length) return "";
     if (answerLead) return answerLead;
@@ -292,7 +294,13 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
               </div>
             ) : (
               <>
-                {lead && <div className="answer-lead">{displayText(lead)}</div>}
+                {lead && <div className="answer-lead">{displayText(lead)} {leadSpans.map((sp) => <CitationChip key={sp.span_id} span={sp} />)}</div>}
+                {t.answer.assembled.status && (
+                  <div className="row t-small" style={{ gap: 6 }}>
+                    <Chip tone={t.answer.assembled.status.kind === "disputed" ? "warning" : "neutral"}>{t.answer.assembled.status.kind === "disputed" ? "Disputed" : t.answer.assembled.status.kind === "pending" ? "Pending" : "As of"}</Chip>
+                    <span className="text-2">{displayText(t.answer.assembled.status.text.replace(/^(Disputed|Pending): /, ""))}</span>
+                  </div>
+                )}
                 {groups.map(([k, rows]) => (
                   <div key={k} className="answer-group facts-host">
                     {(groups.length > 1 || k !== "Answer") && <span className="t-label">{k}</span>}
@@ -335,6 +343,12 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
                     <Button size="sm" variant="link" icon={GitBranch} onClick={() => s.openEvidence({ tab: "path", path: connectPath, packs, fromTurn: true, title: "How this connects" })}>
                       Show how this connects
                     </Button>
+                  </div>
+                )}
+                {(t.answer.assembled.next || !!t.answer.assembled.more) && (
+                  <div className="t-small text-2">
+                    {t.answer.assembled.next && <><strong>Next:</strong> {displayText(t.answer.assembled.next)} </>}
+                    {!!t.answer.assembled.more && <span className="text-3">{plural(t.answer.assembled.more, "more supporting fact")} in the evidence.</span>}
                   </div>
                 )}
                 {t.answer.assembled.explanation && (

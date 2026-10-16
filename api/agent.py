@@ -172,7 +172,11 @@ class Agent:
         if not check_lead(plan, lead):   # a first sentence that misses the question is dropped, not shown
             trace["verification"]["lead_rejected"] = lead
             lead = ""
-        final["assembled"]["lead"] = self._display(lead)
+        final["assembled"]["lead"] = lead
+        if not ver["abstained"]:
+            final["assembled"], final["claims"] = shape_answer(final["assembled"], ver["kept"], packs, ctx.as_of,
+                                                               lambda a: self._settlers(s, a))
+        final["assembled"]["lead"] = self._display(final["assembled"]["lead"])
         for line in final["assembled"]["lines"]:   # quotes stay verbatim on the claim; the shown line uses names
             line["text"] = self._display(line["text"])
         if ver["abstained"]:
@@ -184,7 +188,8 @@ class Agent:
         for ev in self.act(plan, text, s, turn_span, ctx):
             yield ev
         if not s.anonymous:
-            summary = " ".join(l["text"] for l in final["assembled"]["lines"]) or "No verified answer."
+            summary = " ".join([final["assembled"].get("lead") or "", *(l["text"] for l in final["assembled"]["lines"])]).strip() \
+                or "No verified answer."
             self._store_turn(s, summary, "agent")
         trace["queries"] = ctx.queries
         trace["packs"] = packs
@@ -892,6 +897,89 @@ def _past_lead(kept: list[dict], ix, at: int, acts: list[dict], now_statement) -
     return ""
 
 
+MAX_LINES = 3
+
+
+def _backs(c: dict, ix, lead: str) -> bool:
+    """Whether claim c states something the lead sentence says: its fact's names, its quote, its expert or
+    its aggregate."""
+    low = lead.lower()
+    if c.get("label") == "aggregate":
+        agg = ix.aggregates.get((c["pack_id"], c["item_id"]), {}).get("aggregate") or {}
+        return agg.get("text", "~").lower() in low or bool(agg.get("members")) and \
+            all(m["name"].lower() in low for m in agg["members"])
+    if c.get("label") == "graph" and c.get("assertion_ids"):
+        f = ix.facts.get(c["assertion_ids"][0])
+        if not f:
+            return False
+        parts = f["statement"].split(_PRESENT.get(f["predicate"], " ~ "), 1)
+        return len(parts) == 2 and all(x.strip().lower() in low for x in parts if x.strip())
+    if c.get("expert"):
+        return c.get("context", "~").split(" (", 1)[0].lower() in low
+    q = (c.get("quote") or "").rstrip(".").lower()
+    return bool(q) and q[:60] in low
+
+
+def shape_answer(assembled: dict, kept: list[dict], packs: dict[str, dict], as_of: int | None, settlers) -> tuple[dict, list[dict]]:
+    """The enterprise answer contract (item 20). Line 1 answers in one sentence, cited by the claims it states;
+    then at most MAX_LINES supporting lines, none repeating the lead or each other; a status line only when
+    the lead doesn't already say it; one next step only when someone has to act. The returned claims are
+    the shown ones (plus disputed and proposed claims, which V5 and the labels need): the rest stay in the
+    packs for the citation panel."""
+    ix = index_packs(packs)
+    by_id = {c["claim_id"]: c for c in kept}
+    lines = list(assembled["lines"])
+    lead = assembled.get("lead") or ""
+    if not lead and lines:   # no fixed shape for this intent: the first line is the answer
+        first = lines.pop(0)
+        lead, lead_ids = first["text"].rstrip(".") + ".", [first["claim_id"], *first["also"]]
+    else:
+        lead_ids = [c["claim_id"] for c in kept if _backs(c, ix, lead)]
+    shown_spans = {sp for cid in lead_ids for sp in by_id[cid].get("span_ids") or []}
+    out, seen = [], set()
+    for l in lines:
+        ids = [l["claim_id"], *l["also"]]
+        if set(ids) & set(lead_ids) or l["text"] in seen or l["text"].rstrip(".").lower() in lead.lower():
+            continue
+        spans = {sp for cid in ids for sp in by_id[cid].get("span_ids") or []}
+        if spans and spans <= shown_spans and not any(by_id[cid].get("assertion_ids") for cid in ids):
+            continue   # a quote whose sources are already cited adds nothing
+        seen.add(l["text"])
+        out.append(l)
+        shown_spans |= spans
+    more = max(0, len(out) - MAX_LINES)
+    out = out[:MAX_LINES]
+    if not lead_ids and out:   # a lead no claim states on its own (a ranking sentence): the first line backs it
+        lead_ids = [out[0]["claim_id"], *out[0]["also"]]
+    low = lead.lower()
+    shown = set(lead_ids) | {x for l in out for x in [l["claim_id"], *l["also"]]}
+    claims = [c for c in kept if c["claim_id"] in shown or c.get("disputed") or c.get("tense") == "proposed"
+              or c.get("action_ids")]
+    status, nxt = None, None
+    disputed = next((by_id[x] for x in shown if by_id[x].get("disputed") and by_id[x].get("assertion_ids")), None)
+    if disputed:
+        f = ix.facts.get(disputed["assertion_ids"][0]) or {}
+        aid = (f.get("open_disputes") or [disputed["assertion_ids"][0]])[0]
+        who = settlers(aid)
+        if "disput" not in low:
+            status = {"kind": "disputed", "text": f"Disputed: another source disagrees with “{f.get('statement', '')}”."
+                      + (f" {' or '.join(who)} can settle it." if who else "")}
+        if who:
+            nxt = f"Ask {who[0]} to confirm."
+    proposed = [by_id[x] for x in shown if by_id[x].get("tense") == "proposed" and by_id[x].get("assertion_ids")]
+    if proposed and not disputed:
+        who = settlers(proposed[0]["assertion_ids"][0])
+        if not re.search(r"pending|proposal|waiting", low):
+            status = {"kind": "pending", "text": "Pending: proposed, not yet confirmed."
+                      + (f" Waiting on {' or '.join(who)}." if who else "")}
+        if who:
+            nxt = f"Ask {who[0]} to confirm."
+    if as_of is not None and not status and _day(as_of) not in lead and "as of" not in low:
+        status = {"kind": "outdated", "text": f"As of {_day(as_of)}; it may have changed since."}
+    return {**assembled, "lead": lead, "lead_claims": lead_ids, "lines": out, "more": more, "status": status,
+            "next": nxt}, claims
+
+
 def _names_list(xs: list[str]) -> str:
     return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
 
@@ -1011,8 +1099,7 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: di
         ex = sorted((c for c in kept if c.get("expert")), key=lambda c: -c["expert"]["score"])
         if not ex:
             return ""
-        name, _, signals = ex[0]["context"].partition("): ")
-        signals = signals.split("; quote outdated", 1)[0]
+        name, _, signals = ex[0]["context"].partition("): ")   # an outdated quote stays flagged (M6)
         first = name.split(' (', 1)[0]
         out = f"Ask {first} first. {signals[:1].upper() + signals[1:]}."
         cited = {a for c in kept for a in c.get("assertion_ids") or []}
