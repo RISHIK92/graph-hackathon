@@ -1,0 +1,63 @@
+# ABORTED after 17 answers: 1 of 9 answers fell back to the deterministic draft
+
+Resume with the same command and cache.
+
+# Answer layer
+
+Fixed sample of up to 10 questions per category per seed; seeds [1, 2, 3].
+
+| Metric | D (graph agent) |
+|---|---|
+| entity_match | 0.933 (n=15) |
+| entity_f1 | 0.621 (n=14) |
+| citation_precision | 0.720 (n=14) |
+| citation_recall | 0.893 (n=14) |
+| v2_pass | 0.944 (n=15) |
+| v3_pass | 1.000 (n=15) |
+| dispute_disclosure | 1.000 (n=2) |
+| proposal_labelling | 1.000 (n=1) |
+| proposal_as_current | 0.000 (n=1) |
+| action_cited | 1.000 (n=2) |
+| action_in_pack | 1.000 (n=2) |
+| history_judge | 0.800 (n=5) |
+| abstention P/R (D) | 1.00 / 1.00 |
+| plan_ms p50/p95 (D) | 23 / 2230 |
+| tools_ms p50/p95 (D) | 38 / 109 |
+| draft_ms p50/p95 (D) | 2867 / 6497 |
+| verify_ms p50/p95 (D) | 0 / 3976 |
+| latency_ms p50/p95 (D) | 3363 / 10922 |
+| draft citations, final (D) | 0 (must be 0) |
+| judge agreement (D) | 1.00 (n=2) |
+
+## Per category, variant D
+
+| Category | n | abstained | entity_match | entity_f1 | citation_recall | dispute_disclosure | stale_error | proposal_labelling | action_cited | action_in_pack | aggregate_acceptable | aggregate_correct | history_judge |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 single-hop | 2 | 0 | 1.000 (n=2) | 1.000 (n=2) | 1.000 (n=2) | — | — | — | — | — | — | — | — |
+| 2 multi-hop | 2 | 0 | 1.000 (n=2) | 0.633 (n=2) | 1.000 (n=2) | — | — | — | — | — | — | — | — |
+| 3 ownership | 2 | 0 | 1.000 (n=2) | 0.667 (n=2) | 1.000 (n=2) | — | — | — | — | — | — | — | — |
+| 4 decision trace | 2 | 0 | 1.000 (n=2) | 0.667 (n=2) | 1.000 (n=2) | — | — | — | — | — | — | — | — |
+| 4-pending pending draft | 1 | 0 | 1.000 (n=1) | 0.000 (n=1) | — | — | — | 1.000 (n=1) | 1.000 (n=1) | 1.000 (n=1) | — | — | — |
+| 5 stale fact | 2 | 0 | 0.500 (n=2) | 0.333 (n=2) | 0.500 (n=2) | — | — | — | — | — | — | — | 0.500 (n=2) |
+| 6 unanswerable | 2 | 2 | — | — | — | — | — | — | — | — | — | — | — |
+| 7 past belief | 1 | 0 | 1.000 (n=1) | 0.500 (n=1) | 0.500 (n=1) | — | — | — | 1.000 (n=1) | 1.000 (n=1) | — | — | 1.000 (n=1) |
+| 8 disputed | 2 | 0 | 1.000 (n=2) | 0.800 (n=2) | 1.000 (n=2) | 1.000 (n=2) | — | — | — | — | — | — | 1.000 (n=2) |
+| 9 session memory | 1 | 0 | 1.000 (n=1) | — | 1.000 (n=1) | — | — | — | — | — | — | — | — |
+
+Category 7 by phrasing template (D): t2: action_cited=1.000 (n=1), entity=1.000 (n=1)
+
+## Setup scripts (scratch graphs, torn down)
+
+- seed 1 `eval_scratch_1_f996c5f3a9`: 6 steps, 1 questions, 11.4 s
+- seed 1 `eval_scratch_1_9ebf485ae0`: 24 steps, 1 questions, 10.1 s
+- seed 1 `eval_scratch_1_97d170e155`: 0 steps, 1 questions, 10.5 s
+
+## Run report
+
+| Rate | Value |
+|---|---|
+| deterministic fallback | 2 of 11 answers the drafter should have written |
+| escalation | 0 of 17 |
+| checker blocked | 0 of 17 |
+
+Served: drafter: poolside/laguna-xs-2.1 via Poolside (9); planner: poolside/laguna-xs-2.1 via Poolside (5)
