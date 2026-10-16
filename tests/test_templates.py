@@ -292,6 +292,7 @@ PARAMS = {
     "snap_part_of": lambda f: {"_graph": _snap(f)},
     "snap_paths": lambda f: {"_graph": _snap(f), "a": "person:priya", "b": "system:ledger", "types": list(snapshot.EDGE_TYPES)},
     "snap_person_edges": lambda f: {"_graph": _snap(f), "id": "person:priya"},
+    "snap_node_edges": lambda f: {"_graph": _snap(f), "id": "system:checkout"},
     "snap_wcc": lambda f: {"_graph": _snap(f)},
     "snapshot_touches": lambda f: {"V": f.now},
     "snapshot_version": lambda f: {},
@@ -508,6 +509,12 @@ def g_snap_betweenness(f, rows):
 
 def g_snap_person_edges(f, rows):
     assert rows == [{"type": "LEADS", "id": "team:payments", "name": "Payments", "aid": f.ids["lead"]}]
+
+
+def g_snap_node_edges(f, rows):
+    # either direction; 4.22.0's EXPLAIN prints the undirected traverse as `->` but returns both
+    assert sorted((r["id"], r["aid"]) for r in rows) == sorted([("system:ledger", f.ids["dep1"]),
+                                                               ("system:storefront", f.ids["dep2"])])
 
 
 def g_snap_wcc(f, rows):

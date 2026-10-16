@@ -101,6 +101,7 @@ def test_knowledge_gaps_lists_ownerless_systems_and_leaderless_teams(world):
     teams = next(a for a in agg if "team" in a["text"])
     assert {m["name"] for m in systems["members"]} >= {"Orphan"} and "Ledger" not in {m["name"] for m in systems["members"]}
     assert "Nolead" in {m["name"] for m in teams["members"]}
+    assert all(it["facts"] for it in pack["items"])   # an absence cites the entity's own live edges (item 20)
 
 
 def test_agent_routes_the_four_question_types(world):

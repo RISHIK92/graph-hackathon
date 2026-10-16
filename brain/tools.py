@@ -1009,14 +1009,18 @@ def knowledge_gaps(ctx: Ctx, as_of: int | None = None) -> dict:
         return r["c"] not in has_lead or o is None or (o["owner"].startswith("team:") and o["owner"] not in led)
     systems = sorted((r for r in comps if "System" in r["labels"] and gap(r)), key=lambda r: r["name"])
     teams = sorted((r for r in comps if "Team" in r["labels"] and r["id"] not in led), key=lambda r: r["name"])
+    def live(x: str) -> list[str]:   # an absence cites the entity's own live edges: it is there, and active
+        return [e["aid"] for e in sx.q("snap_node_edges", {"id": x})]
     if systems:
         cite = [o for o in (owner(s["id"]) for s in systems) if o]
         _aggregate_item(ctx, pb, len(systems), [{"id": s["id"], "name": s["name"]} for s in systems],
-                        [o["aid"] for o in cite] + [part[s["id"]]["aid"] for s in systems if s["id"] in part and not owns.get(s["id"])],
+                        [o["aid"] for o in cite] + [part[s["id"]]["aid"] for s in systems if s["id"] in part and not owns.get(s["id"])]
+                        + [a for s in systems if not owner(s["id"]) for a in live(s["id"])],
                         f"{len(systems)} system{'s' if len(systems) != 1 else ''} with no owner who has a lead "
                         f"{_when(ctx)}: " + _names([s["name"] for s in systems]) + ".")
     if teams:
-        _aggregate_item(ctx, pb, len(teams), [{"id": x["id"], "name": x["name"]} for x in teams], [],
+        _aggregate_item(ctx, pb, len(teams), [{"id": x["id"], "name": x["name"]} for x in teams],
+                        [a for x in teams for a in live(x["id"])],
                         f"{len(teams)} team{'s' if len(teams) != 1 else ''} with no lead {_when(ctx)}: "
                         + _names([x["name"] for x in teams]) + ".")
     return pb.build()

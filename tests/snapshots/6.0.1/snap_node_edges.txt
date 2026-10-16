@@ -1,0 +1,6 @@
+Sort
+    Project
+        Conditional Traverse | (n)-[e:DEPENDS_ON|LEADS|MEMBER_OF|OWNS|PART_OF|WORKS_ON]-(x:N)
+            Project
+                Filter
+                    Node By Index Scan | (n:N)
