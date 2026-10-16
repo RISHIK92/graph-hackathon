@@ -80,7 +80,7 @@ def _role_body(role: str, model: str) -> dict:
         body["reasoning"] = {"effort": "medium" if role == "extractor" else "low"}
     elif role in ("planner", "drafter"):
         body["reasoning"] = {"enabled": False}
-    if role in ("planner", "drafter", "judge2"):
+    if role in ("planner", "drafter", "judge2") and not model.startswith("anthropic/"):   # Haiku 404s under it
         pin = os.environ.get(f"MODEL_{role.upper()}_PROVIDER")
         body["provider"] = {"require_parameters": True, **({"order": [pin], "allow_fallbacks": False} if pin else {})}
     if role == "judge2":
@@ -232,8 +232,11 @@ def decision_p(res: dict, name: str) -> float | None:
         return None
     if not isinstance(a, dict):
         return float(a) if isinstance(a, (int, float)) and not isinstance(a, bool) else (1.0 if a else 0.0)
-    if "score" in a:
-        return float(a["score"])
+    if "noul" in a:
+        return float(a["noul"])
+    if "score" in a:   # the probability-weighted position on the criteria list
+        n = len(a.get("legend") or a.get("probabilities") or {})
+        return float(a["score"]) / (n - 1) if n > 1 else float(a["score"])
     yes = a.get("answer", True)
     yes = yes.lower() in ("yes", "true") if isinstance(yes, str) else bool(yes)
     p = a.get("probability", a.get("p"))

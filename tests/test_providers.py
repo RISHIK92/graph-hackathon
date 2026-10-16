@@ -58,6 +58,7 @@ def test_role_falls_back_when_the_primary_fails(live):
     assert res["model"] == fallback and res["content"] == "ok"
     assert [b["model"] for _, b in fake.calls] == [primary, fallback]
     assert fake.calls[1][1]["reasoning"] == {"effort": "low"}   # Haiku as the fallback runs at low effort
+    assert "provider" not in fake.calls[1][1]   # live smoke: Haiku 404s under require_parameters
 
 
 def test_role_raises_when_every_model_fails(live):
@@ -86,9 +87,9 @@ def test_role_env_overrides(monkeypatch):
 
 def test_decide_posts_to_the_alpha_endpoint_and_falls_back(live):
     primary, fallback = providers.role_models("checker")
-    answer = {"answers": {"supported": {"answer": True, "probability": 0.93}}, "usage": {"cost": 0.00002}}
+    answer = {"answers": {"supported": {"type": "noul", "noul": 0.93}}, "usage": {"cost": 0.00002}}
     fake = live({primary: 404, fallback: answer})
-    qs = {"supported": {"type": "noul", "instructions": "Is the claim supported?", "criteria": "..."}}
+    qs = {"supported": {"type": "noul", "instructions": "Is the claim supported?", "criteria": {"true": "a", "false": "b"}}}
     res = providers.decide("checker", "x" * 40_000, qs)
     url, body = fake.calls[-1]
     assert url == providers.DECISIONS_URL and body["model"] == fallback and body["questions"] == qs
@@ -98,6 +99,27 @@ def test_decide_posts_to_the_alpha_endpoint_and_falls_back(live):
     again = providers.decide("checker", "x" * 40_000, qs)   # cached like complete
     assert again["answers"] == res["answers"]
     assert [b["model"] for _, b in fake.calls].count(fallback) == 1   # the fallback's answer came from cache
+
+
+def test_decision_p_reads_the_documented_answer_shapes():
+    """The alpha API's shapes (checked against its reference, Oct 16): noul is a probability; score is the
+    probability-weighted position on the criteria list, normalised to 0..1."""
+    assert providers.decision_p({"answers": {"q": {"type": "noul", "noul": 0.96}}}, "q") == pytest.approx(0.96)
+    score = {"type": "score", "score": 1.5, "legend": {"0": "a", "1": "b", "2": "c"}}
+    assert providers.decision_p({"answers": {"q": score}}, "q") == pytest.approx(0.75)
+
+
+def test_every_shipped_decision_question_has_the_documented_criteria():
+    from api.agent import CHECK_QUESTIONS
+    from evals.answer import JUDGE_QUESTIONS
+    from ingest.extract import _SCREEN
+    for qs in (CHECK_QUESTIONS, JUDGE_QUESTIONS, _SCREEN):
+        for name, q in qs.items():
+            assert q["instructions"], name
+            if q["type"] == "noul":
+                assert set(q["criteria"]) == {"true", "false"}, name
+            elif q["type"] == "score":
+                assert isinstance(q["criteria"], list) and len(q["criteria"]) >= 2, name
 
 
 def test_decision_p_reads_scores_and_booleans():

@@ -206,10 +206,11 @@ def _session_user_spans(g: Graph, sid: str) -> list[str]:
 
 JUDGE_QUESTIONS = {
     "rubric": {"type": "noul", "instructions": JUDGE_RUBRIC.rsplit(" Return JSON", 1)[0],
-               "criteria": "Yes only if all of (a)-(d) hold."},
+               "criteria": {"true": "All of (a)-(d) hold.", "false": "Any of (a)-(d) fails, or the answer abstains."}},
     "reference": {"type": "score", "instructions": "How closely does the ANSWER agree with the REFERENCE on the facts "
                                                    "and on when each held?",
-                  "criteria": "1 = the same facts with the same timing; 0.5 = partly; 0 = contradicts or misses it."}}
+                  "criteria": ["Contradicts the reference or misses its facts", "Partly agrees",
+                               "The same facts with the same timing"]}}
 LOW_CONFIDENCE = (0.3, 0.7)
 
 

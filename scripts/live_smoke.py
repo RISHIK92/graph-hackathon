@@ -18,7 +18,7 @@ from brain.config import ROLE_MODELS, settings
 CHAT_ROLES = ("extractor", "planner", "drafter", "escalation", "judge2")
 DECISION_ROLES = ("screen", "checker", "judge")
 QUESTION = {"ok": {"type": "noul", "instructions": "Does the text say that Payments owns Ledger?",
-                   "criteria": "Yes if it states it."}}
+                   "criteria": {"true": "It states it.", "false": "It doesn't."}}}
 
 
 def endpoints(model: str) -> str:
@@ -56,13 +56,15 @@ def call(role: str, model: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--roles", nargs="+", default=list(ROLE_MODELS))
+    ap.add_argument("--pairs", nargs="+", default=[], help="role=model: only these calls (a re-check within budget)")
     a = ap.parse_args()
     if not providers.llm_available():
         raise SystemExit("needs OPENROUTER_API_KEY and BRAIN_LLM on")
     providers.CACHE_DIR = providers.CACHE_DIR.parent / "llm-smoke"   # a smoke call never answers from cache
-    for role in a.roles:
-        for model in providers.role_models(role)[:3]:
-            print(json.dumps({**call(role, model), "endpoints": endpoints(model)}))
+    pairs = [tuple(p.split("=", 1)) for p in a.pairs] or \
+        [(role, model) for role in a.roles for model in providers.role_models(role)[:3]]
+    for role, model in pairs:
+        print(json.dumps({**call(role, model), "endpoints": endpoints(model)}))
     print(json.dumps({"total_cost_usd": round(sum(providers.COSTS.values()), 6)}))
 
 
