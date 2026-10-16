@@ -86,3 +86,19 @@ def test_the_stored_agent_turn_keeps_the_lead(fx):  # noqa: F811
     rows = fx.g.ro("MATCH (:Source {id:$s})-[:HAS_SPAN]->(sp:Span {author_role:'agent'}) RETURN sp.text AS t",
                    {"s": s.id}, template="test")
     assert rows and rows[0]["t"].startswith(lead), (lead, rows)
+
+
+def test_earlier_turns_are_evidence_only_for_conversation_recall(world):  # noqa: F811
+    """Paraphrase finding (item 20): a question the planner can't place fell back to a text search, which
+    found the user's earlier question in this chat and quoted it as the answer. The session's own turns are
+    evidence only when the question is about the conversation."""
+    _counting_world(world)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    run(agent, s, "How many systems depend directly on Ledger?")
+    ans = answer_of(run(agent, s, "Count the systems that depend on Ledger directly"))
+    cited = {sp["span_id"]: sp for p in ans["packs"].values() for it in p["items"] for sp in it["spans"]}
+    used = {sid for c in ans["claims"] for sid in c.get("span_ids") or []}
+    assert not [sid for sid in used if cited.get(sid, {}).get("source_id") == s.id], ans["assembled"]
+    recall = answer_of(run(agent, s, "What was my last question about?"))
+    assert not recall["abstained"]

@@ -139,9 +139,11 @@ class Agent:
             yield {"event": "tool_result", "name": name, "pack_id": pack["pack_id"], "items": len(pack["items"]),
                    "labels": labels, "queries": qs}
 
-        for p in ctx.packs.values():   # the current turn is never evidence for its own answer
-            for it in p.get("items", []) if turn_span else []:
-                it["spans"] = [x for x in it["spans"] if x.get("span_id") != turn_span]
+        recall = plan["intent"] == "memory"
+        for p in ctx.packs.values():   # the current turn is never evidence for its own answer; this chat's
+            for it in p.get("items", []):   # earlier turns are, as text, only for a question about the chat
+                it["spans"] = [x for x in it["spans"] if x.get("span_id") != turn_span   # (item 20); a fact
+                               and (recall or it["facts"] or x.get("source_id") != s.id)]   # learned here keeps its turn
         packs = {k: v for k, v in ctx.packs.items() if not k.startswith("_")}
         answer = {"claims": [], "explanation": ""} if gap else self.draft(text, plan, packs)
         yield {"event": "draft", "claims": len(answer["claims"])}
@@ -693,9 +695,10 @@ def heuristic_plan(text: str) -> dict:
         intent = "gaps"
     elif re.search(r"^(tell me about|what do you know about|give me an overview of|overview of|summari[sz]e)\b", t):
         intent = "summary"   # M9: an entity summary (Graph "Ask about it", entity panels)
-    elif re.search(r"^how many\b|^which \w+ (has|have) the (most|largest|biggest)\b", t):
+    elif re.search(r"^how many\b|^(count|number of)\b|^which \w+ (has|have) the (most|largest|biggest)\b", t):
         intent = "aggregate"
-    elif re.search(r"what breaks|goes down|outage|impact|who do i tell|who should i tell|blast radius", t):
+    elif re.search(r"what breaks|goes down|\b(is|was|went) down\b|outage|impact|\baffected\b|who do i tell|"
+                   r"who should i (tell|notify)|blast radius", t):
         intent = "impact"
     elif re.search(r"\bdepends? on\b|\bdependenc(y|ies)\b", t) and not re.search(r"\b(own|owns|owner|owners|lead|leads|manages?|tell)\b", t):
         intent = "dependency"   # M12: what X depends on, or what depends on X
@@ -712,7 +715,7 @@ def heuristic_plan(text: str) -> dict:
         intent = "decision_trace"
     elif re.search(r"connected|path between|related to", t):
         intent = "path"
-    elif re.search(r"\b(owns?|owned|owners?|responsible|assigned|handle)\b", t):
+    elif re.search(r"\b(owns?|owned|owners?|responsible|accountable|assigned|handle)\b|on the hook|in charge of", t):
         intent = "ownership"
     elif re.search(r"earlier|last time|what did i|remember", t):
         intent = "memory"

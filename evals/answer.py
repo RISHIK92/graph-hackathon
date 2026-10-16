@@ -75,6 +75,22 @@ def sample(qs: list[dict], per_cat: int, seed: int) -> list[dict]:
     return out
 
 
+def stratified(smp: list[dict], n: int) -> list[dict]:
+    """n questions taken round robin across categories, in sample order (0 keeps them all)."""
+    if not n:
+        return smp
+    by = defaultdict(list)
+    for q in smp:
+        by[label_of(q)].append(q)
+    order = sorted(by, key=_label_key)
+    out: list[dict] = []
+    while len(out) < min(n, len(smp)):
+        for lab in order:
+            if by[lab] and len(out) < n:
+                out.append(by[lab].pop(0))
+    return out
+
+
 def _label_key(lab: str) -> tuple:
     num, _, tag = lab.partition("-")
     return (int(num), tag)
@@ -401,7 +417,7 @@ def _pool_map(fn, xs: list) -> list:
 
 
 def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None = None,
-        variants: list[str] | None = None) -> str:
+        variants: list[str] | None = None, total: int = 0) -> str:
     variants = variants or ["A", "D"]
     rows_by_v: dict[str, list[dict]] = defaultdict(list)
     setup_log: list[dict] = []
@@ -416,6 +432,7 @@ def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None =
         smp = sample(qs, per_cat, seed)
         if cats:
             smp = [q for q in smp if label_of(q) in cats]
+        smp = stratified(smp, total // len(seeds) + (seeds.index(seed) < total % len(seeds)) if total else 0)
         plain = [q for q in smp if script_key(q) is None]
         groups: dict[str, list[dict]] = defaultdict(list)
         for q in smp:
@@ -553,13 +570,14 @@ def main() -> None:
     ap.add_argument("--cats", nargs="*", default=None, help="category labels, e.g. 7 9 10 4-pending")
     ap.add_argument("--variants", nargs="*", default=None, choices=list(VARIANT_AGENTS))
     ap.add_argument("--per-cat", type=int, default=10)
+    ap.add_argument("--total", type=int, default=0, help="a stratified subset of this many questions, split evenly across seeds")
     ap.add_argument("--out", default=None, help="results dir (default evals/results/<git-sha>)")
     ap.add_argument("seeds_pos", nargs="*", type=int, help="(legacy) seeds as positional args")
     a = ap.parse_args()
     seeds = a.seeds_pos or a.seeds
     out = Path(a.out) if a.out else ROOT / "evals" / "results" / sha()
     out.mkdir(parents=True, exist_ok=True)
-    print(run(seeds, out, a.per_cat, a.cats, a.variants))
+    print(run(seeds, out, a.per_cat, a.cats, a.variants, a.total))
 
 
 if __name__ == "__main__":

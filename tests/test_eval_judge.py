@@ -74,3 +74,11 @@ def test_cost_per_answer_excludes_the_judges(monkeypatch):
     monkeypatch.setattr(providers, "COSTS", {("planner", "a"): 0.002, ("drafter", "b"): 0.004, ("checker", "c"): 0.001,
                                              ("judge", "d"): 0.5, ("judge2", "e"): 0.5})
     assert ev.cost_per_answer(10) == pytest.approx(0.0007)
+
+
+def test_stratified_subset_covers_every_category_evenly():
+    """The 30-question model A/B (item 20 step 1): 10 per seed, categories taken round robin."""
+    qs = [{"id": f"c{c}-{i:03d}", "category": c} for c in (1, 2, 3, 5, 7, 8, 9, 10) for i in range(5)]
+    sub = ev.stratified(qs, 10)
+    assert len(sub) == 10 and len({q["category"] for q in sub}) == 8
+    assert ev.stratified(qs, 10) == sub and ev.stratified(qs, 0) == qs
