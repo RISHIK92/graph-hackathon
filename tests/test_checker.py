@@ -65,7 +65,7 @@ def test_a_passing_check_keeps_the_drafted_answer(world, live):
 def test_a_failed_check_escalates_once_and_a_passing_recheck_keeps_it(world, live):
     seen, drafts = live([0.1, 0.9])
     ans, trace = _turn(world)
-    assert drafts == [("drafter", agent_mod.DRAFT_TIMEOUT_S), ("escalation", agent_mod.ESCALATION_TIMEOUT_S)] and agent_mod.ESCALATION_TIMEOUT_S <= 5
+    assert drafts == [("drafter", agent_mod.DRAFT_TIMEOUT_S), ("escalation", agent_mod.ESCALATION_TIMEOUT_S)] and agent_mod.ESCALATION_TIMEOUT_S <= 10
     assert trace["check"]["result"] == "pass after escalation" and len(seen) == 2
     assert ans["assembled"]["explanation"] == "escalated"
     assert any(m["role"] == "escalation" for m in trace["models"])

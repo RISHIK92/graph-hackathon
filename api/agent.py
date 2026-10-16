@@ -656,7 +656,7 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
 
 
 REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first verified draft stands
-ESCALATION_TIMEOUT_S = 5   # the escalation redraft after a failed check (item 20 step 0)
+ESCALATION_TIMEOUT_S = 10   # the redraft after a failed check: Haiku needed about 7 s in the A/B (user decision)
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
 DRAFT_TIMEOUT_S = 10
 CHECK_TIMEOUT_S = 2   # gate C12: about 2 s
