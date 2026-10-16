@@ -238,7 +238,9 @@ def _sampled(q: dict) -> bool:
 def _second_judge(body: str) -> dict | None:
     try:
         res = providers.complete([{"role": "system", "content": JUDGE_RUBRIC.replace('{\"score\": 0 or 1', '{\"verdict\": 0 or 1')
-                                   + " Give the verdict first."}, {"role": "user", "content": body}],
+                                   + " The REFERENCE is context for what was true and when; grade only (a)-(d): a fact "
+                                     "the answer leaves out is not a failure. Give the verdict first."},
+                                  {"role": "user", "content": body}],
                                  schema={"type": "object", "properties": {"verdict": {"type": "integer"},
                                                                           "reason": {"type": "string"}},
                                          "required": ["verdict"]}, role="judge2")

@@ -82,3 +82,19 @@ def test_stratified_subset_covers_every_category_evenly():
     sub = ev.stratified(qs, 10)
     assert len(sub) == 10 and len({q["category"] for q in sub}) == 8
     assert ev.stratified(qs, 10) == sub and ev.stratified(qs, 0) == qs
+
+
+def test_the_second_judge_grades_phrasing_and_reads_the_reference_as_context(judges):
+    """Item 20 review: the second judge saw the REFERENCE under a phrasing-only rubric and failed answers for
+    leaving out reference facts; completeness is the decision judge's separate reference score."""
+    seen = []
+
+    def complete(messages, schema=None, role=None, **kw):
+        seen.append(messages[0]["content"])
+        return {"json": {"verdict": 1, "reason": "ok"}, "model": "nvidia/nemotron-3-ultra-550b-a55b"}
+    judges(0.5)
+    import brain.providers as p
+    p.complete = complete
+    ev.judge_history(Q, ANS)
+    assert ev.JUDGE_RUBRIC.rsplit(" Return JSON", 1)[0] in seen[0]   # the rubric itself is unchanged
+    assert "REFERENCE" in seen[0] and "only (a)-(d)" in seen[0]

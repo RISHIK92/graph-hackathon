@@ -973,7 +973,12 @@ def _past_lead(kept: list[dict], ix, at: int, acts: list[dict], now_statement) -
                 or (f["valid_to"] == MAX and not relied) or (relied and f["assertion_id"] not in relied):
             continue
         old = f["statement"].split(_PRESENT[p], 1)
-        out = f["statement"].replace(_PRESENT[p], _PAST[p], 1) + f" on {_day(at)}"
+        out = f["statement"].replace(_PRESENT[p], _PAST[p], 1)
+        lead = next((ix.facts[a] for a in relied if a in ix.facts and ix.facts[a]["predicate"] == "LEADS"
+                     and ix.facts[a]["object_id"] == f["subject_id"]), None) if p == "OWNS" else None
+        if lead:   # the lead it routed to: why the ticket went to that person
+            out += " and " + lead["statement"].replace(_PRESENT["LEADS"], _PAST["LEADS"], 1)
+        out += f" on {_day(at)}"
         new = now_statement(f["assertion_id"]).split(_PRESENT[p], 1)
         if len(old) == 2 and len(new) == 2 and new != old:
             out += f" (changed to {new[0] if new[0] != old[0] else new[1]} on {_day(f['valid_to'])})"

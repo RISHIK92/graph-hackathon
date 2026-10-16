@@ -448,8 +448,11 @@ def test_action_explanation_leads_with_what_it_relied_on_then(world):
     agent = Agent(g, clock)
     s = agent.create_session("judge", "person:eve")
     lead = answer_of(run(agent, s, "Why did you route RDS-42 to Priya?"))["assembled"]["lead"]
-    assert lead.startswith("Proposed routing RDS-42 to Priya Raman on 1 Jan 1970: Payments owned Ledger on 1 Jan 1970")
+    assert lead.startswith("Proposed routing RDS-42 to Priya Raman on 1 Jan 1970: Payments owned Ledger and Priya Raman "
+                           "led Payments on 1 Jan 1970")
     assert lead.endswith("(still the case).")
+    # the lead it relied on too: that is why the ticket went to her (item 20, second-judge review)
+    assert "Priya Raman led Payments" in lead, lead
     assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == "Payments owns Ledger. Priya Raman leads Payments."
 
 
