@@ -1,0 +1,36 @@
+{
+ "judge": [
+  "microsoft/microsoft-decision-1",
+  "openai/gpt-6-luna-decisions"
+ ],
+ "judge2": [
+  "nvidia/nemotron-3-ultra-550b-a55b",
+  "z-ai/glm-5.2"
+ ],
+ "answer_models": {
+  "planner": [
+   "poolside/laguna-xs-2.1"
+  ],
+  "drafter": [
+   "poolside/laguna-xs-2.1"
+  ],
+  "checker": [
+   "typesafe/jev-1.14",
+   "nace-ai/drex-v2.0"
+  ],
+  "escalation": [
+   "anthropic/claude-haiku-5.5"
+  ]
+ },
+ "agreement": 0.8,
+ "agreement_n": 5,
+ "cost_per_answer_usd": 0.000332,
+ "cost_usd": {
+  "planner:poolside/laguna-xs-2.1": 0.000769,
+  "checker:typesafe/jev-1.14": 0.000655,
+  "drafter:poolside/laguna-xs-2.1": 0.006792,
+  "judge:microsoft/microsoft-decision-1": 0.000162,
+  "judge2:nvidia/nemotron-3-ultra-550b-a55b": 0.001676,
+  "escalation:anthropic/claude-haiku-5.5": 0.001743
+ }
+}
