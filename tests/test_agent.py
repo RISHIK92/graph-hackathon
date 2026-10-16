@@ -456,9 +456,9 @@ def test_action_explanation_leads_with_what_it_relied_on_then(world):
     assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == "Payments owns Ledger. Priya Raman leads Payments."
 
 
-def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
-    """Item 18 fix 6: the verifier-driven redraft is one LLM call with a ~5 s timeout; on timeout the first
-    verified draft stands and the trace says so."""
+def test_a_draft_with_dropped_claims_is_not_redrafted(world, monkeypatch):
+    """User decision after the full run: the verifier-driven redraft rescued at most 8 of 33 answers and drove the
+    slow tail (verify p95 13.9 s). A dropped claim stays dropped; the surviving verified claims answer."""
     import httpx
 
     from api import agent as agent_mod
@@ -481,9 +481,9 @@ def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
     agent = Agent(world["g"], world["clock"])
     s = agent.create_session("judge", "person:eve")
     ans = answer_of(run(agent, s, "Who owns Ledger?"))
-    assert calls == [agent_mod.DRAFT_TIMEOUT_S, agent_mod.REDRAFT_TIMEOUT_S] and agent_mod.REDRAFT_TIMEOUT_S <= 5
+    assert calls == [agent_mod.DRAFT_TIMEOUT_S]
     assert not ans["abstained"] and any("Payments owns Ledger" in l["text"] for l in shown(ans))
-    assert agent.turn_log[ans["turn_id"]]["verification"]["redraft"] == "timed out; kept the first verified draft"
+    assert agent.turn_log[ans["turn_id"]]["verification"]["dropped"]
 
 
 def test_llm_draft_cannot_answer_about_an_unknown_name(world, monkeypatch):

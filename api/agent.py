@@ -150,15 +150,9 @@ class Agent:
         answer = {"claims": [], "explanation": ""} if gap else self.draft(text, plan, packs)
         trace["draft_error"] = answer.get("llm_error")   # a timeout or failure, never a silent fallback
         yield {"event": "draft", "claims": len(answer["claims"])}
+        # No redraft after the verifier drops claims (user decision after the full run: it rescued at most 8 of
+        # 33 answers and drove the slow tail); the surviving verified claims answer.
         ver = verify(answer, ctx.packs)
-        redraft = ""
-        if ver["dropped"] and not ver["abstained"] and providers.llm_available():
-            retry = self.draft(text, plan, packs, errors=ver["dropped"], timeout=REDRAFT_TIMEOUT_S)
-            if retry.get("llm_error"):   # item 18 fix 6: a slow model never holds the answer up
-                redraft = "timed out; kept the first verified draft" if retry["llm_error"] == "timeout" else \
-                    "failed; kept the first verified draft"
-            else:
-                answer, ver = retry, verify(retry, ctx.packs)
         drafted = answer.get("drafted", "deterministic")
         if ver["abstained"] and drafted == "llm":
             # The LLM may rephrase, never veto (item 18): an LLM draft that abstains, comes back empty or
@@ -172,7 +166,7 @@ class Agent:
                            *([{"role": "drafter", "model": answer["model"], "provider": answer.get("provider")}]
                              if answer.get("model") else []), *checked]
         trace["verification"] = {"kept": len(ver["kept"]), "dropped": ver["dropped"], "rewritten": ver["rewritten"],
-                                 "draft": drafted, "redraft": redraft, "checks": ver["checks"]}
+                                 "draft": drafted, "checks": ver["checks"]}
         yield {"event": "verification", "kept": len(ver["kept"]), "dropped": ver["dropped"],
                "rewritten": ver["rewritten"]}
         final = {"claims": ver["kept"], "abstained": ver["abstained"],
@@ -689,7 +683,6 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
     return name.replace("_", " ").capitalize()
 
 
-REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first verified draft stands
 ESCALATION_TIMEOUT_S = 10   # the redraft after a failed check: Haiku needed about 7 s in the A/B (user decision)
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
 DRAFT_TIMEOUT_S = 15   # laguna's multi-hop drafts took about 12 s in the full run (user decision)
