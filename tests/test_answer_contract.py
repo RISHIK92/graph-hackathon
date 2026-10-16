@@ -102,3 +102,26 @@ def test_earlier_turns_are_evidence_only_for_conversation_recall(world):  # noqa
     assert not [sid for sid in used if cited.get(sid, {}).get("source_id") == s.id], ans["assembled"]
     recall = answer_of(run(agent, s, "What was my last question about?"))
     assert not recall["abstained"]
+
+
+def test_questions_about_the_assistant_get_a_help_reply(fx):  # noqa: F811
+    """User feedback (deployed site): "what can u do" quoted a random chat message. Questions about the
+    assistant get a fixed help reply with example questions about real entities, and quote nothing."""
+    agent = Agent(fx.g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    for q in ("what can u do", "Help", "hi", "What can I ask you?", "who are you?"):
+        ans = answer_of(run(agent, s, q))
+        assert ans.get("help") and not ans["claims"], q
+        text = " ".join(ans["missing"])
+        assert "Who owns Ledger?" in text and "cites" in text, (q, text)
+
+
+def test_a_question_that_names_nothing_and_fits_no_intent_quotes_nothing(fx):  # noqa: F811
+    agent = Agent(fx.g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    ans = answer_of(run(agent, s, "tell me something interesting"))
+    assert ans.get("help") and not ans["claims"] and "couldn't tie that" in ans["missing"][0]
+    unknown = answer_of(run(agent, s, "Who owns Quasar Gateway?"))   # an unknown name still abstains as before
+    assert unknown["abstained"] and not unknown.get("help")
+    recall = answer_of(run(agent, s, "What was my last question about?"))
+    assert not recall.get("help")

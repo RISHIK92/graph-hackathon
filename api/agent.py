@@ -28,7 +28,7 @@ from .verifier import assemble, check_lead, index_packs, verify
 from brain.ids import now_ms
 
 INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impact", "aggregate", "fact", "memory",
-           "summary", "dependency", "stale_docs", "critical", "key_people", "gaps", "action", "other"]
+           "summary", "dependency", "stale_docs", "critical", "key_people", "gaps", "help", "action", "other"]
 # Questions about the whole organisation (item 17's graph algorithms): no entity has to be named.
 GLOBAL_INTENTS = ("critical", "key_people", "gaps")
 _INTERNAL_ID = re.compile(r"\b(?:as|sp|ac|pa|pk|turn)_[0-9a-f]{6,}|\b(?:system|person|team|project|decision|ticket):[a-z0-9-]+")
@@ -120,7 +120,8 @@ class Agent:
 
         # tool phase: read tools only (A54 §8 i). A question about an attribute the graph doesn't model
         # gets no tools: any fact the tools found about the entity would verify but not answer it.
-        gap = unmodelled(plan, text) or stale_docs_refusal(plan)
+        help_text = self._help(plan, text)
+        gap = help_text or unmodelled(plan, text) or stale_docs_refusal(plan)
         calls = [] if gap else self.tool_calls(plan, text, ctx, s)
         for name, args in calls[:6]:
             if callable(args):   # arguments that depend on an earlier call's pack
@@ -186,6 +187,8 @@ class Agent:
         if ver["abstained"]:
             final["nearest"] = [it.get("path") for p in packs.values() for it in p["items"] if it.get("path")][:3]
             final["missing"] = gap or missing(plan, text)
+            if help_text:
+                final["help"] = True
         yield {"event": "answer", "turn_id": turn_id, **final}
 
         # act: write tools only now, arguments from the current user turn (A54)
@@ -327,6 +330,25 @@ class Agent:
     def _display(self, text: str) -> str:
         """M17: raw ids in shown text ("person:priya commented ...") read as names."""
         return _RAW_ID.sub(lambda m: self._entity_name(m.group(0)), text)
+
+    def _help(self, plan: dict, text: str) -> list[str]:
+        """What Nodus answers, with examples about real entities, for a question about the assistant or one that
+        names nothing and fits no intent (deployed-site feedback: "what can u do" quoted a random chat line)."""
+        names_nothing = not any(m.get("entity_id") for m in plan.get("mentions") or []) and \
+            not any(m.get("text") for m in plan.get("mentions") or []) and \
+            not re.search(r"\s[A-Z][a-z0-9]+", text)   # "Who leads Nimbus Vault?" names something unknown
+        if plan["intent"] != "help" and not (plan["intent"] == "other" and names_nothing):
+            return []
+        systems = sorted(r["name"] for r in self.g.q("all_entities") if r["id"].startswith("system:") and r["name"])
+        x = "Ledger" if "Ledger" in systems else (systems[0] if systems else "a system")
+        head = [] if plan["intent"] == "help" else ["I couldn't tie that to anything in the graph."]
+        return head + [
+            "I answer questions about your company from its graph, and every answer cites where it came from.",
+            f"Try: “Who owns {x}?”, “Why is {x} on its current setup?”, “What breaks if {x} goes down, and who do I "
+            f"tell?”, “Who knows about {x}?”, “Which systems are most critical?” or “Where are our knowledge gaps?”.",
+            "With the access token I can also act: route a ticket to its owner, record a fact you tell me "
+            "(“Infra owns Ledger now”), draft an ADR change or flag outdated docs. A change waits for the right "
+            "person to confirm it."]
 
     def _entity_name(self, eid: str) -> str:
         r = self.g.q("entity_name", {"id": eid}) if eid else []
@@ -743,6 +765,9 @@ def heuristic_plan(text: str) -> dict:
         want = "learn_fact"
     if want != "none":
         intent = "action"
+    elif re.search(r"^(hi|hello|hey|help|thanks|thank you)\b\W*$|what (can|could) (you|u) do|what do (you|u) do|"
+                   r"who are (you|u)|what are (you|u)\b|what (can|should) i ask|how do i use", t):
+        intent = "help"   # about the assistant itself (deployed-site feedback): a help reply, not a search
     elif re.search(r"\b(my|the) (last|previous|earlier|first) (question|message)|what did i (ask|say|tell)|"
                    r"earlier in (this|the|our) (session|conversation|chat)|remind me what i", t):
         intent = "memory"    # conversation recall: answered from the session's own turns (item 18)

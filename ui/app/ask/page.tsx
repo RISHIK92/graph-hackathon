@@ -280,7 +280,13 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
           <div className="answer">
             {t.answer.abstained ? (
               <div className="stack-3" style={{ padding: 16 }}>
-                <Notice tone="info" title="No verified answer">{t.answer.missing?.length ? t.answer.missing.join(" ") : "Nothing in the graph supported a claim the verifier would keep."}</Notice>
+                {t.answer.help ? (
+                  <Notice tone="info" title="What I can do">
+                    <div className="stack">{(t.answer.missing || []).map((m) => <span key={m}>{m}</span>)}</div>
+                  </Notice>
+                ) : (
+                  <Notice tone="info" title="No verified answer">{t.answer.missing?.length ? t.answer.missing.join(" ") : "Nothing in the graph supported a claim the verifier would keep."}</Notice>
+                )}
                 {t.answer.nearest?.filter(Boolean).length ? (
                   <div className="stack">
                     <span className="t-label">Nearest evidence</span>

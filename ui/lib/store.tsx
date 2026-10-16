@@ -42,7 +42,9 @@ export interface Turn {
     lines: Line[]; explanation: string; lead?: string;
     /** The answer contract (item 20): the claims line 1 states, lines left out, a status line and a next step. */
     lead_claims?: string[]; more?: number; status?: { kind: string; text: string } | null; next?: string | null;
-  }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[] };
+  }; packs: Record<string, Pack>; nearest?: (Path | null)[]; missing?: string[];
+    /** A reply about the assistant itself (what it can do), not an answer about the graph. */
+    help?: boolean };
   actions: StreamEvent[];
   turnId?: string;
   actor: string;   // who asked: the acting person at the time, not whoever is acting now (M2)
