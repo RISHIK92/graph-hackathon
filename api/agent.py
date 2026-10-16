@@ -212,6 +212,13 @@ class Agent:
             if key.lower() not in [x["text"].lower() for x in mentions]:
                 mentions.append({"text": key, "entity_id": ""})
         h = heuristic_plan(text)
+        # Jev routes what the rules can't place (user idea, deployed site): one `choice` question within a hard
+        # budget. A question naming a date still goes to the planner model, which also reads the date.
+        if providers.llm_available() and h["intent"] in ("fact", "other") and not _DATED.search(text):
+            routed = self._route(text)
+            if routed:
+                return {**h, "intent": routed[0], "mentions": mentions, "models": [routed[1]]}
+            return {**h, "mentions": mentions}
         # The LLM's intent is used only where the rules say fact/other, and its date only when one is named
         # (gate C12): a confident rule plan with no date skips the call.
         if providers.llm_available() and (h["intent"] in ("fact", "other") or _DATED.search(text)):
@@ -330,6 +337,19 @@ class Agent:
     def _display(self, text: str) -> str:
         """M17: raw ids in shown text ("person:priya commented ...") read as names."""
         return _RAW_ID.sub(lambda m: self._entity_name(m.group(0)), text)
+
+    def _route(self, text: str) -> tuple[str, dict] | None:
+        """The router's intent for a question, or None if it is slow, unsure or unavailable."""
+        def ask() -> dict:
+            return providers.decide("router", f"QUESTION: {text}\n", ROUTER_QUESTION, timeout=ROUTER_BUDGET_S)
+        try:
+            res = _CHECKS.submit(ask).result(timeout=ROUTER_BUDGET_S)
+        except Exception:  # noqa: BLE001 - over budget or no router model: the rule plan stands
+            return None
+        label, conf = providers.decision_choice(res, "intent")
+        if label not in ROUTABLE or label == "fact" or conf < 0.5:
+            return None
+        return label, {"role": "router", "model": res["model"], "provider": res.get("provider")}
 
     def _help(self, plan: dict, text: str) -> list[str]:
         """What Nodus answers, with examples about real entities, for a question about the assistant or one that
@@ -706,6 +726,24 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
 
 
 ESCALATION_TIMEOUT_S = 10   # the redraft after a failed check: Haiku needed about 7 s in the A/B (user decision)
+ROUTER_BUDGET_S = 1.0
+# Intents the router may pick, with what each is for. Whole-graph intents (rankings, gaps) and actions come
+# from their own wording only, so an unknown name can't be turned into a ranking.
+ROUTABLE = {
+    "ownership": "who owns, runs or is responsible for a system, project or ticket",
+    "expertise": "who knows about something, or who to ask about it",
+    "decision_trace": "why a decision was made; ADRs; pending drafts or proposals",
+    "history": "what was true earlier; past owners; why an earlier action was taken",
+    "path": "how two people, teams or systems are connected",
+    "impact": "what breaks, or who is affected or must be told, if something fails",
+    "aggregate": "how many of something, or which has the most",
+    "dependency": "what something depends on, or what depends on it",
+    "summary": "an overview of one system, team, person or project",
+    "memory": "something said earlier in this conversation",
+    "help": "about the assistant itself: what it can do or how to use it",
+    "fact": "any other single fact about something (its status, project or team)"}
+ROUTER_QUESTION = {"intent": {"type": "choice", "instructions": "What is this question about a company's systems, "
+                                                               "teams and decisions asking for?", "criteria": ROUTABLE}}
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
 DRAFT_TIMEOUT_S = 15   # laguna's multi-hop drafts took about 12 s in the full run (user decision)
 CHECK_BUDGET_S = 0.8   # the whole checker stage, fallback included (user decision): a safety layer, not a wait

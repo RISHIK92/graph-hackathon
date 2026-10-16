@@ -117,7 +117,7 @@ def test_planner_and_drafter_calls_are_bounded(world, monkeypatch):
     monkeypatch.setattr(agent_mod.providers, "complete", complete)
     monkeypatch.setattr(agent_mod.providers, "decide", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
     ans, trace = _turn(world)
-    Agent(world["g"], world["clock"]).plan("Is Ledger fine?", None)   # the rules can't place it: the LLM plans
+    Agent(world["g"], world["clock"]).plan("Who owned Ledger in March 2026?", None)   # a date: the planner reads it
     assert ("planner", agent_mod.PLAN_TIMEOUT_S) in seen and ("drafter", agent_mod.DRAFT_TIMEOUT_S) in seen, seen
     assert agent_mod.PLAN_TIMEOUT_S <= 6 and agent_mod.DRAFT_TIMEOUT_S <= 15
     assert not ans["abstained"] and trace["verification"]["draft"] == "deterministic"
@@ -151,8 +151,8 @@ def test_the_llm_planner_is_skipped_when_the_rules_are_sure(world, monkeypatch):
     s = agent.create_session("judge", "person:eve")
     assert agent.plan("Who owns Ledger?", s)["intent"] == "ownership" and "planner" not in seen
     agent.plan("Who owned Ledger in March 2026?", s)
-    agent.plan("Is Ledger fine?", s)
-    assert seen.count("planner") == 2
+    agent.plan("Is Ledger fine?", s)   # the rules can't place it: the router, not the planner
+    assert seen.count("planner") == 1
     assert agent_mod.CHECK_TIMEOUT_S <= 2
 
 
@@ -252,3 +252,40 @@ def test_the_checker_has_a_hard_wall_clock_budget(world, live, monkeypatch):
     assert trace["check"]["result"] == "skipped (budget)"
     assert not ans["abstained"] and ans["claims"] and trace["verification"]["dropped"] == []
     assert any("Payments owns Ledger" in l["text"] for l in shown(ans))
+
+
+def test_jev_routes_questions_the_rules_cant_place(world, monkeypatch):
+    """User idea (deployed site): Jev as the router. When the rules say fact/other and no date is named, a Decisions
+    `choice` question picks the intent within a hard budget; whole-graph intents stay rule-only, and an unsure or
+    slow router leaves the rule plan."""
+    import time as _t
+    seen = []
+
+    def decide(role, state, questions, timeout=None):
+        seen.append((role, state, questions))
+        label = {"Who is on the hook for Ledger these days?": "ownership", "Gimme the blast area for Ledger": "impact",
+                 "Rank Ledger": "critical"}.get(state.split("QUESTION: ", 1)[1].split("\n")[0], "fact")
+        if "slow" in state:
+            _t.sleep(2)
+        return {"model": "typesafe/jev-1.14", "answers": {"intent": {"type": "choice", "choice": label, "confidence": 0.9}}}
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "decide", decide)
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no planner")))
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    plan = agent.plan("Gimme the blast area for Ledger", s)
+    assert plan["intent"] == "impact" and {"role": "router", "model": "typesafe/jev-1.14", "provider": None} in plan["models"]
+    role, state, qs = seen[-1]
+    assert role == "router" and qs["intent"]["type"] == "choice" and "critical" not in qs["intent"]["criteria"]
+    assert agent.plan("Rank Ledger", s)["intent"] != "critical"   # a whole-graph intent is never routed to
+    assert agent.plan("Who owns Ledger?", s)["intent"] == "ownership" and len(seen) == 2   # rules sure: no call
+    t0 = _t.time()
+    assert agent.plan("slow question about Ledger", s)["intent"] in ("fact", "other")
+    assert _t.time() - t0 < agent_mod.ROUTER_BUDGET_S + 0.6 and agent_mod.ROUTER_BUDGET_S <= 1.0
+
+
+def test_decision_choice_reads_the_label_and_confidence():
+    from brain import providers
+    assert providers.decision_choice({"answers": {"q": {"type": "choice", "choice": "impact", "confidence": 0.8}}}, "q") \
+        == ("impact", 0.8)
+    assert providers.decision_choice({"answers": {}}, "q") == (None, 0.0)

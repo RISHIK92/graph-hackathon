@@ -66,6 +66,7 @@ ROLE_MODELS = {
     "drafter": ("deepseek/deepseek-v4.1-flash", "anthropic/claude-haiku-5.5"),
     "escalation": ("anthropic/claude-haiku-5.5", ""),
     "checker": ("typesafe/jev-1.14", "nace-ai/drex-v2.0"),
+    "router": ("typesafe/jev-1.14", "nace-ai/drex-v2.0"),   # intent for questions the rules can't place
     "judge": ("microsoft/microsoft-decision-1", "openai/gpt-6-luna-decisions"),
     "judge2": ("nvidia/nemotron-3-ultra-550b-a55b", "z-ai/glm-5.2"),   # user decision, Oct 16
 }

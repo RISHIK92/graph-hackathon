@@ -288,6 +288,12 @@ def decide(role: str, state: str, questions: dict, timeout: float | None = None)
     raise LLMUnavailable(f"{role}: " + "; ".join(errors))
 
 
+def decision_choice(res: dict, name: str) -> tuple[str | None, float]:
+    """A `choice` question's label and its confidence; (None, 0.0) if it wasn't answered."""
+    a = (res.get("answers") or {}).get(name) or {}
+    return a.get("choice"), float(a.get("confidence") or 0.0)
+
+
 def decision_p(res: dict, name: str) -> float | None:
     """The probability of "yes" (noul) or the score (score) for one question; None if it wasn't answered."""
     a = (res.get("answers") or {}).get(name)
