@@ -18,7 +18,7 @@ from typing import Any
 
 import httpx
 
-from .config import LEGACY_ROLES, ROLE_MODELS, ROLE_PROVIDERS, ROOT, settings
+from .config import IGNORED_PROVIDERS, LEGACY_ROLES, ROLE_MODELS, ROLE_PROVIDERS, ROOT, settings
 
 CACHE_DIR = Path(os.environ.get("BRAIN_LLM_CACHE") or ROOT / ".cache" / "llm")   # a fresh one for a cold-cache eval
 CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -91,7 +91,9 @@ def _role_body(role: str, model: str) -> dict:
     # DeepSeek and the second judge only: Haiku 404s under require_parameters, and so did legacy laguna
     if (role in ("planner", "drafter") and model.startswith("deepseek/")) or role == "judge2":
         pin = os.environ.get(f"MODEL_{role.upper()}_PROVIDER") or ROLE_PROVIDERS.get(role)
-        body["provider"] = {"require_parameters": True, **({"order": [pin], "allow_fallbacks": False} if pin else {})}
+        order = [p.strip() for p in pin.split(",") if p.strip()] if pin else []
+        body["provider"] = {"require_parameters": True, "ignore": IGNORED_PROVIDERS,
+                            **({"order": order, "allow_fallbacks": False} if order else {})}
     if role == "judge2":
         body["max_tokens"] = 300   # verdict first, capped
     return body

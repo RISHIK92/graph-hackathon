@@ -150,11 +150,13 @@ def test_deepseek_only_settings_stay_off_other_models(live, monkeypatch):
 def test_planner_drafter_and_second_judge_have_a_default_pinned_provider(live, monkeypatch):
     """Gate A1: the serving provider is a pinned one. DeepSeek's own endpoint for the planner and drafter,
     DeepInfra (which serves both nemotron and GLM) for the second judge; MODEL_<ROLE>_PROVIDER overrides."""
-    for role, pin in (("planner", "DeepInfra"), ("drafter", "DeepInfra"), ("judge2", "DeepInfra")):
-        body = providers._role_body(role, providers.role_models(role)[0])
-        assert body["provider"] == {"require_parameters": True, "order": [pin], "allow_fallbacks": False}, role
-    monkeypatch.setenv("MODEL_PLANNER_PROVIDER", "Fireworks")
-    assert providers._role_body("planner", "deepseek/deepseek-v4.1-flash")["provider"]["order"] == ["Fireworks"]
+    deepseek = ["deepinfra/fp8/priority", "deepinfra/fp8", "cloudflare", "coreweave/fp8"]
+    for role, pin in (("planner", deepseek), ("drafter", deepseek), ("judge2", ["deepinfra"])):
+        body = providers._role_body(role, providers.role_models(role)[0])["provider"]
+        assert body["order"] == pin and body["allow_fallbacks"] is False and body["require_parameters"] is True, role
+        assert "deepinfra/fp8/flex" in body["ignore"]   # the low-priority queue tier, never
+    monkeypatch.setenv("MODEL_PLANNER_PROVIDER", "fireworks,together")
+    assert providers._role_body("planner", "deepseek/deepseek-v4.1-flash")["provider"]["order"] == ["fireworks", "together"]
 
 
 def test_a_bounded_call_has_a_wall_clock_deadline(monkeypatch):
