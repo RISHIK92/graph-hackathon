@@ -39,14 +39,30 @@ def call(role: str, model: str) -> dict:
             r = providers._post_retry(providers.DECISIONS_URL, body, timeout=30, attempts=1)
             data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
             providers._log_cost(role, model, data)
-            out = {"ok": r.status_code == 200, "http": r.status_code,
+            out = {"ok": r.status_code == 200, "http": r.status_code, "provider": data.get("provider"),
+                   "cost_returned": "cost" in (data.get("usage") or {}),
                    "shape": json.dumps({k: (sorted(v) if isinstance(v, dict) else type(v).__name__) for k, v in data.items()})[:300],
                    "p_ok": providers.decision_p({"answers": data.get("answers") or data.get("results") or {}}, "ok")}
-        else:
-            res = providers._complete_one([{"role": "user", "content": "Reply with the JSON {\"ok\": true}."}],
-                                          {"type": "object", "properties": {"ok": {"type": "boolean"}}}, None, model,
-                                          0.0, 30, role)
-            out = {"ok": res.get("json") == {"ok": True}, "reply": (res.get("content") or "")[:60]}
+        else:   # the product's own request for the role (gate A1), read raw
+            schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]}
+            body = {"model": model, "messages": [{"role": "user", "content": "Reply with the JSON {\"ok\": true}."}],
+                    "temperature": 0, **providers._role_body(role, model), "usage": {"include": True},
+                    "response_format": {"type": "json_schema", "json_schema": {"name": "out", "strict": False, "schema": schema}}}
+            r = providers._post_retry(providers.CHAT_URL, body, timeout=30, attempts=1)
+            data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+            providers._log_cost(role, model, data)
+            usage = data.get("usage") or {}
+            content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+            try:
+                schema_ok = json.loads(content) == {"ok": True}
+            except json.JSONDecodeError:
+                schema_ok = False
+            pin = (body.get("provider") or {}).get("order", [None])[0]
+            out = {"ok": r.status_code == 200 and schema_ok, "http": r.status_code, "schema_ok": schema_ok,
+                   "reasoning_tokens": (usage.get("completion_tokens_details") or {}).get("reasoning_tokens"),
+                   "cost_returned": "cost" in usage, "provider": data.get("provider"), "pinned": pin,
+                   "pin_ok": pin is None or data.get("provider") == pin,
+                   "error": (data.get("error") or {}).get("message", "")[:160] if r.status_code != 200 else None}
     except Exception as e:  # noqa: BLE001
         out = {"ok": False, "error": str(e)[:200]}
     cost = sum(providers.COSTS.values()) - sum(before.values())
@@ -57,10 +73,34 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--roles", nargs="+", default=list(ROLE_MODELS))
     ap.add_argument("--pairs", nargs="+", default=[], help="role=model: only these calls (a re-check within budget)")
+    ap.add_argument("--fallbacks", action="store_true", help="gate A2: a bad primary id per role; the next model answers")
     a = ap.parse_args()
     if not providers.llm_available():
         raise SystemExit("needs OPENROUTER_API_KEY and BRAIN_LLM on")
     providers.CACHE_DIR = providers.CACHE_DIR.parent / "llm-smoke"   # a smoke call never answers from cache
+    if a.fallbacks:
+        import os
+        for role in a.roles:
+            chain = providers.role_models(role)
+            if len(chain) < 2:
+                print(json.dumps({"role": role, "fallback": None, "note": "no fallback by design"}))
+                continue
+            os.environ[f"MODEL_{role.upper()}"] = "bad/no-such-model"
+            t0 = time.time()
+            try:
+                if role in DECISION_ROLES:
+                    res = providers.decide(role, "Payments owns Ledger.", QUESTION, timeout=30)
+                else:
+                    res = providers.complete([{"role": "user", "content": "Reply with the JSON {\"ok\": true}."}],
+                                             schema={"type": "object", "properties": {"ok": {"type": "boolean"}}},
+                                             role=role, timeout=30)
+                print(json.dumps({"role": role, "primary": "bad/no-such-model", "answered_by": res.get("model"),
+                                  "expected": chain[1], "ok": res.get("model") == chain[1], "ms": round((time.time() - t0) * 1000)}))
+            except Exception as e:  # noqa: BLE001
+                print(json.dumps({"role": role, "ok": False, "error": str(e)[:200]}))
+            os.environ.pop(f"MODEL_{role.upper()}")
+        print(json.dumps({"total_cost_usd": round(sum(providers.COSTS.values()), 6), "role_calls": providers.STATS}))
+        return
     pairs = [tuple(p.split("=", 1)) for p in a.pairs] or \
         [(role, model) for role in a.roles for model in providers.role_models(role)[:3]]
     for role, model in pairs:

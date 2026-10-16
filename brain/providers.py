@@ -18,13 +18,20 @@ from typing import Any
 
 import httpx
 
-from .config import LEGACY_ROLES, ROLE_MODELS, ROOT, settings
+from .config import LEGACY_ROLES, ROLE_MODELS, ROLE_PROVIDERS, ROOT, settings
 
 CACHE_DIR = Path(os.environ.get("BRAIN_LLM_CACHE") or ROOT / ".cache" / "llm")   # a fresh one for a cold-cache eval
 CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
 DECISIONS_URL = "https://openrouter.ai/api/alpha/decisions"   # alpha: Jev, Drex and the decision judges
 DECISION_STATE_MAX = 32_000   # bytes per request
 COSTS: dict[tuple[str, str], float] = {}   # (role, model) -> usage.cost of uncached calls, this process
+STATS: dict[str, dict[str, int]] = {}   # role -> model attempts and errors (a 429 storm shows up here)
+
+
+def _count(role: str, error: bool) -> None:
+    s = STATS.setdefault(role, {"calls": 0, "errors": 0})
+    s["calls"] += 1
+    s["errors"] += int(error)
 _NO_SCHEMA: set[str] = set()
 
 
@@ -83,7 +90,7 @@ def _role_body(role: str, model: str) -> dict:
         body["reasoning"] = {"enabled": False}
     # DeepSeek and the second judge only: Haiku 404s under require_parameters, and so did legacy laguna
     if (role in ("planner", "drafter") and model.startswith("deepseek/")) or role == "judge2":
-        pin = os.environ.get(f"MODEL_{role.upper()}_PROVIDER")
+        pin = os.environ.get(f"MODEL_{role.upper()}_PROVIDER") or ROLE_PROVIDERS.get(role)
         body["provider"] = {"require_parameters": True, **({"order": [pin], "allow_fallbacks": False} if pin else {})}
     if role == "judge2":
         body["max_tokens"] = 300   # verdict first, capped
@@ -114,6 +121,26 @@ def _cached(kind: str, payload: Any, fn):
     return out
 
 
+TRANSPORT: httpx.BaseTransport | None = None   # tests swap in a MockTransport
+
+
+def _send(url: str, body: dict, timeout: float) -> httpx.Response:
+    """One POST with a wall-clock deadline. httpx's timeout bounds each read, and OpenRouter keeps a slow request
+    alive with keep-alive bytes, so a "10 s" call ran 170 s in the item 20 A/B; the body is streamed and the
+    deadline checked as it arrives."""
+    deadline = time.monotonic() + timeout
+    with httpx.Client(transport=TRANSPORT, timeout=timeout) as c:
+        with c.stream("POST", url, json=body, headers={"Authorization": f"Bearer {settings.openrouter_key}"}) as r:
+            buf = bytearray()
+            for chunk in r.iter_bytes():
+                buf += chunk
+                if time.monotonic() > deadline:
+                    raise httpx.ReadTimeout(f"no complete response within {timeout:g} s", request=r.request)
+            headers = {k: v for k, v in r.headers.items()
+                       if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")}
+            return httpx.Response(r.status_code, headers=headers, content=bytes(buf), request=r.request)
+
+
 def _post_retry(url: str, body: dict, timeout: float = 120, attempts: int = 6) -> httpx.Response:
     """POST with backoff on 429 / 5xx and on transient transport errors (SSL EOF, resets, timeouts),
     which otherwise abort an hour-long ingestion."""
@@ -122,7 +149,7 @@ def _post_retry(url: str, body: dict, timeout: float = 120, attempts: int = 6) -
     last: Exception | None = None
     for attempt in range(attempts):
         try:
-            r = httpx.post(url, json=body, timeout=timeout, headers={"Authorization": f"Bearer {settings.openrouter_key}"})
+            r = _send(url, body, timeout)
         except (httpx.TransportError, httpx.RemoteProtocolError) as e:
             last = e
             if attempt + 1 < attempts:
@@ -147,8 +174,11 @@ def complete(messages: list[dict], schema: dict | None = None, tools: list[dict]
         errors = []
         for m in role_models(role):
             try:
-                return _complete_one(messages, schema, tools, m, temperature, timeout, role)
+                out = _complete_one(messages, schema, tools, m, temperature, timeout, role)
+                _count(role, False)
+                return out
             except Exception as e:  # noqa: BLE001 - try the fallback
+                _count(role, True)
                 errors.append(f"{m}: {str(e)[:120]}")
         raise LLMUnavailable(f"{role}: " + "; ".join(errors))
     return _complete_one(messages, schema, tools, model or settings.llm_model, temperature, timeout, role or "")
@@ -197,7 +227,8 @@ def _complete_one(messages: list[dict], schema: dict | None, tools: list[dict] |
                 m = re.search(r"\{.*\}|\[.*\]", content, re.S)
                 parsed = json.loads(m.group(0)) if m else None
         _log_cost(role, model, data)
-        return {"content": content, "tool_calls": msg.get("tool_calls") or [], "json": parsed, "model": model}
+        return {"content": content, "tool_calls": msg.get("tool_calls") or [], "json": parsed, "model": model,
+                "provider": data.get("provider")}
 
     return _cached("complete", payload, call)
 
@@ -219,10 +250,14 @@ def decide(role: str, state: str, questions: dict, timeout: float | None = None)
             if "error" in data and not data.get("answers"):
                 raise LLMUnavailable(str(data["error"])[:300])
             cost = _log_cost(role, model, data)
-            return {"model": model, "answers": data.get("answers") or data.get("results") or {}, "cost": cost}
+            return {"model": model, "answers": data.get("answers") or data.get("results") or {}, "cost": cost,
+                    "provider": data.get("provider")}
         try:
-            return _cached("decide", {"model": model, "state": state, "questions": questions}, call)
+            out = _cached("decide", {"model": model, "state": state, "questions": questions}, call)
+            _count(role, False)
+            return out
         except Exception as e:  # noqa: BLE001 - try the fallback
+            _count(role, True)
             errors.append(f"{model}: {str(e)[:120]}")
     raise LLMUnavailable(f"{role}: " + "; ".join(errors))
 

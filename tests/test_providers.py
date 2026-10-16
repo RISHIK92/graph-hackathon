@@ -145,3 +145,37 @@ def test_deepseek_only_settings_stay_off_other_models(live, monkeypatch):
     providers.complete([{"role": "user", "content": "q"}], role="planner")
     body = fake.calls[0][1]
     assert "reasoning" not in body and "provider" not in body, body
+
+
+def test_planner_drafter_and_second_judge_have_a_default_pinned_provider(live, monkeypatch):
+    """Gate A1: the serving provider is a pinned one. DeepSeek's own endpoint for the planner and drafter,
+    DeepInfra (which serves both nemotron and GLM) for the second judge; MODEL_<ROLE>_PROVIDER overrides."""
+    for role, pin in (("planner", "DeepSeek"), ("drafter", "DeepSeek"), ("judge2", "DeepInfra")):
+        body = providers._role_body(role, providers.role_models(role)[0])
+        assert body["provider"] == {"require_parameters": True, "order": [pin], "allow_fallbacks": False}, role
+    monkeypatch.setenv("MODEL_PLANNER_PROVIDER", "Fireworks")
+    assert providers._role_body("planner", "deepseek/deepseek-v4.1-flash")["provider"]["order"] == ["Fireworks"]
+
+
+def test_a_bounded_call_has_a_wall_clock_deadline(monkeypatch):
+    """A/B finding: OpenRouter keeps a slow request alive with keep-alive bytes, so httpx's per-read timeout
+    never fired and a "10 s" drafter call ran 170 s. A bounded call now stops at its deadline."""
+    import time as _t
+
+    class Trickle(httpx.SyncByteStream):
+        def __iter__(self):
+            for _ in range(50):
+                _t.sleep(0.05)
+                yield b" "
+            yield b'{"choices": []}'
+
+    monkeypatch.setattr(providers, "TRANSPORT", httpx.MockTransport(lambda req: httpx.Response(200, stream=Trickle())))
+    import dataclasses
+    monkeypatch.setattr(providers, "settings", dataclasses.replace(providers.settings, openrouter_key="test"))
+    t0 = _t.time()
+    with pytest.raises(httpx.TimeoutException):
+        providers._post_retry(providers.CHAT_URL, {"model": "m"}, timeout=0.5, attempts=1)
+    assert _t.time() - t0 < 1.5
+    fast = httpx.MockTransport(lambda req: httpx.Response(200, json={"ok": 1}))
+    monkeypatch.setattr(providers, "TRANSPORT", fast)
+    assert providers._post_retry(providers.CHAT_URL, {"model": "m"}, timeout=0.5, attempts=1).json() == {"ok": 1}
