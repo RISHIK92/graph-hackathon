@@ -57,11 +57,12 @@ def call(role: str, model: str) -> dict:
                 schema_ok = json.loads(content) == {"ok": True}
             except json.JSONDecodeError:
                 schema_ok = False
-            pin = (body.get("provider") or {}).get("order", [None])[0]
+            order = (body.get("provider") or {}).get("order") or []
+            pin = ",".join(order) or None   # the allowed endpoints; the response names the provider only
             out = {"ok": r.status_code == 200 and schema_ok, "http": r.status_code, "schema_ok": schema_ok,
                    "reasoning_tokens": (usage.get("completion_tokens_details") or {}).get("reasoning_tokens"),
                    "cost_returned": "cost" in usage, "provider": data.get("provider"), "pinned": pin,
-                   "pin_ok": pin is None or data.get("provider") == pin,
+                   "pin_ok": not order or (data.get("provider") or "").lower() in {o.split("/")[0] for o in order},
                    "error": (data.get("error") or {}).get("message", "")[:160] if r.status_code != 200 else None}
     except Exception as e:  # noqa: BLE001
         out = {"ok": False, "error": str(e)[:200]}
