@@ -93,9 +93,13 @@ class Generator:
                                               challenger_correct=d["challenger_correct"], change_id=d["change_id"],
                                               rel=["OWNS"]))
                 else:
+                    # The answer names the owner team's lead too (M4, item 20), so its declaration is gold.
+                    lead = self.cg.state(("LEADS", "", st["value"]), T) if st["value"].startswith("team:") else None
+                    groups = [self.group(key, st["value"])] + \
+                        ([self.group(("LEADS", "", st["value"]), lead["value"])] if lead else [])
                     self.out[3].append(self.q(3, tmpl.format(x=n[x]), expected_entities=[st["value"]],
                                               expected_fact={"subject_id": st["value"], "predicate": "OWNS", "object_id": x},
-                                              groups=[self.group(key, st["value"])], rel=["OWNS"]))
+                                              groups=groups, rel=["OWNS"]))
         for t in self.world.w["tickets"]:
             key = ("ASSIGNED_TO", "", t["id"])
             st = self.cg.state(key, T)
