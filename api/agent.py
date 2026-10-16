@@ -30,6 +30,7 @@ INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impac
            "summary", "dependency", "stale_docs", "critical", "key_people", "gaps", "action", "other"]
 # Questions about the whole organisation (item 17's graph algorithms): no entity has to be named.
 GLOBAL_INTENTS = ("critical", "key_people", "gaps")
+_INTERNAL_ID = re.compile(r"\b(?:as|sp|ac|pa|pk|turn)_[0-9a-f]{6,}|\b(?:system|person|team|project|decision|ticket):[a-z0-9-]+")
 
 
 @dataclass
@@ -230,8 +231,11 @@ class Agent:
                 # Heuristic-first: the rules recognise the named intents and the explicit action verbs
                 # precisely; the LLM only classifies what they leave as "fact" or "other". A write is
                 # never requested on the LLM's word alone (A54: arguments and intent from the user's turn).
+                # whole-graph intents come from their own wording only: the full run's LLM planner turned
+                # "Who leads <unknown name>?" into a ranking instead of an abstention
                 intent = h["intent"] if h["intent"] not in ("fact", "other") else \
-                    (j.get("intent") if j.get("intent") in INTENTS and j.get("intent") != "action" else h["intent"])
+                    (j.get("intent") if j.get("intent") in INTENTS and j.get("intent") not in ("action", *GLOBAL_INTENTS)
+                     else h["intent"])
                 return {"intent": intent, "mentions": mentions, "wants_action": h["wants_action"],
                         "as_of": j.get("as_of", ""), "models": [{"role": "planner", "model": res.get("model"),
                                                                  "provider": res.get("provider")}]}
@@ -374,8 +378,17 @@ class Agent:
         extra = [c for c in base["claims"] if c.get("assertion_ids") and not set(c["assertion_ids"]) & have]
         for i, c in enumerate(extra):
             c["claim_id"] = f"d{i + 1}"
+        for c in llm["claims"]:   # a disputed fact stays disputed (full run: 7 of 30 lost the dispute)
+            if any(ix.facts.get(a, {}).get("open_disputes") for a in c.get("assertion_ids") or []):
+                c["disputed"] = True
+        cover = {a for c in llm["claims"] for a in c.get("assertion_ids") or []}
+        extra += [c for c in base["claims"] if c.get("disputed") and c not in extra
+                  and not set(c.get("assertion_ids") or []) <= cover]
+        explanation = llm.get("explanation", "")
+        if _INTERNAL_ID.search(explanation):   # the unverified explanation never shows internal ids (M17)
+            explanation = ""
         return {"claims": unresolved(relevant_claims(plan, llm["claims"] + extra), packs),
-                "explanation": llm.get("explanation", ""), "drafted": "llm", "model": llm.get("model"),
+                "explanation": explanation, "drafted": "llm", "model": llm.get("model"),
                 "provider": llm.get("provider")}
 
     def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None,

@@ -9,6 +9,7 @@ from api import agent as agent_mod
 from api.agent import Agent, deterministic_draft
 
 from .test_actions import world  # noqa: F401
+from .test_templates import fx  # noqa: F401
 from .test_agent import answer_of, run
 
 
@@ -211,3 +212,25 @@ def test_escalation_can_be_switched_off(world, live, monkeypatch):
     assert drafts == [("drafter", agent_mod.DRAFT_TIMEOUT_S)]
     assert trace["check"]["result"] == "fail; escalation off, returned the graph's verified draft"
     assert trace["verification"]["draft"] == "deterministic" and not ans["abstained"]
+
+
+def test_post_run_fixes(fx, monkeypatch):  # noqa: F811
+    """Full-run findings (b5101d9): the LLM planner turned 'Who leads <unknown>?' into a ranking; LLM claims on a
+    disputed fact lost the dispute (7 of 30); the unverified explanation leaked assertion ids."""
+    from .conftest import Clock
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "decide", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
+    monkeypatch.setattr(agent_mod.providers, "complete", lambda *a, **k: {
+        "json": {"intent": "key_people", "wants_action": "none", "as_of": ""}, "model": "m"})
+    agent = Agent(fx.g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    assert agent.plan("Who leads Nimbus Vault?", s)["intent"] != "key_people"   # rule-only intents
+
+    def llm(self, text, plan, packs, errors=None, timeout=None, role="drafter"):
+        base = deterministic_draft(plan, packs, text)["claims"]
+        plain = [dict(c, disputed=False) for c in base if not c.get("disputed") or c.get("tense") == "current"]
+        return {"claims": plain, "explanation": "The current assertion as_0123456789abcdef states it.", "model": "m"}
+    monkeypatch.setattr(Agent, "_llm_draft", llm)
+    ans = answer_of(run(agent, s, "Who owns Ledger?"))
+    assert any(c.get("disputed") for c in ans["claims"]), ans["claims"]
+    assert ans["assembled"]["explanation"] == ""
