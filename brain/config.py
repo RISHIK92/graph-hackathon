@@ -67,6 +67,6 @@ ROLE_MODELS = {
     "escalation": ("anthropic/claude-haiku-5.5", ""),
     "checker": ("typesafe/jev-1.14", "nace-ai/drex-v2.0"),
     "judge": ("microsoft/microsoft-decision-1", "openai/gpt-6-luna-decisions"),
-    "judge2": ("z-ai/glm-5.2", "nvidia/nemotron-3-ultra-550b-a55b"),
+    "judge2": ("nvidia/nemotron-3-ultra-550b-a55b", "z-ai/glm-5.2"),   # user decision, Oct 16
 }
 LEGACY_ROLES = ("planner", "drafter", "extractor")

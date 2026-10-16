@@ -98,3 +98,12 @@ def test_the_second_judge_grades_phrasing_and_reads_the_reference_as_context(jud
     ev.judge_history(Q, ANS)
     assert ev.JUDGE_RUBRIC.rsplit(" Return JSON", 1)[0] in seen[0]   # the rubric itself is unchanged
     assert "REFERENCE" in seen[0] and "only (a)-(d)" in seen[0]
+
+
+def test_rows_record_how_each_answer_was_drafted():
+    class A:
+        turn_log = {"t1": {"verification": {"draft": "llm"}, "models": [{"role": "drafter", "model": "m"}],
+                           "check": {"result": "pass"}}}
+    assert ev._trace_fields(A(), {"turn_id": "t1"}) == {"drafted": "llm", "models": [{"role": "drafter", "model": "m"}],
+                                                       "check": "pass"}
+    assert ev._trace_fields(A(), {"turn_id": "nope"})["drafted"] is None

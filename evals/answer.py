@@ -254,6 +254,14 @@ def _second_judge(body: str) -> dict | None:
         return None
 
 
+def _trace_fields(agent: Agent, ans: dict) -> dict:
+    """How the answer was drafted and which models it used (item 20: an arm that silently falls back to the
+    graph's draft is not a model measurement)."""
+    t = agent.turn_log.get(ans.get("turn_id"), {})
+    return {"drafted": (t.get("verification") or {}).get("draft"), "models": t.get("models") or [],
+            "check": (t.get("check") or {}).get("result")}
+
+
 def judge_agreement(rows: list[dict]) -> tuple[float | None, int]:
     both = [r for r in rows if r.get("judge1_score") is not None and r.get("judge2_score") is not None]
     return (sum(r["judge1_score"] == r["judge2_score"] for r in both) / len(both) if both else None), len(both)
@@ -404,7 +412,8 @@ def evaluate(agent: Agent, q: dict, as_of: int, variant: str = "D") -> dict:
             "history_judge_reason": None if judge is None else judge["reason"],
             **({k: judge[k] for k in ("judge", "p", "reference_match", "judge1_score", "judge2", "judge2_score",
                                       "low_confidence", "sampled")} if judge else {}),
-            "claim_labels": labels, "gold_action_ids": gold_actions, "answer": answer_text[:400], **stages}
+            "claim_labels": labels, "gold_action_ids": gold_actions, "answer": answer_text[:400], **stages,
+            **_trace_fields(agent, ans)}
 
 
 World_names: dict[int, dict[str, str]] = {}
