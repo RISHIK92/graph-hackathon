@@ -364,3 +364,21 @@ def test_person_panel_has_a_profile(api_client):
     assert [x["name"] for x in prof["leads"]] == ["Payments"]
     assert [x["name"] for x in prof["owns_via_team"]] == ["Ledger"]
     assert prof["decides"] == []
+
+
+def test_gaps_endpoint_lists_cited_knowledge_gaps(api_client):
+    """Item 20: the Overview "Knowledge gaps" box reads one GET; each gap cites what it counts."""
+    client, world = api_client
+    from brain import store
+    g, wp = world["g"], world["wp"]
+    store.upsert_entities(g, [{"id": "system:orphan", "name": "Orphan", "aliases": []},
+                              {"id": "team:nolead", "name": "Nolead", "aliases": []}])
+    make_span(g, "sp_nl", "nolead owns orphan", 1)
+    _fact(wp, "OWNS", "team:nolead", "system:orphan", 1, "sp_nl")
+    resp = client.get("/gaps")
+    assert resp.status_code == 200
+    pack = resp.json()
+    assert pack["tool"] == "knowledge_gaps"
+    systems = next(it for it in pack["items"] if "system" in it["aggregate"]["text"])
+    assert "Orphan" in {m["name"] for m in systems["aggregate"]["members"]} and systems["facts"]
+    assert client.get("/gaps", params={"as_of": 1}).status_code == 200

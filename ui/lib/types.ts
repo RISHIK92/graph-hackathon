@@ -99,6 +99,8 @@ export interface PackItem {
   changed_since?: { assertion_id: string; then: string; now: string; statement: string; replaced_by?: string | null }[];
   suggestion?: string | null;
   confirms?: { proposal: string; confirmed: string; status: string; action: string | null }[];
+  /** A counted answer or a knowledge gap: the members it counts (V10). */
+  aggregate?: { count: number; text: string; members: { id: string; name: string }[] };
   /** A confirmation's outcome (M20). */
   confirmed?: { made_current: Fact[]; replaced: Fact[]; overruled: Fact[] };
 }

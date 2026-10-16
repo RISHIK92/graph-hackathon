@@ -3,11 +3,12 @@
 import { Flag, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
+import { CitationChip } from "@/components/Chips";
 import { Chip, DisputeFlag, EntityLink, ErrorState, SkeletonRows, Status } from "@/components/ui";
 import { qs } from "@/lib/api";
 import { fmtDate, plural } from "@/lib/format";
 import { useApi, useStore } from "@/lib/store";
-import type { Directory } from "@/lib/types";
+import type { Directory, Pack } from "@/lib/types";
 
 const EXAMPLES = ["Who owns Ledger?", "Why is Ledger on Aurora?", "What breaks if Ledger goes down, and who do I tell?"];
 
@@ -17,6 +18,8 @@ export default function OverviewPage() {
   const s = useStore();
   const router = useRouter();
   const { data, error, loading, reload } = useApi<Directory>(`/directory${qs({ as_of: s.asOf })}`);
+  const gaps = useApi<Pack>(`/gaps${qs({ as_of: s.asOf })}`);
+  const gapItems = (gaps.data?.items || []).filter((it) => it.aggregate);
   const disputed = (data?.systems || []).filter((x) => x.disputed);
   const recent = [...(data?.decisions || [])].filter((d) => d.decided_at).sort((a, b) => (b.decided_at || 0) - (a.decided_at || 0)).slice(0, 4);
   return (
@@ -61,6 +64,20 @@ export default function OverviewPage() {
                   ))}
                 </div>
               ) : <span className="t-small text-2">No open disputes.</span>}
+            </section>
+            <section className="stack-3">
+              <span className="t-label">Knowledge gaps</span>
+              {gaps.error ? <span className="t-small text-2">Couldn&apos;t check for gaps.</span> : !gaps.data ? <SkeletonRows n={2} /> : gapItems.some((it) => it.aggregate?.count) ? (
+                <div className="stack">
+                  {gapItems.filter((it) => it.aggregate?.count).map((it) => (
+                    <div key={it.item_id} className="row-wrap">
+                      <span>{it.aggregate?.text.split(":")[0]}:</span>
+                      {it.aggregate?.members.map((m) => <EntityLink key={m.id} id={m.id} name={m.name} />)}
+                      {it.spans.slice(0, 3).map((sp) => <CitationChip key={sp.span_id} span={sp} />)}
+                    </div>
+                  ))}
+                </div>
+              ) : <span className="t-small text-2">Every system has an owner with a lead, and every team has a lead.</span>}
             </section>
             <section className="stack-3">
               <span className="t-label">Recent decisions</span>

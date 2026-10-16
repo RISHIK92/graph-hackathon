@@ -245,6 +245,13 @@ def _open_dispute_runs() -> dict[str, list[str]]:
     return out
 
 
+@app.get("/gaps")
+def gaps(as_of: int | None = None) -> dict:
+    """Knowledge gaps at the As-of date (item 20): systems with no owner who has a lead, and teams with no lead,
+    as the knowledge_gaps evidence pack, each gap citing the ownership facts it counts. Read-only."""
+    return run_tool(_ctx(as_of), "knowledge_gaps", {})
+
+
 @app.get("/directory")
 def directory(as_of: int | None = None) -> dict:
     """Lists for the Directory page: one call, every entity type, at the As-of date (DESIGN.md §4.3)."""
