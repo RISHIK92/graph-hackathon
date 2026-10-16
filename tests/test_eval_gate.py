@@ -10,6 +10,12 @@ from evals import answer as ev
 from .test_actions import world  # noqa: F401
 
 
+@pytest.fixture(autouse=True)
+def _live(monkeypatch):
+    """The guard applies to live runs; tests that need offline set it back."""
+    monkeypatch.setattr(providers, "llm_available", lambda: True)
+
+
 def _row(i, drafted="llm", label="1", latency=900.0):
     return {"seed": 1, "variant": "D", "id": f"c{label}-{i:03d}", "label": label, "abstained": False,
             "drafted": drafted, "latency_ms": latency}
@@ -147,3 +153,10 @@ def test_the_guard_needs_three_events_before_it_aborts():
     assert ev.Guard().reason(rows + [_row(18, "deterministic")], {}, 0.0)
     assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 14, "errors": 2}}, 0.0) is None
     assert ev.Guard().reason(rows[:16], {"drafter": {"calls": 30, "errors": 3}}, 0.0)
+
+
+def test_offline_runs_are_never_aborted_for_deterministic_drafts(monkeypatch):
+    """Found running C8: offline every answer is the graph's draft by design, so the guard applies only live."""
+    monkeypatch.setattr(providers, "llm_available", lambda: False)
+    rows = [_row(i, "deterministic") for i in range(20)]
+    assert ev.Guard().reason(rows, {}, 0.0) is None

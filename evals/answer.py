@@ -284,7 +284,7 @@ class Guard:
         self.ab_cost, self.min_n = ab_cost_per_answer, min_n
 
     def reason(self, rows: list[dict], stats: dict, answer_cost: float) -> str | None:
-        if len(rows) < self.min_n:
+        if len(rows) < self.min_n or not providers.llm_available():   # offline, every draft is the graph's
             return None
         eligible = [r for r in rows if r.get("label") not in FIXED_SHAPE and not r.get("abstained")]
         fell = [r for r in eligible if fell_back(r)]

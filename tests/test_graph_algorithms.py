@@ -212,3 +212,9 @@ def test_who_to_ask_names_the_expert_who_bridges_teams(world):
         or "Bob Okafor is also the #1 connector between people, teams and systems now." in lead, lead
     pack = run_tool(Ctx(g, now=clock()), "key_people", {"person_ids": ["person:priya", "person:bob"]})
     assert [it["ranking"]["name"] for it in pack["items"] if it.get("ranking")] == ["Bob Okafor"]
+
+
+def test_relying_on_reads_as_depending_on():
+    """Gate C8: "relying on" is "depending on" (the only offline false abstention, category 11)."""
+    for q in ("Which system has the most other systems relying on it?", "What do most systems rely on?"):
+        assert heuristic_plan(q)["intent"] == "critical", q

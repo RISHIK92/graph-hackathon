@@ -726,7 +726,8 @@ def heuristic_plan(text: str) -> dict:
         intent = "memory"    # conversation recall: answered from the session's own turns (item 18)
     elif re.search(r"single points? of failure|\bkey (people|persons?)\b|bus factor|most (connected|central) (people|person)", t):
         intent = "key_people"
-    elif re.search(r"most (critical|important|depended[- ]on)|critical systems|which systems matter", t):
+    elif re.search(r"most (critical|important|depended[- ]on)|critical systems|which systems matter|"
+                   r"most (other )?systems (rely|relying|depend|depending) on|do most systems (rely|depend) on", t):
         intent = "critical"
     elif re.search(r"knowledge gaps?|\bgaps\b|(no|without an?) (current )?(owner|lead)\b|unowned|leaderless", t):
         intent = "gaps"
