@@ -105,7 +105,6 @@ function GraphInner() {
     s.setAsOf(next);
     s.toast({ tone: "info", title: next ? `Viewing as of ${fmtDate(next)}` : "Viewing today", body: "Every page follows this date.", action: { label: "Undo", onClick: () => s.setAsOf(prev) } });
   };
-  const dark = typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "dark";
 
   return (
     <div className="graph">
@@ -229,7 +228,7 @@ function GraphInner() {
           <button className="legend-toggle" onClick={() => setLegendOpen((v) => !v)} aria-expanded={legendOpen}>{legendOpen ? "Hide legend" : "Legend"}</button>
           {legendOpen && ENTITY_LABELS.filter((l) => !hideTickets || l !== "Ticket").map((l) => {
             const st = NODE_STYLE[l];
-            const colour = dark ? st.dark : st.colour;
+            const colour = st.colour;
             const shape = st.shape === "diamond" ? "rotate(45deg) scale(0.8)" : undefined;
             return <span key={l} className="item"><i className="sw" style={{ background: colour, borderRadius: st.shape === "ellipse" ? "50%" : 2, transform: shape, clipPath: st.shape === "triangle" ? "polygon(50% 0, 100% 100%, 0 100%)" : undefined }} />{l}</span>;
           })}

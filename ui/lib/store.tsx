@@ -67,7 +67,6 @@ interface Session {
   anonymous: boolean;
 }
 
-export type Theme = "system" | "light" | "dark";
 
 interface Store {
   ready: boolean;
@@ -93,10 +92,6 @@ interface Store {
   debug: boolean;
   nextResetAt: number | null;
   // ui chrome
-  theme: Theme;
-  setTheme: (t: Theme) => void;
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (v: boolean) => void;
   sessionSheetOpen: boolean;
   setSessionSheetOpen: (v: boolean) => void;
   paletteOpen: boolean;
@@ -131,21 +126,7 @@ export function useOpenMode(): "replace" | "push" {
 }
 
 const ACTING_KEY = "brain.actingAs";
-const THEME_KEY = "brain.theme";
-const SIDEBAR_KEY = "brain.sidebar";
 const PENDING_POLL_MS = 30_000;
-
-function applyTheme(t: Theme) {
-  try {
-    // Light is the default; dark on explicit choice, or with "system" when the OS prefers it (n2).
-    if (t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      document.documentElement.setAttribute("data-theme", "dark");
-    }
-    else document.documentElement.removeAttribute("data-theme");
-  } catch {
-    /* ssr */
-  }
-}
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -160,8 +141,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [debug, setDebug] = useState(false);
   const [nextResetAt, setNextResetAt] = useState<number | null>(null);
-  const [theme, setThemeState] = useState<Theme>("light");
-  const [sidebarCollapsed, setSidebarCollapsedState] = useState(false);
   const [sessionSheetOpen, setSessionSheetOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [inspector, setInspector] = useState<InspectorView[]>([]);
@@ -181,18 +160,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     bump();
   }, [bump]);
 
-  // first load: token, debug flag, theme, people, health
+  // first load: token, debug flag, people, health
   useEffect(() => {
     setTokenState(getToken());
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
-    try {
-      const t = (localStorage.getItem(THEME_KEY) as Theme) || "light";
-      setThemeState(t);
-      applyTheme(t);
-      setSidebarCollapsedState(localStorage.getItem(SIDEBAR_KEY) === "1");
-    } catch {
-      /* ignore */
-    }
     get<Person[]>("/people").then(setPeople).catch(() => setPeople([]));
     get<{ next_reset_at: number | null }>("/health")
       .then((h) => setNextResetAt(h.next_reset_at ?? null))
@@ -257,25 +228,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setVersion((v) => v + 1);
   }, []);
 
-  const setTheme = useCallback((t: Theme) => {
-    setThemeState(t);
-    applyTheme(t);
-    try {
-      localStorage.setItem(THEME_KEY, t);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const setSidebarCollapsed = useCallback((v: boolean) => {
-    setSidebarCollapsedState(v);
-    try {
-      localStorage.setItem(SIDEBAR_KEY, v ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const personName = useCallback(
     (id: string) => people.find((p) => p.id === id)?.name || names[id]?.name || id.replace(/^person:/, ""),
     [people, names],
@@ -316,7 +268,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     () => ({
       ready, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
       people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, pendingCount, debug,
-      nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
+      nextResetAt, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
       openEntity: (id, name, mode = "replace") => openInspector({ kind: "entity", id, name }, mode),
       openAction: (id, mode = "replace") => openInspector({ kind: "action", id }, mode),
@@ -324,7 +276,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toasts, toast, dismissToast, holdToasts: (on: boolean) => { toastHover.current = on; }, names, resolveNames,
     }),
     [ready, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
-      lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, theme, setTheme, sidebarCollapsed, setSidebarCollapsed, sessionSheetOpen,
+      lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],
   );

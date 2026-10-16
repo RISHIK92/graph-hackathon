@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  AlertCircle, BookOpen, HelpCircle, LayoutGrid, Calendar, ChevronDown, GitBranch, Inbox, Info, KeyRound, Loader2, MessageSquare, PanelLeft, Search, Settings2, UserRound, X,
-} from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, Search, Settings2, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,14 +10,21 @@ import { API_URL } from "@/lib/api";
 import { CodingAgentHelp } from "./CodingAgentHelp";
 import { CommandPalette } from "./CommandPalette";
 import Inspector from "./Inspector";
-import { Button, Chip, CountBadge, Field, Modal, Notice, Popover, Segmented, Toasts } from "./ui";
+import { Button, Chip, Field, Modal, Notice, Popover, Toasts } from "./ui";
 
+// g+key jumps; Explore merges Directory and Graph (design brief step 6), so both stay reachable by key and ⌘K
+const JUMPS = [
+  { href: "/", label: "Home", key: "o" },
+  { href: "/ask", label: "Ask", key: "a" },
+  { href: "/directory", label: "Directory", key: "d" },
+  { href: "/graph", label: "Graph", key: "g" },
+  { href: "/inbox", label: "Inbox", key: "i" },
+];
 const NAV = [
-  { href: "/", label: "Overview", icon: LayoutGrid, key: "o" },
-  { href: "/ask", label: "Ask", icon: MessageSquare, key: "a" },
-  { href: "/directory", label: "Directory", icon: BookOpen, key: "d" },
-  { href: "/graph", label: "Graph", icon: GitBranch, key: "g" },
-  { href: "/inbox", label: "Inbox", icon: Inbox, key: "i" },
+  { href: "/", label: "Home", key: "o", match: (p: string) => p === "/" },
+  { href: "/ask", label: "Ask", key: "a", match: (p: string) => p.startsWith("/ask") },
+  { href: "/directory", label: "Explore", key: "d", match: (p: string) => /^\/(directory|graph|e\/)/.test(p) },
+  { href: "/inbox", label: "Inbox", key: "i", match: (p: string) => p.startsWith("/inbox") },
 ];
 
 export default function Shell({ children }: { children: React.ReactNode }) {
@@ -35,12 +40,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (!pinned.current) closeInspector(); }, [path, closeInspector]);
   // m14: the tab says where you are, and how much waits in the Inbox
   useEffect(() => {
-    const page = NAV.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path === "/" ? "Overview" : "");
+    const page = JUMPS.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path === "/" ? "Home" : "");
     const inbox = pendingCount > 0 ? ` (${pendingCount})` : "";
     if (page) document.title = `${page === "Inbox" ? `Inbox${inbox}` : page} · Nodus`;
   }, [path, pendingCount]);
 
-  // keyboard: ⌘K palette, [ sidebar, g+key jumps, / search
+  // keyboard: ⌘K palette, g+key jumps, / search
   useEffect(() => {
     let pendingG = 0;
     const onKey = (e: KeyboardEvent) => {
@@ -49,10 +54,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); s.setPaletteOpen(true); return; }
       if (typing) return;
       if (e.key === "/") { e.preventDefault(); s.setPaletteOpen(true); return; }
-      if (e.key === "[") { e.preventDefault(); s.setSidebarCollapsed(!s.sidebarCollapsed); return; }
       if (e.key === "g") { pendingG = Date.now(); return; }
       if (pendingG && Date.now() - pendingG < 800) {
-        const n = NAV.find((x) => x.key === e.key);
+        const n = JUMPS.find((x) => x.key === e.key);
         if (n) { e.preventDefault(); router.push(n.href); }
         pendingG = 0;
       }
@@ -63,45 +67,38 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   const past = !!s.asOf;
   return (
-    <div className={`app ${hasInspector ? "has-inspector" : ""} ${s.sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
-      <nav className="sidebar" aria-label="Primary">
-        <div className="sidebar-brand">
-          <span className="mark" aria-hidden><GitBranch /></span>
-          <span className="truncate">Nodus</span>
-        </div>
-        {NAV.map((n) => {
-          const active = path === n.href || path.startsWith(`${n.href}/`) || (n.href === "/directory" && path.startsWith("/e/"));
-          const Icon = n.icon;
-          return (
-            <Link key={n.href} href={n.href} className={`nav-item ${active ? "active" : ""}`} title={n.label} aria-current={active ? "page" : undefined}>
-              <Icon className="icon" />
-              <span>{n.label}</span>
-              {n.href === "/inbox" && s.pendingCount > 0 ? <span className="nav-badge"><CountBadge n={s.pendingCount} accent /></span> : <kbd className="nav-kbd">g {n.key}</kbd>}
-            </Link>
-          );
-        })}
-        <div className="sidebar-footer">
-          <SessionStatus />
-          <button className="session-status" onClick={() => setHelpOpen(true)} title="Use from your coding agent">
-            <HelpCircle className="icon-sm" /><span>Coding agent (MCP)</span>
-          </button>
-          <button className="session-status" onClick={() => s.setSidebarCollapsed(!s.sidebarCollapsed)} title="Toggle sidebar  [">
-            <PanelLeft className="icon-sm" /><span>Collapse</span><kbd className="right">[</kbd>
-          </button>
-        </div>
-      </nav>
-
-      <div className="main">
-        <header className="ctxbar">
+    <div className={`app ${hasInspector ? "has-inspector" : ""}`}>
+      <header className="topbar">
+        <Link href="/" className="brand" aria-label="Nodus home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" aria-hidden><circle cx="5" cy="6" r="2.4" /><circle cx="19" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7 7.2l3.8 8.6M17 7.2l-3.8 8.6M7.4 6h9.2" /></svg>
+          Nodus
+        </Link>
+        <nav className="topnav" aria-label="Main">
+          {NAV.map((n) => {
+            const active = n.match(path);
+            return (
+              <Link key={n.href} href={n.href} className={`nav-item ${active ? "active" : ""}`} title={`${n.label}  g ${n.key}`} aria-current={active ? "page" : undefined}>
+                {n.label}
+                {n.href === "/inbox" && s.pendingCount > 0 && <span className="nav-count" aria-label={`${s.pendingCount} awaiting you`}>{s.pendingCount}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="topbar-tools">
           <button className="search-btn" onClick={() => s.setPaletteOpen(true)} aria-label="Search and commands">
             <Search className="icon-sm" />
             <span>Search</span>
             <kbd>⌘K</kbd>
           </button>
-          <span className="grow" />
+          <LiveStatus />
           <AsOfPill />
           <ActingMenu />
-        </header>
+          <AccessBadge />
+          <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
+        </div>
+      </header>
+
+      <div className="main">
         <div className={`content ${past ? "past" : ""}`}>
           {s.sessionError ? <ApiDown /> : children}
         </div>
@@ -116,15 +113,24 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SessionStatus() {
+/** "Graph live" once the session is up; never a blocking "Connecting…" (design brief shell). */
+function LiveStatus() {
   const s = useStore();
-  const anon = s.session?.anonymous;
+  const state = s.sessionError ? "down" : !s.session ? "wait" : "";
   return (
-    <button className="session-status" onClick={() => s.setSessionSheetOpen(true)} title="Session settings">
-      {s.sessionError ? <AlertCircle className="icon-sm text-error" /> : !s.session ? <Loader2 className="icon-sm spin text-3" /> : anon ? <Info className="icon-sm text-warning" /> : <KeyRound className="icon-sm text-success" />}
-      <span>{s.sessionError ? "API unreachable" : !s.session ? "Connecting…" : anon ? "Demo mode: nothing is saved" : "Writes enabled"}</span>
-      <Settings2 className="icon-sm right" />
+    <button className={`live-dot ${state}`} onClick={() => s.setSessionSheetOpen(true)} title="Session settings">
+      <span>{s.sessionError ? "API unreachable" : !s.session ? "Starting" : "Graph live"}</span>
     </button>
+  );
+}
+
+function AccessBadge() {
+  const s = useStore();
+  if (!s.session) return null;
+  return s.session.anonymous ? (
+    <button className="access-badge" onClick={() => s.setSessionSheetOpen(true)} title="Paste the write token in Session settings">Read-only · writes need a token</button>
+  ) : (
+    <button className="access-badge write" onClick={() => s.setSessionSheetOpen(true)} title="Session settings"><KeyRound className="icon-sm" /> Can write</button>
   );
 }
 
@@ -172,9 +178,8 @@ function ActingMenu() {
       align="right"
       trigger={({ toggle, open }) => (
         <button className="pill" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title="Acting as (demo identity, not authentication)">
-          <span className="avatar">{me ? initials(me.name) : "?"}</span>
-          <span className="truncate" style={{ maxWidth: 160 }}>{me?.name || "Acting as…"}</span>
-          <Chip tone="neutral" title="Switching person is for the demo. It is not a login.">Demo identity</Chip>
+          <span className="acting-label">Acting as</span>
+          <span className="who truncate" style={{ maxWidth: 160 }}>{me?.name || "…"}</span>
           <ChevronDown className="icon-sm" />
         </button>
       )}
@@ -221,7 +226,7 @@ function ActingMenu() {
   );
 }
 
-/** Session sheet: mode, token, acting person, as-of, theme, debug, reset (DESIGN.md §4.1). */
+/** Session sheet: mode, token, acting person, as-of, debug, reset (DESIGN.md §4.1). */
 async function tokenAccepted(token: string, actingAs: string): Promise<boolean> {
   try {
     const r = await fetch(`${API_URL}/sessions`, {
@@ -280,9 +285,6 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
             <input className="input" type="date" value={dateInputValue(s.asOf)} onChange={(e) => s.setAsOf(fromDateInput(e.target.value))} />
             {s.asOf && <Button size="sm" onClick={() => s.setAsOf(null)}>Today</Button>}
           </div>
-        </Field>
-        <Field label="Theme" help="Light is the default. Dark is applied only when chosen here.">
-          <Segmented options={[{ id: "light", label: "Light" }, { id: "dark", label: "Dark" }, { id: "system", label: "System" }]} value={s.theme} onChange={(v) => s.setTheme(v)} />
         </Field>
       </div>
       <div className="t-small text-3">Debug panels (raw packs, verifier report) show when the page URL has <code>?debug=1</code>.</div>

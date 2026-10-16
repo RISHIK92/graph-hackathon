@@ -22,13 +22,14 @@ export interface GraphHandle {
 }
 
 /** Node encoding (DESIGN.md §3.2): shape by type, a restrained neutral/accent ramp, one legend. */
-export const NODE_STYLE: Record<string, { colour: string; dark: string; shape: string; size: number }> = {
-  Team: { colour: "#4f46e5", dark: "#818cf8", shape: "round-rectangle", size: 26 },
-  System: { colour: "#334155", dark: "#cbd5e1", shape: "diamond", size: 20 },
-  Project: { colour: "#64748b", dark: "#94a3b8", shape: "round-rectangle", size: 18 },
-  Person: { colour: "#94a3b8", dark: "#64748b", shape: "ellipse", size: 14 },
-  Decision: { colour: "#0f172a", dark: "#e2e8f0", shape: "triangle", size: 18 },
-  Ticket: { colour: "#cbd5e1", dark: "#475569", shape: "ellipse", size: 10 },
+// Phosphor entity colours: systems and projects teal, teams and people violet, records grey (item 19)
+export const NODE_STYLE: Record<string, { colour: string; shape: string; size: number }> = {
+  Team: { colour: "#BBA6FF", shape: "round-rectangle", size: 26 },
+  System: { colour: "#74D9C3", shape: "diamond", size: 20 },
+  Project: { colour: "#74D9C3", shape: "round-rectangle", size: 18 },
+  Person: { colour: "#BBA6FF", shape: "ellipse", size: 14 },
+  Decision: { colour: "#C9D2CE", shape: "triangle", size: 18 },
+  Ticket: { colour: "#C9D2CE", shape: "ellipse", size: 10 },
 };
 
 function cssVar(name: string, fallback: string): string {
@@ -67,7 +68,6 @@ const GraphCanvas = forwardRef<GraphHandle, {
     (async () => {
       const cytoscape = (await import("cytoscape")).default;
       if (cancelled || !el.current) return;
-      const dark = document.documentElement.getAttribute("data-theme") === "dark";
       const ids = new Set(nodes.map((n) => n.id));
       const els: ElementDefinition[] = [
         ...nodes.map((n) => {
@@ -75,7 +75,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
           const st = NODE_STYLE[lab] || NODE_STYLE.Person;
           const pos = positions.current.get(n.id);
           return {
-            data: { id: n.id, label: n.name, colour: dark ? st.dark : st.colour, shape: st.shape, size: st.size, type: lab },
+            data: { id: n.id, label: n.name, colour: st.colour, shape: st.shape, size: st.size, type: lab },
             ...(pos ? { position: { ...pos } } : {}),
           };
         }),
@@ -107,7 +107,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
             selector: "node",
             style: {
               "background-color": "data(colour)", shape: "data(shape)" as "ellipse", width: "data(size)", height: "data(size)",
-              label: "data(label)", color: fg, "font-size": 10, "font-family": cssVar("--font", "Inter, system-ui"),
+              label: "data(label)", color: fg, "font-size": 10, "font-family": cssVar("--font", "Geist, system-ui"),
               "text-valign": "bottom", "text-margin-y": 4, "text-outline-color": bg, "text-outline-width": 2,
               "border-width": 1.5, "border-color": bg,
               // m9: labels drop out when zoomed far out instead of piling up, and long names are cut short
