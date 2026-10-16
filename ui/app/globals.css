@@ -1,4 +1,4 @@
-/* Company Brain UI — tokens and component styles. Contract: DESIGN.md §3.
+/* Nodus UI — tokens and component styles. Contract: DESIGN.md §3.
    Light is the default. Dark is applied only via [data-theme="dark"] (Session sheet), never from the OS. */
 
 :root {

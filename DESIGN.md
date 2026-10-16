@@ -1,4 +1,4 @@
-# Company Brain UI — design audit, information architecture and design system
+# Nodus UI — design audit, information architecture and design system
 
 Status: proposal, no code changed. Screenshots of the current UI are in `docs/ui-audit/` (dark mode, 1440 px, token set unless noted). This document is the contract for the redesign; the implementation is critiqued against §4 and §5 after each screen is built.
 
@@ -366,7 +366,7 @@ Each screen lists layout, components and the state matrix. "States" means every 
 
 Layout: conversation column (max 760 px, centred in the content area) + inspector (always open on Ask, shows the evidence for the selected claim; empty state explains).
 
-- **Empty state**: title "Ask the company brain", one line on verification, suggested questions as a two-column list grouped "Questions" and "Actions (write)", each with a kind icon. Composer at the bottom.
+- **Empty state**: title "Ask Nodus", one line on verification, suggested questions as a two-column list grouped "Questions" and "Actions (write)", each with a kind icon. Composer at the bottom.
 - **Turn**: user line (left-aligned, `body-strong`, person avatar, time, as-of chip if set); then a **status line** that replaces the raw trace: during streaming "Planning… · Reading owners… · Verifying…" with a progress bar; when done "Ownership · 2 tools · 2 claims verified · 0 dropped · 310 ms" with a "Trace" button that opens the trace in the inspector (Cypher, params, rows, timings, verifier report). Nothing mono is shown in the conversation.
 - **Answer**: a lead sentence assembled from the claims ("Infra owns Ledger; the lead is Bob Lindqvist.") followed by claims as fact rows, grouped by the planner intent (impact: "What breaks" / "Who to tell"; ownership: "Owner" / "Lead"; history: a timeline). Selecting a row highlights it and drives the inspector. The unverified explanation, if any, is a muted paragraph labelled "Explanation (not verified)".
 - **Abstain**: notice (info) "No verified answer" + "Nearest evidence" rows, each opening the Path tab.

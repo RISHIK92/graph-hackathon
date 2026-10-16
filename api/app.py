@@ -26,7 +26,7 @@ from brain.tools import Ctx, chain_view, evidence, facts, run_tool, span_items
 from .agent import Agent, Session
 from brain.ids import now_ms
 
-app = FastAPI(title="Company Brain")
+app = FastAPI(title="Nodus")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 G = Graph()

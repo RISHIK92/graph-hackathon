@@ -1,4 +1,4 @@
-# Company Brain UI
+# Nodus UI
 
 Next.js 15 (App Router). Talks only to the Python API.
 

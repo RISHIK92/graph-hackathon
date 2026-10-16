@@ -7,10 +7,10 @@ import { Button, Chip, Modal } from "./ui";
 
 // Run from the repository folder: the server reads FalkorDB settings from its .env, and BRAIN_MCP_ACTOR is
 // the person its writes are recorded as (without it, the write tools refuse).
-const COMMAND = 'claude mcp add company-brain -e BRAIN_MCP_ACTOR=person:priya-raman -- "$(pwd)/.venv/bin/python" -m mcp_server.server';
+const COMMAND = 'claude mcp add nodus -e BRAIN_MCP_ACTOR=person:priya-raman -- "$(pwd)/.venv/bin/python" -m mcp_server.server';
 const CONFIG = JSON.stringify({
   mcpServers: {
-    "company-brain": {
+    "nodus": {
       command: "/path/to/graphs-hackathon-dev/.venv/bin/python",
       args: ["-m", "mcp_server.server"],
       env: { BRAIN_MCP_ACTOR: "person:priya-raman" },

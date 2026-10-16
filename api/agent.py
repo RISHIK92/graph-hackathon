@@ -56,7 +56,7 @@ class Agent:
             return Session("anon_" + uuid.uuid4().hex[:12], user_id, acting_as, True)
         sid = "src_sess_" + uuid.uuid4().hex[:16]
         store.create_source(self.g, {"id": sid, "doc_key": f"chat_session:brain:{sid}", "kind": "chat_session",
-                                     "system": "brain", "external_id": sid, "title": f"Chat in Company Brain · {self._entity_name(acting_as)} · {_day(self.clock())}",
+                                     "system": "brain", "external_id": sid, "title": f"Chat in Nodus · {self._entity_name(acting_as)} · {_day(self.clock())}",
                                      "uri": f"/sessions/{sid}", "created_at": self.clock(), "updated_at": self.clock(),
                                      "ingested_at": self.clock(), "is_latest": True, "status": "active",
                                      "user_id": user_id, "acting_as": acting_as})

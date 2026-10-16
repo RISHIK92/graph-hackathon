@@ -1,0 +1,81 @@
+# Deploy Nodus to its VM (item 21). Port 22 is open only to the owner's IP, so the job opens it to this runner's
+# IP for the deploy and always closes it again. Secrets: AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY (an IAM key
+# allowed only to authorise and revoke ingress on the nodus-web group), NODUS_SSH_KEY, OPENROUTER_API_KEY.
+name: deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+concurrency: deploy
+env:
+  AWS_REGION: ap-south-1
+  NODUS_SG: sg-0ddb64d8379a25f5d
+  NODUS_HOST: 13.126.121.212
+  NODUS_DOMAIN: nodus.rishiklabs.tech
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Open SSH to this runner
+        run: |
+          echo "RUNNER_IP=$(curl -fsS https://checkip.amazonaws.com)" >> "$GITHUB_ENV"
+          aws ec2 authorize-security-group-ingress --group-id "$NODUS_SG" --ip-permissions \
+            "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$(curl -fsS https://checkip.amazonaws.com)/32,Description=github-actions}]"
+      - name: SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.NODUS_SSH_KEY }}" > ~/.ssh/nodus && chmod 600 ~/.ssh/nodus
+          for i in 1 2 3 4 5; do ssh-keyscan -T 10 "$NODUS_HOST" > ~/.ssh/known_hosts 2>/dev/null && [ -s ~/.ssh/known_hosts ] && break; sleep 5; done
+      - name: Copy the code
+        run: git archive HEAD | ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" 'mkdir -p ~/nodus && tar -x -C ~/nodus'
+      - name: Configure (tokens made on the VM; the OpenRouter key from its secret, over stdin)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          printf '%s' "$OPENROUTER_API_KEY" | ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" "NODUS_DOMAIN=$NODUS_DOMAIN bash -s" <<'SH'
+          set -e
+          key=$(cat)
+          f=~/nodus/deploy/.env
+          [ -f "$f" ] || cp ~/nodus/deploy/.env.prod.example "$f"
+          chmod 600 "$f"
+          python3 - "$f" "$key" "$NODUS_DOMAIN" <<'PY'
+          import re, secrets, sys
+          path, key, domain = sys.argv[1:]
+          text = open(path).read()
+          def put(name, value, only_if_empty=False):
+              global text
+              m = re.search(rf"^{name}=(.*)$", text, re.M)
+              if m and only_if_empty and m.group(1):
+                  return
+              line = f"{name}={value}"
+              text = re.sub(rf"^{name}=.*$", lambda _: line, text, flags=re.M) if m else text + line + "\n"
+          put("BRAIN_DOMAIN", domain)
+          put("PUBLIC_WRITE_TOKEN", secrets.token_hex(24), only_if_empty=True)
+          put("ADMIN_TOKEN", secrets.token_hex(24), only_if_empty=True)
+          if key:
+              put("OPENROUTER_API_KEY", key)
+          open(path, "w").write(text)
+          PY
+          SH
+      - name: Start and seed
+        run: |
+          ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" 'set -e; cd ~/nodus
+            docker compose -f deploy/docker-compose.prod.yml up -d --build
+            if [ ! -f ~/.nodus-seeded ]; then
+              sleep 10
+              docker compose -f deploy/docker-compose.prod.yml exec -T api brain reset --seed world/seeds/1 > /dev/null
+              touch ~/.nodus-seeded
+            fi
+            docker compose -f deploy/docker-compose.prod.yml ps --format "{{.Service}} {{.State}}"'
+      - name: Close SSH again
+        if: always()
+        run: |
+          [ -n "${RUNNER_IP:-}" ] && aws ec2 revoke-security-group-ingress --group-id "$NODUS_SG" --ip-permissions \
+            "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$RUNNER_IP/32}]" || true
+          rm -f ~/.ssh/nodus

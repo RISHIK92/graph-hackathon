@@ -25,7 +25,7 @@ function EntityInner() {
   const { data, error, reload } = useEntity(id);
   const disputes = disputesOf(data, id).length;
   const notFound = error && /404|not found/i.test(error);
-  useEffect(() => { if (data?.name) document.title = `${data.name} · Company Brain`; }, [data?.name]);
+  useEffect(() => { if (data?.name) document.title = `${data.name} · Nodus`; }, [data?.name]);
 
   return (
     <div className="page">

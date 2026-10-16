@@ -95,7 +95,7 @@ function Ask() {
           {!turns.length && (
             <div className="stack-6" style={{ paddingTop: 48 }}>
               <div className="stack">
-                <h1 className="t-display">Ask the company brain</h1>
+                <h1 className="t-display">Ask Nodus</h1>
                 <p className="text-2">Ask who owns what, why a decision was made, or what breaks if something goes down. Every answer shows where it came from.</p>
               </div>
               <div className="suggest-grid">

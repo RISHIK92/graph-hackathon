@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Company Brain",
+  title: "Nodus",
   description: "Who owns what, who knows what, and why. Every answer cited, every change dated.",
 };
 

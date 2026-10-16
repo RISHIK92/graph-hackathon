@@ -101,7 +101,7 @@ function SourceTab({ spanId, sourceId, quote }: { spanId: string; sourceId?: str
         // m13: a message from this app's chat is shown alone, with who said it and when, not the whole transcript
         <div className="src-doc">
           <div className="t-small text-2" style={{ padding: "8px 12px 0" }}>
-            {span.data.role === "agent" ? "Company Brain" : names[span.data.author || ""]?.name || "Someone in this chat"} · {fmtDateTime(span.data.ts)}
+            {span.data.role === "agent" ? "Nodus" : names[span.data.author || ""]?.name || "Someone in this chat"} · {fmtDateTime(span.data.ts)}
           </div>
           <div className="src-span hit"><Quoted text={span.data.text} start={quote?.start} end={quote?.end} /></div>
         </div>

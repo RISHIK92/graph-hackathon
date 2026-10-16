@@ -4,24 +4,24 @@ One Ubuntu 24.04 VM (t3.medium, 30 GB gp3) in ap-south-1, behind an Elastic IP, 
 `deploy/docker-compose.prod.yml`: Caddy (80/443, automatic HTTPS) in front of the UI and the API; FalkorDB 6.0.1
 with no host port. A t3.medium costs roughly $1 a day while it runs (plus the Elastic IP while it is attached).
 
-## 1. AWS (profile `rishik-personal`, region ap-south-1, every resource tagged `project=company-brain`)
+## 1. AWS (profile `rishik-personal`, region ap-south-1, every resource tagged `project=nodus`)
 
 Run this block in **bash** (`bash`, then paste): zsh doesn't split `$P` into words.
 
 ```bash
 P="--profile rishik-personal --region ap-south-1"
-TAG='ResourceType=%s,Tags=[{Key=project,Value=company-brain}]'
+TAG='ResourceType=%s,Tags=[{Key=project,Value=nodus}]'
 AMI=$(aws ssm get-parameter $P --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id --query Parameter.Value --output text)
 MYIP=$(curl -s https://checkip.amazonaws.com)
-aws ec2 create-key-pair $P --key-name company-brain-key --key-type ed25519 --query KeyMaterial --output text \
-  --tag-specifications "$(printf "$TAG" key-pair)" > ~/.ssh/company-brain-key.pem && chmod 600 ~/.ssh/company-brain-key.pem
-SG=$(aws ec2 create-security-group $P --group-name company-brain-web --description "company-brain: 80/443 public, 22 from one IP" \
+aws ec2 create-key-pair $P --key-name nodus-key --key-type ed25519 --query KeyMaterial --output text \
+  --tag-specifications "$(printf "$TAG" key-pair)" > ~/.ssh/nodus-key.pem && chmod 600 ~/.ssh/nodus-key.pem
+SG=$(aws ec2 create-security-group $P --group-name nodus-web --description "nodus: 80/443 public, 22 from one IP" \
   --tag-specifications "$(printf "$TAG" security-group)" --query GroupId --output text)
 aws ec2 authorize-security-group-ingress $P --group-id $SG --ip-permissions \
   "IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges=[{CidrIp=0.0.0.0/0}]" \
   "IpProtocol=tcp,FromPort=443,ToPort=443,IpRanges=[{CidrIp=0.0.0.0/0}]" \
   "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$MYIP/32}]"
-ID=$(aws ec2 run-instances $P --image-id $AMI --instance-type t3.medium --key-name company-brain-key \
+ID=$(aws ec2 run-instances $P --image-id $AMI --instance-type t3.medium --key-name nodus-key \
   --security-group-ids $SG --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=30,VolumeType=gp3}' \
   --tag-specifications "$(printf "$TAG" instance)" "$(printf "$TAG" volume)" --query 'Instances[0].InstanceId' --output text)
 aws ec2 wait instance-running $P --instance-ids $ID
@@ -42,11 +42,11 @@ certificate on first start and retries until DNS resolves.
 
 ```bash
 # from your machine: the code goes over as a git bundle (nothing needs pushing)
-git bundle create /tmp/company-brain.bundle main
-scp -i ~/.ssh/company-brain-key.pem /tmp/company-brain.bundle ubuntu@<elastic-ip>:
-ssh -i ~/.ssh/company-brain-key.pem ubuntu@<elastic-ip>
+git bundle create /tmp/nodus.bundle main
+scp -i ~/.ssh/nodus-key.pem /tmp/nodus.bundle ubuntu@<elastic-ip>:
+ssh -i ~/.ssh/nodus-key.pem ubuntu@<elastic-ip>
 curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker ubuntu && exit   # log in again after this
-git clone company-brain.bundle graph-hackathon && cd graph-hackathon
+git clone nodus.bundle graph-hackathon && cd graph-hackathon
 cp deploy/.env.prod.example deploy/.env
 sed -i "s/^BRAIN_DOMAIN=.*/BRAIN_DOMAIN=<subdomain>/" deploy/.env
 sed -i "s/^PUBLIC_WRITE_TOKEN=.*/PUBLIC_WRITE_TOKEN=$(openssl rand -hex 24)/" deploy/.env
@@ -75,7 +75,7 @@ docker compose -f deploy/docker-compose.prod.yml ps
 ## 6. Rollback
 
 ```bash
-git fetch ~/company-brain.bundle main && git log --oneline -5 FETCH_HEAD   # a newer bundle, scp'd as above
+git fetch ~/nodus.bundle main && git log --oneline -5 FETCH_HEAD   # a newer bundle, scp'd as above
 git checkout <commit>
 docker compose -f deploy/docker-compose.prod.yml up -d --build api ui
 ```
@@ -101,4 +101,27 @@ P="--profile rishik-personal --region ap-south-1"
 aws ec2 stop-instances $P --instance-ids <id>            # stops the hourly instance cost; the disk remains (~$2.40/month)
 aws ec2 release-address $P --allocation-id <eip-alloc>   # an idle Elastic IP is billed hourly
 aws ec2 terminate-instances $P --instance-ids <id>       # removes the VM and its disk
+```
+
+## 10. Deploy from GitHub Actions
+
+`.github/workflows/deploy.yml` deploys on every push to `main` (and on demand). SSH is open only to the owner's IP,
+so the job opens port 22 to its own runner IP, copies the code (`git archive`), writes `deploy/.env` on the VM
+(tokens generated there on the first run; the OpenRouter key from its secret, over stdin, never logged), starts the
+stack, seeds once, and always closes port 22 again.
+
+Repository secrets (Settings > Secrets and variables > Actions):
+
+| Secret | Value |
+|---|---|
+| `OPENROUTER_API_KEY` | the demo key (about a $5 limit) |
+| `NODUS_SSH_KEY` | the private key from `~/.ssh/nodus-key.pem` |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | an IAM user's key that may only change ingress on `nodus-web` |
+
+The IAM user is created by the owner (not by the agent); its only policy:
+
+```json
+{"Version": "2012-10-17", "Statement": [{"Effect": "Allow",
+  "Action": ["ec2:AuthorizeSecurityGroupIngress", "ec2:RevokeSecurityGroupIngress"],
+  "Resource": "arn:aws:ec2:ap-south-1:625408984315:security-group/sg-0ddb64d8379a25f5d"}]}
 ```

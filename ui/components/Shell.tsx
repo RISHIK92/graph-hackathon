@@ -37,7 +37,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const page = NAV.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path === "/" ? "Overview" : "");
     const inbox = pendingCount > 0 ? ` (${pendingCount})` : "";
-    if (page) document.title = `${page === "Inbox" ? `Inbox${inbox}` : page} · Company Brain`;
+    if (page) document.title = `${page === "Inbox" ? `Inbox${inbox}` : page} · Nodus`;
   }, [path, pendingCount]);
 
   // keyboard: ⌘K palette, [ sidebar, g+key jumps, / search
@@ -67,7 +67,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       <nav className="sidebar" aria-label="Primary">
         <div className="sidebar-brand">
           <span className="mark" aria-hidden><GitBranch /></span>
-          <span className="truncate">Company Brain</span>
+          <span className="truncate">Nodus</span>
         </div>
         {NAV.map((n) => {
           const active = path === n.href || path.startsWith(`${n.href}/`) || (n.href === "/directory" && path.startsWith("/e/"));

@@ -1,5 +1,5 @@
 [project]
-name = "company-brain"
+name = "nodus"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = ["falkordb", "fastapi", "uvicorn[standard]", "pyyaml", "httpx", "numpy", "mcp", "sse-starlette"]
