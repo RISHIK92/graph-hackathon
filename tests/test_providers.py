@@ -1,0 +1,107 @@
+"""Item 20 step 0: per-role models with fallbacks, the Decisions API client, and cost logging. Fake
+transports only; no network."""
+import httpx
+import pytest
+
+from brain import providers
+
+
+class Fake:
+    """Answers OpenRouter requests per model: a dict, an exception, or an HTTP status."""
+
+    def __init__(self, by_model: dict):
+        self.by_model, self.calls = by_model, []
+
+    def __call__(self, url, body, timeout=120, attempts=6):
+        self.calls.append((url, body))
+        out = self.by_model.get(body["model"], 503)
+        if isinstance(out, Exception):
+            raise out
+        if isinstance(out, int):
+            return httpx.Response(out, json={"error": "down"}, request=httpx.Request("POST", url))
+        return httpx.Response(200, json=out, request=httpx.Request("POST", url))
+
+
+def chat(text, cost=0.0001):
+    return {"choices": [{"message": {"content": text}}], "usage": {"cost": cost}}
+
+
+@pytest.fixture
+def live(monkeypatch, tmp_path):
+    monkeypatch.setattr(providers, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(providers, "llm_available", lambda: True)
+    monkeypatch.delenv("LLM_MODEL", raising=False)
+    providers.COSTS.clear()
+
+    def install(by_model):
+        fake = Fake(by_model)
+        monkeypatch.setattr(providers, "_post_retry", fake)
+        return fake
+    return install
+
+
+def test_role_uses_its_primary_with_role_settings(live):
+    m = providers.role_models("planner")
+    fake = live({m[0]: chat('{"intent": "ownership"}')})
+    res = providers.complete([{"role": "user", "content": "q"}], schema={"type": "object"}, role="planner")
+    assert res["model"] == m[0] and res["json"] == {"intent": "ownership"}
+    body = fake.calls[0][1]
+    assert body["temperature"] == 0 and body["reasoning"] == {"enabled": False}
+    assert body["provider"]["require_parameters"] is True and body["usage"] == {"include": True}
+    assert providers.COSTS[("planner", m[0])] == pytest.approx(0.0001)
+
+
+def test_role_falls_back_when_the_primary_fails(live):
+    primary, fallback = providers.role_models("drafter")
+    fake = live({primary: 503, fallback: chat("ok")})
+    res = providers.complete([{"role": "user", "content": "q"}], role="drafter")
+    assert res["model"] == fallback and res["content"] == "ok"
+    assert [b["model"] for _, b in fake.calls] == [primary, fallback]
+    assert fake.calls[1][1]["reasoning"] == {"effort": "low"}   # Haiku as the fallback runs at low effort
+
+
+def test_role_raises_when_every_model_fails(live):
+    primary, fallback = providers.role_models("planner")
+    live({primary: httpx.ConnectError("x"), fallback: 500})
+    with pytest.raises(providers.LLMUnavailable):
+        providers.complete([{"role": "user", "content": "q"}], role="planner")
+
+
+def test_escalation_has_no_fallback():
+    assert providers.role_models("escalation") == ["anthropic/claude-haiku-5.5"]
+
+
+def test_legacy_llm_model_sets_planner_drafter_and_extractor_alone(monkeypatch):
+    monkeypatch.setenv("LLM_MODEL", "poolside/laguna-xs-2.1")
+    for role in ("planner", "drafter", "extractor"):
+        assert providers.role_models(role) == ["poolside/laguna-xs-2.1"], role
+    assert providers.role_models("checker")[0] == "typesafe/jev-1.14"
+
+
+def test_role_env_overrides(monkeypatch):
+    monkeypatch.setenv("MODEL_CHECKER", "nace-ai/drex-v2.0")
+    monkeypatch.setenv("MODEL_CHECKER_FALLBACK", "none")
+    assert providers.role_models("checker") == ["nace-ai/drex-v2.0"]
+
+
+def test_decide_posts_to_the_alpha_endpoint_and_falls_back(live):
+    primary, fallback = providers.role_models("checker")
+    answer = {"answers": {"supported": {"answer": True, "probability": 0.93}}, "usage": {"cost": 0.00002}}
+    fake = live({primary: 404, fallback: answer})
+    qs = {"supported": {"type": "noul", "instructions": "Is the claim supported?", "criteria": "..."}}
+    res = providers.decide("checker", "x" * 40_000, qs)
+    url, body = fake.calls[-1]
+    assert url == providers.DECISIONS_URL and body["model"] == fallback and body["questions"] == qs
+    assert len(body["state"].encode()) <= providers.DECISION_STATE_MAX   # under 32 KB per request
+    assert res["model"] == fallback and providers.decision_p(res, "supported") == pytest.approx(0.93)
+    assert providers.COSTS[("checker", fallback)] == pytest.approx(0.00002)
+    again = providers.decide("checker", "x" * 40_000, qs)   # cached like complete
+    assert again["answers"] == res["answers"]
+    assert [b["model"] for _, b in fake.calls].count(fallback) == 1   # the fallback's answer came from cache
+
+
+def test_decision_p_reads_scores_and_booleans():
+    assert providers.decision_p({"answers": {"q": {"score": 0.4}}}, "q") == pytest.approx(0.4)
+    assert providers.decision_p({"answers": {"q": {"answer": False}}}, "q") == 0.0
+    assert providers.decision_p({"answers": {"q": {"answer": "yes", "probability": 0.8}}}, "q") == pytest.approx(0.8)
+    assert providers.decision_p({"answers": {}}, "q") is None

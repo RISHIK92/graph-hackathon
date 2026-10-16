@@ -38,7 +38,7 @@ class Settings:
     graph: str = field(default_factory=lambda: _get("FALKOR_GRAPH", "brain"))
     pin: int = field(default_factory=lambda: int(_get("FALKOR_PIN", "60001")))
     openrouter_key: str = field(default_factory=lambda: _get("OPENROUTER_API_KEY"))
-    llm_model: str = field(default_factory=lambda: _get("LLM_MODEL", "anthropic/claude-sonnet-5-5"))
+    llm_model: str = field(default_factory=lambda: _get("LLM_MODEL", "anthropic/claude-sonnet-5.5"))
     embed_provider: str = field(default_factory=lambda: _get("EMBED_PROVIDER", "local"))
     embed_model: str = field(default_factory=lambda: _get("EMBED_MODEL", "local-hash-v1"))
     embed_dim: int = field(default_factory=lambda: int(_get("EMBED_DIM", "256")))
@@ -55,3 +55,18 @@ class Settings:
 
 
 settings = Settings()
+
+# Model per role, with a fallback (item 20 step 0). MODEL_<ROLE> and MODEL_<ROLE>_FALLBACK override them
+# ("none" disables the fallback); MODEL_<ROLE>_PROVIDER pins an OpenRouter provider. A set LLM_MODEL is the
+# legacy single-model mode: that model alone plans, drafts and extracts.
+ROLE_MODELS = {
+    "extractor": ("anthropic/claude-haiku-5.5", "deepseek/deepseek-v4.1-flash"),
+    "screen": ("typesafe/jev-1.14", "nace-ai/drex-v2.0"),
+    "planner": ("deepseek/deepseek-v4.1-flash", "anthropic/claude-haiku-5.5"),
+    "drafter": ("deepseek/deepseek-v4.1-flash", "anthropic/claude-haiku-5.5"),
+    "escalation": ("anthropic/claude-haiku-5.5", ""),
+    "checker": ("typesafe/jev-1.14", "nace-ai/drex-v2.0"),
+    "judge": ("microsoft/microsoft-decision-1", "openai/gpt-6-luna-decisions"),
+    "judge2": ("z-ai/glm-5.2", "nvidia/nemotron-3-ultra-550b-a55b"),
+}
+LEGACY_ROLES = ("planner", "drafter", "extractor")
