@@ -1,13 +1,17 @@
 Distinct
     Project
         Filter
-            Conditional Traverse | (m)-[ce:EVIDENCED_BY]->(anon_0:Span)
-                Project
-                    Filter
-                        Conditional Traverse | (a)-[sp:SUPERSEDES]->(old:Assertion)
-                            Filter
-                                Conditional Traverse | (s)<-[e:EVIDENCED_BY]-(a:Assertion)
-                                    Filter
-                                        Conditional Traverse | (src)-[h:HAS_SPAN]->(s:Span)
+            Conditional Traverse | (src)-[h:HAS_SPAN]->(s:Span)
+                Filter
+                    Conditional Traverse | (a)-[e:EVIDENCED_BY]->(s:Span)
+                        Distinct
+                            Project
+                                Filter
+                                    Conditional Traverse | (m)-[ce:EVIDENCED_BY]->(anon_0:Span)
+                                        Project
                                             Filter
-                                                Node By Index Scan | (src:Source)
+                                                Node By Index Scan | (m:Assertion)
+                                                    Project
+                                                        Filter
+                                                            Conditional Traverse | (a)-[sp:SUPERSEDES]->(old:Assertion)
+                                                                Node By Label Scan | (a:Assertion)
