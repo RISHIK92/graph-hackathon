@@ -1,0 +1,2938 @@
+[
+ {
+  "version": "6.0.1",
+  "scale": 1,
+  "build": {
+   "seed_s": 17.3,
+   "total_s": 17.3,
+   "nodes": 2618,
+   "edges": 6913,
+   "assertions": 569,
+   "spans": 1008,
+   "entities": 143
+  },
+  "templates": {
+   "action": {
+    "n": 1656,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 27.6
+   },
+   "action_log": {
+    "n": 10,
+    "p50": 0.2,
+    "p95": 0.2,
+    "max": 0.2
+   },
+   "action_read": {
+    "n": 1739,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 3.9
+   },
+   "all_entities": {
+    "n": 3,
+    "p50": 5.2,
+    "p95": 6.9,
+    "max": 6.9
+   },
+   "already_confirmed": {
+    "n": 600,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 11.8
+   },
+   "assertion": {
+    "n": 843,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 3.1
+   },
+   "assertions_by_id": {
+    "n": 1580,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 6.4
+   },
+   "based_on_spans": {
+    "n": 144,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 1.9
+   },
+   "belief_all_leads": {
+    "n": 63,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 1.4
+   },
+   "belief_lead_of": {
+    "n": 1689,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 37.9
+   },
+   "belief_out_edges": {
+    "n": 2232,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 34.5
+   },
+   "belief_owners_of": {
+    "n": 1389,
+    "p50": 0.3,
+    "p95": 0.6,
+    "max": 157.2
+   },
+   "chains_for_entity": {
+    "n": 289,
+    "p50": 0.2,
+    "p95": 0.7,
+    "max": 24.3
+   },
+   "confirms_of": {
+    "n": 4,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "current_in_chain": {
+    "n": 50,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 0.5
+   },
+   "decision_status": {
+    "n": 144,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 4.6
+   },
+   "decision_trace": {
+    "n": 291,
+    "p50": 0.4,
+    "p95": 1.4,
+    "max": 11.2
+   },
+   "decisions_affecting": {
+    "n": 28,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 1.1
+   },
+   "demo_identity": {
+    "n": 1,
+    "p50": 1.0,
+    "p95": 1.0,
+    "max": 1.0
+   },
+   "depends_on": {
+    "n": 15,
+    "p50": 0.2,
+    "p95": 1.3,
+    "max": 1.3
+   },
+   "directory_decisions": {
+    "n": 22,
+    "p50": 1.0,
+    "p95": 2.2,
+    "max": 2.3
+   },
+   "directory_people": {
+    "n": 72,
+    "p50": 1.8,
+    "p95": 4.1,
+    "max": 8.0
+   },
+   "directory_projects": {
+    "n": 22,
+    "p50": 0.6,
+    "p95": 1.9,
+    "max": 3.9
+   },
+   "directory_systems": {
+    "n": 22,
+    "p50": 0.8,
+    "p95": 2.1,
+    "max": 2.8
+   },
+   "directory_tickets": {
+    "n": 22,
+    "p50": 2.1,
+    "p95": 5.8,
+    "max": 6.9
+   },
+   "dispute_chains": {
+    "n": 148,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 1.9
+   },
+   "dispute_edge": {
+    "n": 264,
+    "p50": 0.2,
+    "p95": 0.2,
+    "max": 0.5
+   },
+   "disputed_run": {
+    "n": 189,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 2.7
+   },
+   "doc_evidence": {
+    "n": 1,
+    "p50": 0.5,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "entity": {
+    "n": 71,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 0.6
+   },
+   "entity_name": {
+    "n": 1453,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 11.7
+   },
+   "entity_names": {
+    "n": 1411,
+    "p50": 1.3,
+    "p95": 5.1,
+    "max": 146.1
+   },
+   "entity_sources": {
+    "n": 71,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 1.1
+   },
+   "evidence_fragment": {
+    "n": 1258,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 8.0
+   },
+   "existing_spans": {
+    "n": 1,
+    "p50": 0.4,
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "experts_signals": {
+    "n": 5,
+    "p50": 1.5,
+    "p95": 2.1,
+    "max": 2.1
+   },
+   "graph_edge_kinds": {
+    "n": 22,
+    "p50": 2.9,
+    "p95": 17.2,
+    "max": 18.6
+   },
+   "graph_edges": {
+    "n": 29,
+    "p50": 3.8,
+    "p95": 9.3,
+    "max": 80.4
+   },
+   "graph_nodes": {
+    "n": 29,
+    "p50": 1.6,
+    "p95": 3.9,
+    "max": 4.3
+   },
+   "graph_ticks": {
+    "n": 22,
+    "p50": 1.1,
+    "p95": 1.7,
+    "max": 2.4
+   },
+   "group_counts": {
+    "n": 2,
+    "p50": 1.0,
+    "p95": 1.5,
+    "max": 1.5
+   },
+   "impact_dependents": {
+    "n": 29,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 2.9
+   },
+   "integrity_chains": {
+    "n": 1,
+    "p50": 5.7,
+    "p95": 5.7,
+    "max": 5.7
+   },
+   "integrity_i1": {
+    "n": 1,
+    "p50": 11.5,
+    "p95": 11.5,
+    "max": 11.5
+   },
+   "integrity_i11": {
+    "n": 1,
+    "p50": 0.6,
+    "p95": 0.6,
+    "max": 0.6
+   },
+   "integrity_i5": {
+    "n": 1,
+    "p50": 0.5,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "integrity_sentinel": {
+    "n": 1,
+    "p50": 0.2,
+    "p95": 0.2,
+    "max": 0.2
+   },
+   "latest_spans": {
+    "n": 1,
+    "p50": 0.3,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "lead_at": {
+    "n": 253,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 3.0
+   },
+   "learn_ents": {
+    "n": 4,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "link_exact": {
+    "n": 486,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 19.0
+   },
+   "link_fulltext": {
+    "n": 486,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 15.5
+   },
+   "link_vector": {
+    "n": 486,
+    "p50": 0.7,
+    "p95": 2.1,
+    "max": 158.9
+   },
+   "live_confirmations": {
+    "n": 189,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 5.8
+   },
+   "names": {
+    "n": 1,
+    "p50": 1.6,
+    "p95": 1.6,
+    "max": 1.6
+   },
+   "neighbourhood": {
+    "n": 61,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 1.9
+   },
+   "nodes_by_id": {
+    "n": 61,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 1.4
+   },
+   "overview_decisions": {
+    "n": 94,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 5.9
+   },
+   "overview_pending": {
+    "n": 94,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 3.2
+   },
+   "overview_teams": {
+    "n": 94,
+    "p50": 1.0,
+    "p95": 2.9,
+    "max": 8.6
+   },
+   "owner_at": {
+    "n": 247,
+    "p50": 0.3,
+    "p95": 1.6,
+    "max": 10.1
+   },
+   "pending_proposals": {
+    "n": 10,
+    "p50": 0.2,
+    "p95": 0.2,
+    "max": 0.2
+   },
+   "people": {
+    "n": 20,
+    "p50": 1.0,
+    "p95": 2.5,
+    "max": 2.7
+   },
+   "person_name": {
+    "n": 1739,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 2.5
+   },
+   "produced_assertions": {
+    "n": 1488,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 54.3
+   },
+   "produced_sources": {
+    "n": 1488,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 78.3
+   },
+   "proposal_ends": {
+    "n": 1068,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 1.7
+   },
+   "proposal_links": {
+    "n": 2815,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 5.4
+   },
+   "proposals_about": {
+    "n": 291,
+    "p50": 0.2,
+    "p95": 0.8,
+    "max": 6.2
+   },
+   "rationale_spans": {
+    "n": 144,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 1.9
+   },
+   "recent_actions": {
+    "n": 50,
+    "p50": 0.5,
+    "p95": 1.3,
+    "max": 2.2
+   },
+   "related_at": {
+    "n": 60,
+    "p50": 0.4,
+    "p95": 2.3,
+    "max": 8.2
+   },
+   "replaced_by": {
+    "n": 291,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 4.5
+   },
+   "replaces_out": {
+    "n": 291,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 4.0
+   },
+   "revisions": {
+    "n": 2,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "run_members": {
+    "n": 2042,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 5.5
+   },
+   "search_fulltext": {
+    "n": 18,
+    "p50": 0.5,
+    "p95": 2.4,
+    "max": 2.4
+   },
+   "search_vector": {
+    "n": 18,
+    "p50": 0.9,
+    "p95": 2.2,
+    "max": 2.2
+   },
+   "session_spans": {
+    "n": 50,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 1.9
+   },
+   "snap_betweenness": {
+    "n": 21,
+    "p50": 1.1,
+    "p95": 2.1,
+    "max": 13.4
+   },
+   "snap_dependents": {
+    "n": 110,
+    "p50": 0.1,
+    "p95": 0.3,
+    "max": 1.3
+   },
+   "snap_leaders": {
+    "n": 42,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 6.7
+   },
+   "snap_meta": {
+    "n": 88,
+    "p50": 0.1,
+    "p95": 0.2,
+    "max": 0.3
+   },
+   "snap_node_count": {
+    "n": 21,
+    "p50": 0.1,
+    "p95": 0.2,
+    "max": 0.2
+   },
+   "snap_owns": {
+    "n": 21,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 0.6
+   },
+   "snap_pagerank": {
+    "n": 22,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 121.8
+   },
+   "snap_part_of": {
+    "n": 21,
+    "p50": 0.3,
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "snap_paths": {
+    "n": 26,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 1.1
+   },
+   "snap_person_edges": {
+    "n": 105,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 1.3
+   },
+   "snap_wcc": {
+    "n": 21,
+    "p50": 0.9,
+    "p95": 4.6,
+    "max": 152.3
+   },
+   "snapshot_touches": {
+    "n": 7,
+    "p50": 5.9,
+    "p95": 9.9,
+    "max": 9.9
+   },
+   "snapshot_version": {
+    "n": 91,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 0.9
+   },
+   "source_exists": {
+    "n": 2,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "source_view": {
+    "n": 20,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 1.3
+   },
+   "span_details": {
+    "n": 1410,
+    "p50": 0.4,
+    "p95": 1.4,
+    "max": 21.2
+   },
+   "span_facts": {
+    "n": 17,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "span_view": {
+    "n": 20,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.5
+   },
+   "stale_detection": {
+    "n": 22,
+    "p50": 1.4,
+    "p95": 3.1,
+    "max": 3.3
+   },
+   "stale_override": {
+    "n": 22,
+    "p50": 0.6,
+    "p95": 1.2,
+    "max": 1.3
+   },
+   "stated_by_latest": {
+    "n": 1,
+    "p50": 0.8,
+    "p95": 0.8,
+    "max": 0.8
+   },
+   "statement": {
+    "n": 125,
+    "p50": 0.1,
+    "p95": 0.2,
+    "max": 0.5
+   },
+   "strongest_member": {
+    "n": 3538,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 31.3
+   },
+   "ticket_about": {
+    "n": 70,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 2.0
+   },
+   "turn_count": {
+    "n": 348,
+    "p50": 0.2,
+    "p95": 0.7,
+    "max": 17.7
+   },
+   "turn_span": {
+    "n": 4,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "unsupported": {
+    "n": 1,
+    "p50": 7.2,
+    "p95": 7.2,
+    "max": 7.2
+   },
+   "withdrawn_by": {
+    "n": 24,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.8
+   }
+  },
+  "tools": {
+   "critical_systems": {
+    "n": 20,
+    "p50": 14.5,
+    "p95": 15.8,
+    "max": 17.4
+   },
+   "connection_between": {
+    "n": 20,
+    "p50": 15.1,
+    "p95": 21.6,
+    "max": 22.0
+   },
+   "key_people": {
+    "n": 20,
+    "p50": 13.1,
+    "p95": 18.1,
+    "max": 18.4
+   },
+   "knowledge_gaps": {
+    "n": 20,
+    "p50": 10.6,
+    "p95": 29.7,
+    "max": 65.1
+   }
+  },
+  "rebuild": {
+   "runs_s": [
+    0.156,
+    0.048,
+    0.043,
+    0.044,
+    0.04
+   ],
+   "p50_s": 0.044,
+   "max_s": 0.156
+  },
+  "write_plan": {
+   "n": 1353,
+   "p50": 7.2,
+   "p95": 16.8,
+   "max": 296.2
+  },
+  "unexercised": [
+   "action_draft",
+   "action_evidence",
+   "action_targets",
+   "any_confirmed",
+   "any_person",
+   "belief_parent_of",
+   "belief_primary_team",
+   "chain_meta",
+   "confirmed_proposals",
+   "confirmed_targets",
+   "draft_decision",
+   "draft_status",
+   "graph_mentioned",
+   "owner_inherited",
+   "owner_previous",
+   "past_belief_members",
+   "past_belief_run",
+   "paths_between",
+   "session"
+  ],
+  "slowest": [
+   "graph_edge_kinds",
+   "integrity_i1",
+   "snapshot_touches",
+   "graph_edges",
+   "unsupported"
+  ],
+  "profiles": {},
+  "errors": [],
+  "questions": 445
+ },
+ {
+  "version": "6.0.1",
+  "scale": 10,
+  "build": {
+   "seed_s": 11.6,
+   "total_s": 155.2,
+   "nodes": 26279,
+   "edges": 69346,
+   "assertions": 5726,
+   "spans": 10116,
+   "entities": 1430
+  },
+  "templates": {
+   "action": {
+    "n": 1656,
+    "p50": 0.4,
+    "p95": 1.4,
+    "max": 6.9
+   },
+   "action_log": {
+    "n": 10,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 0.9
+   },
+   "action_read": {
+    "n": 1739,
+    "p50": 0.4,
+    "p95": 1.2,
+    "max": 9.7
+   },
+   "all_entities": {
+    "n": 3,
+    "p50": 25.5,
+    "p95": 50.7,
+    "max": 50.7
+   },
+   "already_confirmed": {
+    "n": 600,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 4.7
+   },
+   "assertion": {
+    "n": 1928,
+    "p50": 0.3,
+    "p95": 1.6,
+    "max": 47.5
+   },
+   "assertions_by_id": {
+    "n": 1833,
+    "p50": 0.4,
+    "p95": 2.2,
+    "max": 10.3
+   },
+   "based_on_spans": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 1.8,
+    "max": 6.3
+   },
+   "belief_all_leads": {
+    "n": 424,
+    "p50": 1.0,
+    "p95": 3.9,
+    "max": 16.4
+   },
+   "belief_lead_of": {
+    "n": 2774,
+    "p50": 0.3,
+    "p95": 1.5,
+    "max": 52.3
+   },
+   "belief_out_edges": {
+    "n": 2232,
+    "p50": 0.6,
+    "p95": 2.1,
+    "max": 59.3
+   },
+   "belief_owners_of": {
+    "n": 2474,
+    "p50": 0.4,
+    "p95": 2.0,
+    "max": 20.1
+   },
+   "chains_for_entity": {
+    "n": 432,
+    "p50": 0.3,
+    "p95": 2.9,
+    "max": 33.0
+   },
+   "confirms_of": {
+    "n": 4,
+    "p50": 0.5,
+    "p95": 1.6,
+    "max": 1.6
+   },
+   "current_in_chain": {
+    "n": 50,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 1.2
+   },
+   "decision_status": {
+    "n": 144,
+    "p50": 0.5,
+    "p95": 2.0,
+    "max": 23.8
+   },
+   "decision_trace": {
+    "n": 310,
+    "p50": 0.6,
+    "p95": 2.2,
+    "max": 29.4
+   },
+   "decisions_affecting": {
+    "n": 44,
+    "p50": 0.3,
+    "p95": 1.8,
+    "max": 2.7
+   },
+   "demo_identity": {
+    "n": 1,
+    "p50": 12.5,
+    "p95": 12.5,
+    "max": 12.5
+   },
+   "depends_on": {
+    "n": 30,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 0.8
+   },
+   "directory_decisions": {
+    "n": 22,
+    "p50": 10.5,
+    "p95": 41.5,
+    "max": 190.7
+   },
+   "directory_people": {
+    "n": 112,
+    "p50": 34.0,
+    "p95": 78.5,
+    "max": 311.3
+   },
+   "directory_projects": {
+    "n": 22,
+    "p50": 6.3,
+    "p95": 18.3,
+    "max": 39.0
+   },
+   "directory_systems": {
+    "n": 22,
+    "p50": 11.7,
+    "p95": 33.5,
+    "max": 54.5
+   },
+   "directory_tickets": {
+    "n": 22,
+    "p50": 48.1,
+    "p95": 325.8,
+    "max": 1839.5
+   },
+   "dispute_chains": {
+    "n": 188,
+    "p50": 1.3,
+    "p95": 16.0,
+    "max": 59.0
+   },
+   "dispute_edge": {
+    "n": 2640,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 5.5
+   },
+   "disputed_run": {
+    "n": 1274,
+    "p50": 0.3,
+    "p95": 1.8,
+    "max": 27.0
+   },
+   "doc_evidence": {
+    "n": 1,
+    "p50": 0.5,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "entity": {
+    "n": 132,
+    "p50": 0.2,
+    "p95": 1.3,
+    "max": 6.7
+   },
+   "entity_name": {
+    "n": 1357,
+    "p50": 0.2,
+    "p95": 1.4,
+    "max": 30.2
+   },
+   "entity_names": {
+    "n": 1772,
+    "p50": 7.3,
+    "p95": 19.5,
+    "max": 912.1
+   },
+   "entity_sources": {
+    "n": 132,
+    "p50": 0.4,
+    "p95": 1.9,
+    "max": 6.0
+   },
+   "evidence_fragment": {
+    "n": 1483,
+    "p50": 0.4,
+    "p95": 1.7,
+    "max": 8.4
+   },
+   "existing_spans": {
+    "n": 1,
+    "p50": 1.2,
+    "p95": 1.2,
+    "max": 1.2
+   },
+   "experts_signals": {
+    "n": 5,
+    "p50": 5.7,
+    "p95": 10.1,
+    "max": 10.1
+   },
+   "graph_edge_kinds": {
+    "n": 22,
+    "p50": 98.3,
+    "p95": 259.4,
+    "max": 279.8
+   },
+   "graph_edges": {
+    "n": 29,
+    "p50": 54.9,
+    "p95": 210.1,
+    "max": 273.3
+   },
+   "graph_nodes": {
+    "n": 29,
+    "p50": 19.7,
+    "p95": 248.0,
+    "max": 313.5
+   },
+   "graph_ticks": {
+    "n": 22,
+    "p50": 7.7,
+    "p95": 12.3,
+    "max": 18.3
+   },
+   "group_counts": {
+    "n": 2,
+    "p50": 12.9,
+    "p95": 33.3,
+    "max": 33.3
+   },
+   "impact_dependents": {
+    "n": 45,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 3.1
+   },
+   "integrity_chains": {
+    "n": 1,
+    "p50": 68.8,
+    "p95": 68.8,
+    "max": 68.8
+   },
+   "integrity_i1": {
+    "n": 1,
+    "p50": 103.8,
+    "p95": 103.8,
+    "max": 103.8
+   },
+   "integrity_i11": {
+    "n": 1,
+    "p50": 5.4,
+    "p95": 5.4,
+    "max": 5.4
+   },
+   "integrity_i5": {
+    "n": 1,
+    "p50": 3.6,
+    "p95": 3.6,
+    "max": 3.6
+   },
+   "integrity_sentinel": {
+    "n": 1,
+    "p50": 1.4,
+    "p95": 1.4,
+    "max": 1.4
+   },
+   "latest_spans": {
+    "n": 1,
+    "p50": 0.3,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "lead_at": {
+    "n": 343,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 4.8
+   },
+   "learn_ents": {
+    "n": 4,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "link_exact": {
+    "n": 521,
+    "p50": 0.4,
+    "p95": 2.1,
+    "max": 18.2
+   },
+   "link_fulltext": {
+    "n": 521,
+    "p50": 0.6,
+    "p95": 2.9,
+    "max": 27.6
+   },
+   "link_vector": {
+    "n": 521,
+    "p50": 1.2,
+    "p95": 6.2,
+    "max": 246.9
+   },
+   "live_confirmations": {
+    "n": 1274,
+    "p50": 0.3,
+    "p95": 1.7,
+    "max": 13.5
+   },
+   "names": {
+    "n": 1,
+    "p50": 57.7,
+    "p95": 57.7,
+    "max": 57.7
+   },
+   "neighbourhood": {
+    "n": 122,
+    "p50": 0.5,
+    "p95": 2.0,
+    "max": 3.0
+   },
+   "nodes_by_id": {
+    "n": 122,
+    "p50": 0.3,
+    "p95": 2.2,
+    "max": 3.6
+   },
+   "overview_decisions": {
+    "n": 134,
+    "p50": 2.0,
+    "p95": 5.6,
+    "max": 29.1
+   },
+   "overview_pending": {
+    "n": 134,
+    "p50": 1.6,
+    "p95": 7.1,
+    "max": 37.4
+   },
+   "overview_teams": {
+    "n": 134,
+    "p50": 10.7,
+    "p95": 38.3,
+    "max": 319.7
+   },
+   "owner_at": {
+    "n": 331,
+    "p50": 0.4,
+    "p95": 1.8,
+    "max": 5.9
+   },
+   "pending_proposals": {
+    "n": 10,
+    "p50": 0.5,
+    "p95": 3.4,
+    "max": 3.4
+   },
+   "people": {
+    "n": 20,
+    "p50": 21.0,
+    "p95": 27.3,
+    "max": 30.7
+   },
+   "person_name": {
+    "n": 1739,
+    "p50": 0.2,
+    "p95": 0.8,
+    "max": 4.9
+   },
+   "produced_assertions": {
+    "n": 1488,
+    "p50": 0.3,
+    "p95": 1.3,
+    "max": 10.8
+   },
+   "produced_sources": {
+    "n": 1488,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 7.3
+   },
+   "proposal_ends": {
+    "n": 1068,
+    "p50": 0.2,
+    "p95": 0.8,
+    "max": 8.8
+   },
+   "proposal_links": {
+    "n": 2817,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 6.3
+   },
+   "proposals_about": {
+    "n": 310,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 5.7
+   },
+   "rationale_spans": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 8.8
+   },
+   "recent_actions": {
+    "n": 50,
+    "p50": 0.7,
+    "p95": 1.3,
+    "max": 3.6
+   },
+   "related_at": {
+    "n": 66,
+    "p50": 1.1,
+    "p95": 18.5,
+    "max": 101.9
+   },
+   "replaced_by": {
+    "n": 310,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 5.9
+   },
+   "replaces_out": {
+    "n": 310,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 9.1
+   },
+   "revisions": {
+    "n": 2,
+    "p50": 0.4,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "run_members": {
+    "n": 4167,
+    "p50": 0.2,
+    "p95": 1.2,
+    "max": 26.1
+   },
+   "search_fulltext": {
+    "n": 20,
+    "p50": 1.7,
+    "p95": 17.8,
+    "max": 41.1
+   },
+   "search_vector": {
+    "n": 20,
+    "p50": 10.0,
+    "p95": 16.4,
+    "max": 28.9
+   },
+   "session_spans": {
+    "n": 50,
+    "p50": 0.6,
+    "p95": 1.3,
+    "max": 1.7
+   },
+   "snap_betweenness": {
+    "n": 21,
+    "p50": 49.6,
+    "p95": 82.1,
+    "max": 96.5
+   },
+   "snap_dependents": {
+    "n": 115,
+    "p50": 0.3,
+    "p95": 1.5,
+    "max": 3.9
+   },
+   "snap_leaders": {
+    "n": 42,
+    "p50": 0.7,
+    "p95": 9.2,
+    "max": 14.8
+   },
+   "snap_meta": {
+    "n": 89,
+    "p50": 0.2,
+    "p95": 1.1,
+    "max": 7.7
+   },
+   "snap_node_count": {
+    "n": 21,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 0.7
+   },
+   "snap_owns": {
+    "n": 21,
+    "p50": 1.9,
+    "p95": 3.6,
+    "max": 13.9
+   },
+   "snap_pagerank": {
+    "n": 23,
+    "p50": 1.2,
+    "p95": 5.2,
+    "max": 53.7
+   },
+   "snap_part_of": {
+    "n": 21,
+    "p50": 1.2,
+    "p95": 2.5,
+    "max": 3.8
+   },
+   "snap_paths": {
+    "n": 26,
+    "p50": 0.3,
+    "p95": 2.6,
+    "max": 3.3
+   },
+   "snap_person_edges": {
+    "n": 105,
+    "p50": 0.4,
+    "p95": 1.6,
+    "max": 4.1
+   },
+   "snap_wcc": {
+    "n": 21,
+    "p50": 8.4,
+    "p95": 22.9,
+    "max": 65.2
+   },
+   "snapshot_touches": {
+    "n": 7,
+    "p50": 83.6,
+    "p95": 109.0,
+    "max": 109.0
+   },
+   "snapshot_version": {
+    "n": 92,
+    "p50": 1.0,
+    "p95": 5.3,
+    "max": 29.0
+   },
+   "source_exists": {
+    "n": 2,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 1.1
+   },
+   "source_view": {
+    "n": 20,
+    "p50": 1.1,
+    "p95": 3.9,
+    "max": 4.3
+   },
+   "span_details": {
+    "n": 1656,
+    "p50": 0.6,
+    "p95": 3.4,
+    "max": 49.5
+   },
+   "span_facts": {
+    "n": 17,
+    "p50": 0.3,
+    "p95": 2.9,
+    "max": 2.9
+   },
+   "span_view": {
+    "n": 20,
+    "p50": 0.8,
+    "p95": 7.8,
+    "max": 8.1
+   },
+   "stale_detection": {
+    "n": 22,
+    "p50": 21.9,
+    "p95": 47.7,
+    "max": 79.3
+   },
+   "stale_override": {
+    "n": 22,
+    "p50": 7.0,
+    "p95": 13.9,
+    "max": 17.9
+   },
+   "stated_by_latest": {
+    "n": 1,
+    "p50": 0.5,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "statement": {
+    "n": 1241,
+    "p50": 0.2,
+    "p95": 1.7,
+    "max": 322.5
+   },
+   "strongest_member": {
+    "n": 3538,
+    "p50": 0.2,
+    "p95": 1.0,
+    "max": 32.6
+   },
+   "ticket_about": {
+    "n": 72,
+    "p50": 0.6,
+    "p95": 3.6,
+    "max": 34.5
+   },
+   "turn_count": {
+    "n": 348,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 5.3
+   },
+   "turn_span": {
+    "n": 4,
+    "p50": 0.4,
+    "p95": 3.7,
+    "max": 3.7
+   },
+   "unsupported": {
+    "n": 1,
+    "p50": 56.0,
+    "p95": 56.0,
+    "max": 56.0
+   },
+   "withdrawn_by": {
+    "n": 24,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 3.5
+   }
+  },
+  "tools": {
+   "critical_systems": {
+    "n": 20,
+    "p50": 43.0,
+    "p95": 71.5,
+    "max": 71.8
+   },
+   "connection_between": {
+    "n": 20,
+    "p50": 3.9,
+    "p95": 8.1,
+    "max": 10.4
+   },
+   "key_people": {
+    "n": 20,
+    "p50": 87.7,
+    "p95": 118.4,
+    "max": 123.5
+   },
+   "knowledge_gaps": {
+    "n": 20,
+    "p50": 127.2,
+    "p95": 213.8,
+    "max": 222.0
+   }
+  },
+  "rebuild": {
+   "runs_s": [
+    0.788,
+    0.517,
+    0.644,
+    0.284,
+    0.359
+   ],
+   "p50_s": 0.517,
+   "max_s": 0.788
+  },
+  "write_plan": {
+   "n": 1353,
+   "p50": 20.4,
+   "p95": 66.6,
+   "max": 383.5
+  },
+  "unexercised": [
+   "action_draft",
+   "action_evidence",
+   "action_targets",
+   "any_confirmed",
+   "any_person",
+   "belief_parent_of",
+   "belief_primary_team",
+   "chain_meta",
+   "confirmed_proposals",
+   "confirmed_targets",
+   "draft_decision",
+   "draft_status",
+   "graph_mentioned",
+   "owner_inherited",
+   "owner_previous",
+   "past_belief_members",
+   "past_belief_run",
+   "paths_between",
+   "session"
+  ],
+  "slowest": [
+   "directory_tickets",
+   "graph_edge_kinds",
+   "graph_nodes",
+   "graph_edges",
+   "snapshot_touches"
+  ],
+  "profiles": {
+   "directory_tickets": "Sort | Records produced: 600, Execution time: 1.033899 ms\n    Aggregate | Records produced: 600, Execution time: 7.011172 ms\n        Optional | Records produced: 600, Execution time: 0.107790 ms\n            Aggregate | Records produced: 600, Execution time: 12.335830 ms\n                Apply | Records produced: 600, Execution time: 0.281703 ms\n                    Aggregate | Records produced: 600, Execution time: 5.252868 ms\n                        Apply | Records produced: 600, Execution time: 0.029792 ms\n                            Node By Label Scan | (k:Ticket) | Records produced: 600, Execution time: 0.022958 ms\n                            Optional | Records produced: 0, Execution time: 0.000000 ms\n                                Filter | Records produced: 600, Execution time: 0.146415 ms\n                                    Filter | Records produced: 600, Execution time: 0.032498 ms\n                                        Edge By Index Scan | (k)-[ab:ABOUT]->(x:Entity) | Records produced: 600, Execution time: 15.061201 ms\n                                            Argument | Records produced: 0, Execution time: 0.000000 ms\n                    Optional | Records produced: 0, Execution time: 0.000000 ms\n                        Filter | Records produced: 420, Execution time: 0.143039 ms\n                            Filter | Records produced: 420, Execution time: 0.057957 ms\n                                Edge By Index Scan | (p)-[a:ASSIGNED_TO]->(k:Ticket) | Records produced: 420, Execution time: 15.486819 ms\n                                    Argument | Records produced: 0, Execution time: 0.000000 ms\n            Filter | Records produced: 600, Execution time: 6.776719 ms\n                Node By Index Scan | (st:Assertion) | Records produced: 600, Execution time: 26.052387 ms\n                    Argument | Records produced: 0, Execution time: 0.000000 ms",
+   "graph_edge_kinds": "Aggregate | Records produced: 2746, Execution time: 28.701300 ms\n    Filter | Records produced: 3536, Execution time: 1.479185 ms\n        Conditional Traverse | (a)-[ev:EVIDENCED_BY]->(s:Span) | Records produced: 3886, Execution time: 1.219102 ms\n            Filter | Records produced: 3526, Execution time: 22.687113 ms\n                Node By Index Scan | (a:Assertion) | Records produced: 3526, Execution time: 46.607286 ms",
+   "graph_nodes": "Project | Records produced: 1574, Execution time: 2.997823 ms\n    Node By Label Scan | (n:Entity) | Records produced: 1574, Execution time: 0.054582 ms",
+   "graph_edges": "Project | Records produced: 2746, Execution time: 3.843434 ms\n    Filter | Records produced: 2746, Execution time: 18.315228 ms\n        Conditional Traverse | (a)-[e]->(b:Entity) | Records produced: 3041, Execution time: 5.991066 ms\n            Node By Label Scan | (a:Entity) | Records produced: 1574, Execution time: 0.023582 ms",
+   "snapshot_touches": "Aggregate | Records produced: 4690, Execution time: 36.932746 ms\n    Filter | Records produced: 6920, Execution time: 0.892735 ms\n        Conditional Traverse | (s)->(x:Entity) | Records produced: 7090, Execution time: 31.748290 ms\n            Filter | Records produced: 5550, Execution time: 0.370660 ms\n                Conditional Traverse | (p)<-(s:Span) | Records produced: 5550, Execution time: 4.027473 ms\n                    Node By Label Scan | (p:Person) | Records produced: 400, Execution time: 0.016791 ms"
+  },
+  "errors": [],
+  "questions": 476
+ },
+ {
+  "version": "4.22.0",
+  "scale": 1,
+  "build": {
+   "seed_s": 10.4,
+   "total_s": 10.4,
+   "nodes": 2618,
+   "edges": 6913,
+   "assertions": 569,
+   "spans": 1008,
+   "entities": 143
+  },
+  "templates": {
+   "action": {
+    "n": 1656,
+    "p50": 0.4,
+    "p95": 0.9,
+    "max": 19.2
+   },
+   "action_log": {
+    "n": 10,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "action_read": {
+    "n": 1739,
+    "p50": 0.5,
+    "p95": 1.2,
+    "max": 5.3
+   },
+   "all_entities": {
+    "n": 3,
+    "p50": 8.0,
+    "p95": 34.5,
+    "max": 34.5
+   },
+   "already_confirmed": {
+    "n": 600,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 2.2
+   },
+   "assertion": {
+    "n": 843,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 9.9
+   },
+   "assertions_by_id": {
+    "n": 1602,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 7.8
+   },
+   "based_on_spans": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 0.6,
+    "max": 3.4
+   },
+   "belief_all_leads": {
+    "n": 63,
+    "p50": 0.3,
+    "p95": 0.6,
+    "max": 1.0
+   },
+   "belief_lead_of": {
+    "n": 1689,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 6.6
+   },
+   "belief_out_edges": {
+    "n": 2232,
+    "p50": 0.6,
+    "p95": 1.7,
+    "max": 17.3
+   },
+   "belief_owners_of": {
+    "n": 1389,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 120.9
+   },
+   "chains_for_entity": {
+    "n": 289,
+    "p50": 0.2,
+    "p95": 1.1,
+    "max": 6.0
+   },
+   "confirms_of": {
+    "n": 4,
+    "p50": 0.7,
+    "p95": 0.9,
+    "max": 0.9
+   },
+   "current_in_chain": {
+    "n": 50,
+    "p50": 0.4,
+    "p95": 1.4,
+    "max": 4.1
+   },
+   "decision_status": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 10.4
+   },
+   "decision_trace": {
+    "n": 291,
+    "p50": 0.6,
+    "p95": 1.5,
+    "max": 30.9
+   },
+   "decisions_affecting": {
+    "n": 28,
+    "p50": 0.2,
+    "p95": 2.0,
+    "max": 3.9
+   },
+   "demo_identity": {
+    "n": 1,
+    "p50": 0.8,
+    "p95": 0.8,
+    "max": 0.8
+   },
+   "depends_on": {
+    "n": 15,
+    "p50": 0.2,
+    "p95": 0.7,
+    "max": 0.7
+   },
+   "directory_decisions": {
+    "n": 22,
+    "p50": 1.5,
+    "p95": 5.6,
+    "max": 6.3
+   },
+   "directory_people": {
+    "n": 72,
+    "p50": 2.0,
+    "p95": 5.1,
+    "max": 6.3
+   },
+   "directory_projects": {
+    "n": 22,
+    "p50": 0.9,
+    "p95": 2.5,
+    "max": 2.9
+   },
+   "directory_systems": {
+    "n": 22,
+    "p50": 1.2,
+    "p95": 3.3,
+    "max": 4.4
+   },
+   "directory_tickets": {
+    "n": 22,
+    "p50": 4.1,
+    "p95": 6.3,
+    "max": 7.1
+   },
+   "dispute_chains": {
+    "n": 148,
+    "p50": 0.4,
+    "p95": 1.3,
+    "max": 3.8
+   },
+   "dispute_edge": {
+    "n": 264,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 3.4
+   },
+   "disputed_run": {
+    "n": 189,
+    "p50": 0.2,
+    "p95": 0.8,
+    "max": 2.1
+   },
+   "doc_evidence": {
+    "n": 1,
+    "p50": 0.9,
+    "p95": 0.9,
+    "max": 0.9
+   },
+   "entity": {
+    "n": 71,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 1.2
+   },
+   "entity_name": {
+    "n": 1465,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 8.3
+   },
+   "entity_names": {
+    "n": 1411,
+    "p50": 2.3,
+    "p95": 5.6,
+    "max": 225.9
+   },
+   "entity_sources": {
+    "n": 71,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 1.7
+   },
+   "evidence_fragment": {
+    "n": 1280,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 6.6
+   },
+   "existing_spans": {
+    "n": 1,
+    "p50": 0.8,
+    "p95": 0.8,
+    "max": 0.8
+   },
+   "experts_signals": {
+    "n": 5,
+    "p50": 4.1,
+    "p95": 8.4,
+    "max": 8.4
+   },
+   "graph_edge_kinds": {
+    "n": 22,
+    "p50": 4.3,
+    "p95": 11.4,
+    "max": 11.8
+   },
+   "graph_edges": {
+    "n": 29,
+    "p50": 7.0,
+    "p95": 18.9,
+    "max": 22.5
+   },
+   "graph_nodes": {
+    "n": 29,
+    "p50": 1.9,
+    "p95": 4.7,
+    "max": 5.8
+   },
+   "graph_ticks": {
+    "n": 22,
+    "p50": 2.3,
+    "p95": 4.5,
+    "max": 12.7
+   },
+   "group_counts": {
+    "n": 2,
+    "p50": 1.9,
+    "p95": 2.5,
+    "max": 2.5
+   },
+   "impact_dependents": {
+    "n": 29,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 2.2
+   },
+   "integrity_chains": {
+    "n": 1,
+    "p50": 2.9,
+    "p95": 2.9,
+    "max": 2.9
+   },
+   "integrity_i1": {
+    "n": 1,
+    "p50": 3.5,
+    "p95": 3.5,
+    "max": 3.5
+   },
+   "integrity_i11": {
+    "n": 1,
+    "p50": 3.1,
+    "p95": 3.1,
+    "max": 3.1
+   },
+   "integrity_i5": {
+    "n": 1,
+    "p50": 4.9,
+    "p95": 4.9,
+    "max": 4.9
+   },
+   "integrity_sentinel": {
+    "n": 1,
+    "p50": 0.4,
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "latest_spans": {
+    "n": 1,
+    "p50": 0.5,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "lead_at": {
+    "n": 253,
+    "p50": 0.2,
+    "p95": 0.8,
+    "max": 3.1
+   },
+   "learn_ents": {
+    "n": 4,
+    "p50": 0.4,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "link_exact": {
+    "n": 486,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 15.8
+   },
+   "link_fulltext": {
+    "n": 486,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 5.2
+   },
+   "link_vector": {
+    "n": 486,
+    "p50": 0.7,
+    "p95": 2.1,
+    "max": 8.1
+   },
+   "live_confirmations": {
+    "n": 189,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 2.0
+   },
+   "names": {
+    "n": 1,
+    "p50": 5.1,
+    "p95": 5.1,
+    "max": 5.1
+   },
+   "neighbourhood": {
+    "n": 61,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 2.8
+   },
+   "nodes_by_id": {
+    "n": 61,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 0.8
+   },
+   "overview_decisions": {
+    "n": 94,
+    "p50": 0.4,
+    "p95": 1.9,
+    "max": 6.0
+   },
+   "overview_pending": {
+    "n": 94,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 6.4
+   },
+   "overview_teams": {
+    "n": 94,
+    "p50": 1.1,
+    "p95": 3.4,
+    "max": 19.2
+   },
+   "owner_at": {
+    "n": 247,
+    "p50": 0.2,
+    "p95": 1.0,
+    "max": 3.4
+   },
+   "pending_proposals": {
+    "n": 10,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "people": {
+    "n": 20,
+    "p50": 1.6,
+    "p95": 7.5,
+    "max": 14.1
+   },
+   "person_name": {
+    "n": 1739,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 16.5
+   },
+   "produced_assertions": {
+    "n": 1488,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 9.9
+   },
+   "produced_sources": {
+    "n": 1488,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 25.3
+   },
+   "proposal_ends": {
+    "n": 1068,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 2.6
+   },
+   "proposal_links": {
+    "n": 2815,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 23.1
+   },
+   "proposals_about": {
+    "n": 291,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 1.8
+   },
+   "rationale_spans": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 3.2
+   },
+   "recent_actions": {
+    "n": 50,
+    "p50": 0.8,
+    "p95": 1.9,
+    "max": 2.4
+   },
+   "related_at": {
+    "n": 60,
+    "p50": 0.4,
+    "p95": 0.8,
+    "max": 1.8
+   },
+   "replaced_by": {
+    "n": 291,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 3.5
+   },
+   "replaces_out": {
+    "n": 291,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 3.2
+   },
+   "revisions": {
+    "n": 2,
+    "p50": 0.4,
+    "p95": 0.8,
+    "max": 0.8
+   },
+   "run_members": {
+    "n": 2106,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 5.5
+   },
+   "search_fulltext": {
+    "n": 18,
+    "p50": 0.6,
+    "p95": 0.9,
+    "max": 0.9
+   },
+   "search_vector": {
+    "n": 18,
+    "p50": 1.1,
+    "p95": 3.9,
+    "max": 3.9
+   },
+   "session_spans": {
+    "n": 50,
+    "p50": 0.7,
+    "p95": 1.3,
+    "max": 3.5
+   },
+   "snap_betweenness": {
+    "n": 21,
+    "p50": 1.8,
+    "p95": 14.0,
+    "max": 26.3
+   },
+   "snap_dependents": {
+    "n": 110,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 0.9
+   },
+   "snap_leaders": {
+    "n": 42,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 1.1
+   },
+   "snap_meta": {
+    "n": 88,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 0.8
+   },
+   "snap_node_count": {
+    "n": 21,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "snap_owns": {
+    "n": 21,
+    "p50": 0.4,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "snap_pagerank": {
+    "n": 22,
+    "p50": 0.4,
+    "p95": 1.8,
+    "max": 76.0
+   },
+   "snap_part_of": {
+    "n": 21,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 0.7
+   },
+   "snap_paths": {
+    "n": 26,
+    "p50": 0.4,
+    "p95": 0.7,
+    "max": 2.0
+   },
+   "snap_person_edges": {
+    "n": 105,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 7.3
+   },
+   "snap_wcc": {
+    "n": 21,
+    "p50": 1.0,
+    "p95": 1.6,
+    "max": 19.0
+   },
+   "snapshot_touches": {
+    "n": 7,
+    "p50": 5.8,
+    "p95": 6.3,
+    "max": 6.3
+   },
+   "snapshot_version": {
+    "n": 91,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 3.5
+   },
+   "source_exists": {
+    "n": 2,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 1.0
+   },
+   "source_view": {
+    "n": 20,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 1.3
+   },
+   "span_details": {
+    "n": 1428,
+    "p50": 0.5,
+    "p95": 1.5,
+    "max": 11.0
+   },
+   "span_facts": {
+    "n": 13,
+    "p50": 0.2,
+    "p95": 0.8,
+    "max": 0.8
+   },
+   "span_view": {
+    "n": 20,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 0.5
+   },
+   "stale_detection": {
+    "n": 22,
+    "p50": 3.7,
+    "p95": 7.5,
+    "max": 8.6
+   },
+   "stale_override": {
+    "n": 22,
+    "p50": 1.6,
+    "p95": 3.2,
+    "max": 7.0
+   },
+   "stated_by_latest": {
+    "n": 1,
+    "p50": 0.9,
+    "p95": 0.9,
+    "max": 0.9
+   },
+   "statement": {
+    "n": 125,
+    "p50": 0.1,
+    "p95": 0.2,
+    "max": 1.0
+   },
+   "strongest_member": {
+    "n": 3538,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 17.9
+   },
+   "ticket_about": {
+    "n": 70,
+    "p50": 0.5,
+    "p95": 1.1,
+    "max": 3.2
+   },
+   "turn_count": {
+    "n": 348,
+    "p50": 0.5,
+    "p95": 1.0,
+    "max": 2.8
+   },
+   "turn_span": {
+    "n": 4,
+    "p50": 0.5,
+    "p95": 1.2,
+    "max": 1.2
+   },
+   "unsupported": {
+    "n": 1,
+    "p50": 11.4,
+    "p95": 11.4,
+    "max": 11.4
+   },
+   "withdrawn_by": {
+    "n": 24,
+    "p50": 0.3,
+    "p95": 0.6,
+    "max": 0.7
+   }
+  },
+  "tools": {
+   "critical_systems": {
+    "n": 20,
+    "p50": 17.2,
+    "p95": 20.8,
+    "max": 21.8
+   },
+   "connection_between": {
+    "n": 20,
+    "p50": 17.9,
+    "p95": 22.3,
+    "max": 22.4
+   },
+   "key_people": {
+    "n": 20,
+    "p50": 15.8,
+    "p95": 80.9,
+    "max": 82.8
+   },
+   "knowledge_gaps": {
+    "n": 20,
+    "p50": 10.1,
+    "p95": 11.8,
+    "max": 12.0
+   }
+  },
+  "rebuild": {
+   "runs_s": [
+    0.042,
+    0.043,
+    0.031,
+    0.033,
+    0.027
+   ],
+   "p50_s": 0.033,
+   "max_s": 0.043
+  },
+  "write_plan": {
+   "n": 1353,
+   "p50": 4.2,
+   "p95": 8.7,
+   "max": 70.4
+  },
+  "unexercised": [
+   "action_draft",
+   "action_evidence",
+   "action_targets",
+   "any_confirmed",
+   "any_person",
+   "belief_parent_of",
+   "belief_primary_team",
+   "chain_meta",
+   "confirmed_proposals",
+   "confirmed_targets",
+   "draft_decision",
+   "draft_status",
+   "graph_mentioned",
+   "owner_inherited",
+   "owner_previous",
+   "past_belief_members",
+   "past_belief_run",
+   "paths_between",
+   "session"
+  ],
+  "slowest": [
+   "all_entities",
+   "graph_edges",
+   "snap_betweenness",
+   "graph_edge_kinds",
+   "unsupported"
+  ],
+  "profiles": {},
+  "errors": [],
+  "questions": 445
+ },
+ {
+  "version": "4.22.0",
+  "scale": 10,
+  "build": {
+   "seed_s": 10.0,
+   "total_s": 72.6,
+   "nodes": 26279,
+   "edges": 69346,
+   "assertions": 5726,
+   "spans": 10116,
+   "entities": 1430
+  },
+  "templates": {
+   "action": {
+    "n": 1656,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 10.4
+   },
+   "action_log": {
+    "n": 10,
+    "p50": 0.3,
+    "p95": 0.6,
+    "max": 0.6
+   },
+   "action_read": {
+    "n": 1739,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 16.5
+   },
+   "all_entities": {
+    "n": 3,
+    "p50": 16.9,
+    "p95": 24.2,
+    "max": 24.2
+   },
+   "already_confirmed": {
+    "n": 600,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 2.6
+   },
+   "assertion": {
+    "n": 1928,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 7.2
+   },
+   "assertions_by_id": {
+    "n": 1856,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 8.3
+   },
+   "based_on_spans": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 6.9
+   },
+   "belief_all_leads": {
+    "n": 424,
+    "p50": 1.5,
+    "p95": 3.1,
+    "max": 10.6
+   },
+   "belief_lead_of": {
+    "n": 2774,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 12.5
+   },
+   "belief_out_edges": {
+    "n": 2232,
+    "p50": 1.0,
+    "p95": 2.4,
+    "max": 23.9
+   },
+   "belief_owners_of": {
+    "n": 2474,
+    "p50": 0.3,
+    "p95": 0.6,
+    "max": 8.2
+   },
+   "chains_for_entity": {
+    "n": 432,
+    "p50": 0.3,
+    "p95": 1.0,
+    "max": 4.4
+   },
+   "confirms_of": {
+    "n": 4,
+    "p50": 0.6,
+    "p95": 1.9,
+    "max": 1.9
+   },
+   "current_in_chain": {
+    "n": 50,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 1.4
+   },
+   "decision_status": {
+    "n": 144,
+    "p50": 0.4,
+    "p95": 1.3,
+    "max": 4.5
+   },
+   "decision_trace": {
+    "n": 310,
+    "p50": 0.6,
+    "p95": 1.4,
+    "max": 6.4
+   },
+   "decisions_affecting": {
+    "n": 44,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 1.6
+   },
+   "demo_identity": {
+    "n": 1,
+    "p50": 2.0,
+    "p95": 2.0,
+    "max": 2.0
+   },
+   "depends_on": {
+    "n": 30,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 1.6
+   },
+   "directory_decisions": {
+    "n": 22,
+    "p50": 10.9,
+    "p95": 23.8,
+    "max": 26.7
+   },
+   "directory_people": {
+    "n": 112,
+    "p50": 22.1,
+    "p95": 38.1,
+    "max": 255.9
+   },
+   "directory_projects": {
+    "n": 22,
+    "p50": 6.0,
+    "p95": 11.4,
+    "max": 12.8
+   },
+   "directory_systems": {
+    "n": 22,
+    "p50": 9.1,
+    "p95": 19.1,
+    "max": 19.7
+   },
+   "directory_tickets": {
+    "n": 22,
+    "p50": 31.1,
+    "p95": 59.7,
+    "max": 67.1
+   },
+   "dispute_chains": {
+    "n": 188,
+    "p50": 1.7,
+    "p95": 7.8,
+    "max": 27.9
+   },
+   "dispute_edge": {
+    "n": 2640,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 12.6
+   },
+   "disputed_run": {
+    "n": 1274,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 5.0
+   },
+   "doc_evidence": {
+    "n": 1,
+    "p50": 0.9,
+    "p95": 0.9,
+    "max": 0.9
+   },
+   "entity": {
+    "n": 132,
+    "p50": 0.2,
+    "p95": 0.3,
+    "max": 2.2
+   },
+   "entity_name": {
+    "n": 1369,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 3.9
+   },
+   "entity_names": {
+    "n": 1772,
+    "p50": 6.8,
+    "p95": 13.5,
+    "max": 470.4
+   },
+   "entity_sources": {
+    "n": 132,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 3.9
+   },
+   "evidence_fragment": {
+    "n": 1506,
+    "p50": 0.4,
+    "p95": 1.2,
+    "max": 8.1
+   },
+   "existing_spans": {
+    "n": 1,
+    "p50": 2.4,
+    "p95": 2.4,
+    "max": 2.4
+   },
+   "experts_signals": {
+    "n": 5,
+    "p50": 77.5,
+    "p95": 120.8,
+    "max": 120.8
+   },
+   "graph_edge_kinds": {
+    "n": 22,
+    "p50": 40.6,
+    "p95": 211.9,
+    "max": 243.0
+   },
+   "graph_edges": {
+    "n": 29,
+    "p50": 52.1,
+    "p95": 308.1,
+    "max": 347.5
+   },
+   "graph_nodes": {
+    "n": 29,
+    "p50": 17.3,
+    "p95": 186.3,
+    "max": 224.9
+   },
+   "graph_ticks": {
+    "n": 22,
+    "p50": 14.5,
+    "p95": 18.9,
+    "max": 32.3
+   },
+   "group_counts": {
+    "n": 2,
+    "p50": 15.2,
+    "p95": 20.1,
+    "max": 20.1
+   },
+   "impact_dependents": {
+    "n": 45,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 1.1
+   },
+   "integrity_chains": {
+    "n": 1,
+    "p50": 29.3,
+    "p95": 29.3,
+    "max": 29.3
+   },
+   "integrity_i1": {
+    "n": 1,
+    "p50": 233.2,
+    "p95": 233.2,
+    "max": 233.2
+   },
+   "integrity_i11": {
+    "n": 1,
+    "p50": 8.5,
+    "p95": 8.5,
+    "max": 8.5
+   },
+   "integrity_i5": {
+    "n": 1,
+    "p50": 76.5,
+    "p95": 76.5,
+    "max": 76.5
+   },
+   "integrity_sentinel": {
+    "n": 1,
+    "p50": 0.6,
+    "p95": 0.6,
+    "max": 0.6
+   },
+   "latest_spans": {
+    "n": 1,
+    "p50": 0.4,
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "lead_at": {
+    "n": 343,
+    "p50": 0.2,
+    "p95": 0.6,
+    "max": 40.6
+   },
+   "learn_ents": {
+    "n": 4,
+    "p50": 0.3,
+    "p95": 1.4,
+    "max": 1.4
+   },
+   "link_exact": {
+    "n": 521,
+    "p50": 0.3,
+    "p95": 0.9,
+    "max": 6.7
+   },
+   "link_fulltext": {
+    "n": 521,
+    "p50": 0.5,
+    "p95": 1.3,
+    "max": 3.2
+   },
+   "link_vector": {
+    "n": 521,
+    "p50": 0.8,
+    "p95": 2.3,
+    "max": 14.9
+   },
+   "live_confirmations": {
+    "n": 1274,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 3.2
+   },
+   "names": {
+    "n": 1,
+    "p50": 15.1,
+    "p95": 15.1,
+    "max": 15.1
+   },
+   "neighbourhood": {
+    "n": 122,
+    "p50": 0.4,
+    "p95": 1.2,
+    "max": 24.8
+   },
+   "nodes_by_id": {
+    "n": 122,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 1.4
+   },
+   "overview_decisions": {
+    "n": 134,
+    "p50": 1.8,
+    "p95": 5.5,
+    "max": 17.2
+   },
+   "overview_pending": {
+    "n": 134,
+    "p50": 0.3,
+    "p95": 1.1,
+    "max": 4.4
+   },
+   "overview_teams": {
+    "n": 134,
+    "p50": 9.2,
+    "p95": 23.8,
+    "max": 232.0
+   },
+   "owner_at": {
+    "n": 331,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 2.8
+   },
+   "pending_proposals": {
+    "n": 10,
+    "p50": 1.8,
+    "p95": 11.8,
+    "max": 11.8
+   },
+   "people": {
+    "n": 20,
+    "p50": 13.0,
+    "p95": 18.2,
+    "max": 23.4
+   },
+   "person_name": {
+    "n": 1739,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 5.5
+   },
+   "produced_assertions": {
+    "n": 1488,
+    "p50": 0.4,
+    "p95": 1.1,
+    "max": 11.3
+   },
+   "produced_sources": {
+    "n": 1488,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 5.2
+   },
+   "proposal_ends": {
+    "n": 1068,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 12.3
+   },
+   "proposal_links": {
+    "n": 2817,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 38.4
+   },
+   "proposals_about": {
+    "n": 310,
+    "p50": 0.2,
+    "p95": 0.7,
+    "max": 2.7
+   },
+   "rationale_spans": {
+    "n": 144,
+    "p50": 0.3,
+    "p95": 0.8,
+    "max": 22.2
+   },
+   "recent_actions": {
+    "n": 50,
+    "p50": 0.7,
+    "p95": 2.3,
+    "max": 3.2
+   },
+   "related_at": {
+    "n": 66,
+    "p50": 0.4,
+    "p95": 1.0,
+    "max": 9.3
+   },
+   "replaced_by": {
+    "n": 310,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 4.0
+   },
+   "replaces_out": {
+    "n": 310,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 3.0
+   },
+   "revisions": {
+    "n": 2,
+    "p50": 0.3,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "run_members": {
+    "n": 4220,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 11.5
+   },
+   "search_fulltext": {
+    "n": 20,
+    "p50": 0.6,
+    "p95": 0.8,
+    "max": 1.1
+   },
+   "search_vector": {
+    "n": 20,
+    "p50": 1.3,
+    "p95": 2.8,
+    "max": 3.9
+   },
+   "session_spans": {
+    "n": 50,
+    "p50": 0.7,
+    "p95": 1.7,
+    "max": 3.5
+   },
+   "snap_betweenness": {
+    "n": 21,
+    "p50": 85.4,
+    "p95": 110.6,
+    "max": 212.2
+   },
+   "snap_dependents": {
+    "n": 115,
+    "p50": 0.3,
+    "p95": 0.7,
+    "max": 11.5
+   },
+   "snap_leaders": {
+    "n": 42,
+    "p50": 0.6,
+    "p95": 1.6,
+    "max": 4.4
+   },
+   "snap_meta": {
+    "n": 89,
+    "p50": 0.2,
+    "p95": 0.7,
+    "max": 1.3
+   },
+   "snap_node_count": {
+    "n": 21,
+    "p50": 0.3,
+    "p95": 0.3,
+    "max": 0.3
+   },
+   "snap_owns": {
+    "n": 21,
+    "p50": 2.2,
+    "p95": 3.4,
+    "max": 3.6
+   },
+   "snap_pagerank": {
+    "n": 23,
+    "p50": 1.7,
+    "p95": 19.0,
+    "max": 169.1
+   },
+   "snap_part_of": {
+    "n": 21,
+    "p50": 1.8,
+    "p95": 2.3,
+    "max": 2.8
+   },
+   "snap_paths": {
+    "n": 26,
+    "p50": 0.2,
+    "p95": 1.1,
+    "max": 3.6
+   },
+   "snap_person_edges": {
+    "n": 105,
+    "p50": 0.5,
+    "p95": 1.2,
+    "max": 2.2
+   },
+   "snap_wcc": {
+    "n": 21,
+    "p50": 8.2,
+    "p95": 10.2,
+    "max": 98.1
+   },
+   "snapshot_touches": {
+    "n": 7,
+    "p50": 62.0,
+    "p95": 92.4,
+    "max": 92.4
+   },
+   "snapshot_version": {
+    "n": 92,
+    "p50": 1.2,
+    "p95": 2.5,
+    "max": 4.2
+   },
+   "source_exists": {
+    "n": 2,
+    "p50": 0.3,
+    "p95": 1.2,
+    "max": 1.2
+   },
+   "source_view": {
+    "n": 20,
+    "p50": 0.4,
+    "p95": 0.6,
+    "max": 1.7
+   },
+   "span_details": {
+    "n": 1664,
+    "p50": 0.6,
+    "p95": 1.8,
+    "max": 23.1
+   },
+   "span_facts": {
+    "n": 2,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 0.5
+   },
+   "span_view": {
+    "n": 20,
+    "p50": 0.4,
+    "p95": 4.2,
+    "max": 4.5
+   },
+   "stale_detection": {
+    "n": 22,
+    "p50": 33.9,
+    "p95": 52.0,
+    "max": 54.0
+   },
+   "stale_override": {
+    "n": 22,
+    "p50": 12.9,
+    "p95": 21.8,
+    "max": 67.4
+   },
+   "stated_by_latest": {
+    "n": 1,
+    "p50": 1.3,
+    "p95": 1.3,
+    "max": 1.3
+   },
+   "statement": {
+    "n": 1241,
+    "p50": 0.2,
+    "p95": 0.4,
+    "max": 9.8
+   },
+   "strongest_member": {
+    "n": 3538,
+    "p50": 0.2,
+    "p95": 0.5,
+    "max": 4.8
+   },
+   "ticket_about": {
+    "n": 72,
+    "p50": 0.6,
+    "p95": 3.4,
+    "max": 4.7
+   },
+   "turn_count": {
+    "n": 348,
+    "p50": 0.4,
+    "p95": 1.4,
+    "max": 5.7
+   },
+   "turn_span": {
+    "n": 4,
+    "p50": 0.4,
+    "p95": 1.8,
+    "max": 1.8
+   },
+   "unsupported": {
+    "n": 1,
+    "p50": 99.7,
+    "p95": 99.7,
+    "max": 99.7
+   },
+   "withdrawn_by": {
+    "n": 24,
+    "p50": 0.3,
+    "p95": 0.5,
+    "max": 1.0
+   }
+  },
+  "tools": {
+   "critical_systems": {
+    "n": 20,
+    "p50": 26.6,
+    "p95": 38.0,
+    "max": 43.4
+   },
+   "connection_between": {
+    "n": 20,
+    "p50": 3.0,
+    "p95": 4.2,
+    "max": 4.3
+   },
+   "key_people": {
+    "n": 20,
+    "p50": 128.0,
+    "p95": 155.6,
+    "max": 158.4
+   },
+   "knowledge_gaps": {
+    "n": 20,
+    "p50": 74.3,
+    "p95": 88.2,
+    "max": 139.0
+   }
+  },
+  "rebuild": {
+   "runs_s": [
+    0.294,
+    0.239,
+    0.619,
+    0.275,
+    0.258
+   ],
+   "p50_s": 0.275,
+   "max_s": 0.619
+  },
+  "write_plan": {
+   "n": 1353,
+   "p50": 5.0,
+   "p95": 11.2,
+   "max": 54.9
+  },
+  "unexercised": [
+   "action_draft",
+   "action_evidence",
+   "action_targets",
+   "any_confirmed",
+   "any_person",
+   "belief_parent_of",
+   "belief_primary_team",
+   "chain_meta",
+   "confirmed_proposals",
+   "confirmed_targets",
+   "draft_decision",
+   "draft_status",
+   "graph_mentioned",
+   "owner_inherited",
+   "owner_previous",
+   "past_belief_members",
+   "past_belief_run",
+   "paths_between",
+   "session"
+  ],
+  "slowest": [
+   "graph_edges",
+   "integrity_i1",
+   "graph_edge_kinds",
+   "graph_nodes",
+   "experts_signals"
+  ],
+  "profiles": {
+   "graph_edges": "Results | Records produced: 2746, Execution time: 0.117389 ms\n    Project | Records produced: 2746, Execution time: 1.625531 ms\n        Filter | Records produced: 2746, Execution time: 3.646743 ms\n            Conditional Traverse | (a)-[e]->(b:Entity) | Records produced: 3041, Execution time: 20.602476 ms\n                Node By Label Scan | (a:Entity) | Records produced: 1574, Execution time: 0.106193 ms",
+   "integrity_i1": "Results | Records produced: 3531, Execution time: 0.150241 ms\n    Aggregate | Records produced: 3531, Execution time: 32.626862 ms\n        Filter | Records produced: 4361, Execution time: 4.721769 ms\n            Node By Label Scan | (a:Assertion) | Records produced: 7511, Execution time: 0.312620 ms",
+   "graph_edge_kinds": "Results | Records produced: 2746, Execution time: 0.113503 ms\n    Aggregate | Records produced: 2746, Execution time: 10.734507 ms\n        Filter | Records produced: 3536, Execution time: 1.002421 ms\n            Conditional Traverse | (a)-[ev:EVIDENCED_BY]->(s:Span) | Records produced: 3886, Execution time: 6.297250 ms\n                Node By Index Scan | (a:Assertion) | Records produced: 3526, Execution time: 20.602644 ms",
+   "graph_nodes": "Results | Records produced: 1574, Execution time: 0.066410 ms\n    Project | Records produced: 1574, Execution time: 0.588366 ms\n        Node By Label Scan | (n:Entity) | Records produced: 1574, Execution time: 0.056505 ms",
+   "experts_signals": "Results | Records produced: 1, Execution time: 0.002500 ms\n    Aggregate | Records produced: 1, Execution time: 1.141163 ms\n        Optional Conditional Traverse | (d)-[db:DECIDED_BY]->(p5:Person) | Records produced: 1, Execution time: 0.240623 ms\n            Optional Conditional Traverse | (d)-[af:AFFECTS]->(d) | Records produced: 1, Execution time: 0.283750 ms\n                Aggregate | Records produced: 1, Execution time: 74.732961 ms\n                    Apply | Records produced: 2520, Execution time: 0.223690 ms\n                        Aggregate | Records produced: 1, Execution time: 1.068366 ms\n                            Apply | Records produced: 120, Execution time: 0.013135 ms\n                                Aggregate | Records produced: 1, Execution time: 0.054417 ms\n                                    Apply | Records produced: 1, Execution time: 0.003208 ms\n                                        Aggregate | Records produced: 1, Execution time: 0.065291 ms\n                                            Apply | Records produced: 44, Execution time: 0.004465 ms\n                                                Node By Index Scan | (x:Entity) | Records produced: 1, Execution time: 0.022291 ms\n                                                Optional | Records produced: 44, Execution time: 0.002539 ms\n                                                    Conditional Traverse | (s)->(p:Person) | Records produced: 44, Execution time: 0.142581 ms\n                                                        Filter | Records produced: 64, Execution time: 0.015211 ms\n                                                            Conditional Traverse | (s)->(s) | Records produced: 66, Execution time: 0.124537 ms\n                                                                Argument | Records produced: 1, Execution time: 0.000000 ms\n                                        Optional | Records produced: 1, Execution time: 0.000124 ms\n                                            Filter | Records produced: 0, Execution time: 0.000168 ms\n                                                Conditional Traverse | (p2)-[r:OWNS|:WORKS_ON|:LEADS]->(p2) | Records produced: 0, Execution time: 0.054416 ms\n                                                    Argument | Records produced: 1, Execution time: 0.000083 ms\n                                Optional | Records produced: 120, Execution time: 0.005001 ms\n                                    Filter | Records produced: 120, Execution time: 0.054654 ms\n                                        Edge By Index Scan | [l:LEADS] | Records produced: 120, Execution time: 0.116382 ms\n                                            Filter | Records produced: 1, Execution time: 0.013333 ms\n                                                Edge By Index Scan | [o:OWNS] | Records produced: 1, Execution time: 0.019917 ms\n                                                    Argument | Records produced: 1, Execution time: 0.000041 ms\n                        Optional | Records produced: 2520, Execution time: 0.131004 ms\n                            Filter | Records produced: 2520, Execution time: 1.310673 ms\n                                Edge By Index Scan | [asg:ASSIGNED_TO] | Records produced: 2940, Execution time: 1.929179 ms\n                                    Filter | Records produced: 7, Execution time: 1.999742 ms\n                                        Edge By Index Scan | [ab:ABOUT] | Records produced: 7, Execution time: 0.065123 ms\n                                            Argument | Records produced: 1, Execution time: 0.000000 ms"
+  },
+  "errors": [],
+  "questions": 476
+ }
+]
