@@ -173,3 +173,30 @@ def test_llm_claims_with_a_string_fact_or_only_an_action_citation_are_handled(wo
     assert not _uncited({"action_ids": ["ac_1"]}, ix) and not _uncited({"path_id": "p_1"}, ix)
     assert _uncited({"span_ids": ["sp_x"]}, ix) and _uncited({}, ix)
     assert index_packs   # the real index carries actions and paths too
+
+
+def test_the_checker_sees_a_current_claim_and_the_whole_answers_evidence(world, monkeypatch):
+    """Gate C11 (A/B seeds 1-2): 3 of 4 blocks were false. A proposal was checked as if stated as fact, and
+    "answerable" saw only the first claim's spans. The checker now takes the first current claim (a proposal is
+    labelled as one) and judges answerability on all the answer's cited spans."""
+    from api.verifier import index_packs  # noqa: F401
+    seen = []
+
+    def decide(role, state, questions, timeout=None):
+        seen.append(state)
+        return {"model": "typesafe/jev-1.14", "answers": {k: {"noul": 0.9} for k in questions}}
+    monkeypatch.setattr(agent_mod.providers, "decide", decide)
+    agent = Agent(world["g"], world["clock"])
+    packs = {"p": {"pack_id": "p", "tool": "t", "args": {}, "items": [{
+        "item_id": "i", "label": "graph", "path": None, "actions": [], "note": "",
+        "facts": [{"assertion_id": "a1", "statement": "Infra owns Ledger", "status": "proposed", "predicate": "OWNS"},
+                  {"assertion_id": "a2", "statement": "Payments owns Ledger", "status": "current", "predicate": "OWNS"}],
+        "spans": [{"span_id": "s1", "text": "draft: Infra owns Ledger", "cites": ["a1"]},
+                  {"span_id": "s2", "text": "catalogue: Payments owns Ledger", "cites": ["a2"]}]}]}}
+    kept = [{"claim_id": "c1", "tense": "proposed", "assertion_ids": ["a1"], "span_ids": ["s1"]},
+            {"claim_id": "c2", "tense": "current", "assertion_ids": ["a2"], "span_ids": ["s2"]}]
+    agent._check("Who owns Ledger?", kept, packs)
+    assert "CLAIM: Payments owns Ledger" in seen[0] and "catalogue: Payments owns Ledger" in seen[0]
+    assert "ANSWER EVIDENCE" in seen[0] and "draft: Infra owns Ledger" in seen[0].split("ANSWER EVIDENCE", 1)[1]
+    agent._check("Is a change pending for Ledger?", kept[:1], packs)
+    assert "CLAIM (proposed, not yet confirmed): Infra owns Ledger" in seen[1]
