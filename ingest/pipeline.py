@@ -22,7 +22,7 @@ from brain.db import Graph
 from brain.write_path import Candidate, ValidationError, WritePath, validate
 
 from .connectors import SourceDoc, Unit, iso_ms, read_render, upload_docs
-from .extract import AliasIndex, extract, extractor_name
+from .extract import AliasIndex, extract, extractor_name, screen_injection
 from brain.ids import now_ms
 
 
@@ -57,6 +57,8 @@ class Ingestor:
         self.index: AliasIndex | None = None
         self.entities: dict[str, dict] = {}
         self.fail_after_stage8 = fail_after_stage8   # test hook: crash one Source before its marker
+        self.live = False             # an upload: the extractor model reads it (item 20 step 0)
+        self.screened: set[str] = set()   # Source ids the ingest screen flagged: spans only, no facts
 
     def ingest_render(self, render_dir: Path, seed: int | None = None) -> Report:
         docs = read_render(Path(render_dir))
@@ -74,6 +76,14 @@ class Ingestor:
                 d.author_id = people.get(d.author_id.lower(), "")
                 for u in d.units:
                     u.author_id = d.author_id
+        self.live = True
+        for d in docs:
+            res = screen_injection("\n\n".join(u.text for u in d.units))
+            if res and res["flagged"]:
+                self.screened.add(d.source_id)
+                self.report.add(source=d.source_id, outcome="injection_screened", model=res["model"], p=res["p"])
+            elif res and res.get("skipped"):
+                self.report.add(source=d.source_id, outcome="screen_skipped", error=res["skipped"])
         return self.ingest_docs(docs)
 
     def ingest_docs(self, docs: list[SourceDoc], seed: int | None = None) -> Report:
@@ -109,7 +119,7 @@ class Ingestor:
         """Run LLM extraction for every prose span of every Source in one global pool so the
         per-Source pipeline hits the provider cache. Chat messages are one span each, so without
         this phase 2 would be one slow call at a time. No-op without an LLM."""
-        if not providers.llm_available() or not self.index:
+        if not self.live or not providers.llm_available() or not self.index:
             return
         types = {k: registry.label_of(k) for k in self.entities}
         names = {k: v["name"] for k, v in self.entities.items()}
@@ -121,7 +131,7 @@ class Ingestor:
                     if ments:
                         jobs.append((u.text, ments))
         with ThreadPoolExecutor(max_workers=EXTRACT_WORKERS) as pool:
-            for _ in pool.map(lambda j: _safe_extract(j[0], j[1], types, names), jobs):
+            for _ in pool.map(lambda j: _safe_extract(j[0], j[1], types, names, self.live), jobs):
                 pass
 
     def _done(self, d: SourceDoc) -> bool:
@@ -245,6 +255,9 @@ class Ingestor:
     def _candidates(self, d: SourceDoc, units: list[Unit]) -> list[tuple[Candidate, str]]:
         if not hasattr(d.units[0] if d.units else None, "span_id"):
             self._span_records(d)
+        if d.source_id in self.screened:
+            store.set_source(self.g, d.source_id, {"screen": "injection"})
+            return []
         out: list[tuple[Candidate, str]] = []
         types = {k: registry.label_of(k) for k in self.entities}
         names = {k: v["name"] for k, v in self.entities.items()}
@@ -265,7 +278,7 @@ class Ingestor:
         # LLM extraction is I/O-bound (6–11 s per call on free-tier models): run the spans of one Source
         # concurrently, keeping unit order so the report and candidate order stay deterministic.
         with ThreadPoolExecutor(max_workers=EXTRACT_WORKERS) as pool:
-            extracted = list(pool.map(lambda um: extract(um[0].text, "", um[1], types, names), prose_units))
+            extracted = list(pool.map(lambda um: extract(um[0].text, "", um[1], types, names, self.live), prose_units))
         for (u, ments), xs in zip(prose_units, extracted):
             form = "chat" if d.kind in ("chat", "chat_session") else "prose"
             for x in xs:
@@ -279,7 +292,7 @@ class Ingestor:
                 vf, basis = (iso_ms(x.stated_date), "stated") if x.stated_date else (u.ts, "source_time")
                 out.append((Candidate(x.predicate, x.subject_id, x.object_id, x.object_value, x.qualifier,
                                       x.negated, vf, basis, u.span_id, x.quote_start, x.quote_end, d.source_id,
-                                      form, x.confidence, extractor_name()), u.text))
+                                      form, x.confidence, extractor_name(self.live)), u.text))
         return out
 
     # -- step 8 -----------------------------------------------------------------------------
@@ -386,9 +399,9 @@ class Ingestor:
         wp.execute(plan)
 
 
-def _safe_extract(text, ments, types, names):
+def _safe_extract(text, ments, types, names, live=False):
     try:
-        return extract(text, "", ments, types, names)
+        return extract(text, "", ments, types, names, live)
     except Exception:  # noqa: BLE001 - the per-Source pass will retry or fall back
         return None
 

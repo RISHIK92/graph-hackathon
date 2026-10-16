@@ -260,6 +260,9 @@ export interface Trace {
   turn_id: string;
   tool_calls: { name: string; args: Record<string, unknown>; pack_id: string; queries: QueryLog[]; sentence?: string }[];
   verification: { kept: number; dropped: unknown[]; rewritten: unknown[]; checks?: Record<string, number> } | null;
+  /** Item 20 step 0: the models this answer used, by role, and the live checker's result. */
+  models?: { role: string; model: string | null; result?: string }[];
+  check?: { result: string; reason?: string; model?: string };
   packs?: Record<string, Pack>;
 }
 

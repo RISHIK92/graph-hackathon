@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import type { Trace } from "@/lib/types";
 import { Chip, Details, ErrorState, Skeleton } from "./ui";
 
+const ROLE: Record<string, string> = { planner: "Understood the question", drafter: "Wrote the answer", checker: "Checked the answer",
+  escalation: "Rewrote after a failed check" };
+
 /** "How I answered": each step as a sentence, the query behind it under "Show query", the verifier; raw
  * tool names, arguments and packs only with ?debug=1 (M17). */
 export function TraceView({ turnId }: { turnId: string }) {
@@ -68,6 +71,22 @@ export function TraceView({ turnId }: { turnId: string }) {
             </div>
           )}
           {debug && v.dropped.length > 0 && <Details summary="Dropped claims"><pre className="code">{JSON.stringify(v.dropped, null, 1)}</pre></Details>}
+        </section>
+      )}
+      {(trace.models?.length || trace.check) && (
+        <section className="inspector-section">
+          <span className="t-label">Models</span>
+          {trace.models?.length ? (
+            <div className="stack t-small">
+              {trace.models.map((m, i) => (
+                <span key={i} className="row-wrap" style={{ gap: 6 }}>
+                  <Chip tone="neutral">{ROLE[m.role] || m.role}</Chip><code>{m.model || "unknown"}</code>
+                  {m.result && <span className="text-2">{m.result === "pass" ? "passed" : "failed"}</span>}
+                </span>
+              ))}
+            </div>
+          ) : <span className="t-small text-2">No model was used: the answer comes straight from the graph.</span>}
+          {trace.check && <span className="t-small text-2">Answer check: {trace.check.result}{trace.check.reason ? ` (${trace.check.reason})` : ""}.</span>}
         </section>
       )}
       {debug && trace.packs && <Details summary="Raw packs (debug)"><pre className="debug">{JSON.stringify(trace.packs, null, 1)}</pre></Details>}

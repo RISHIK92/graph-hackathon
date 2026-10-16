@@ -646,7 +646,7 @@ def query_graph(ctx: Ctx, question: str) -> dict:
     for attempt in range(2):
         res = providers.complete([{"role": "system", "content": "Write one FalkorDB Cypher read query. " + SCHEMA_CARD
                                    + " Reply with the query only."},
-                                  {"role": "user", "content": question}])
+                                  {"role": "user", "content": question}], role="planner")
         cypher = res["content"].strip().strip("`").removeprefix("cypher").strip()
         if not _single_read(cypher):
             continue
