@@ -29,6 +29,7 @@ import os
 import random
 import re
 import statistics
+import threading
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -259,7 +260,65 @@ def _trace_fields(agent: Agent, ans: dict) -> dict:
     graph's draft is not a model measurement)."""
     t = agent.turn_log.get(ans.get("turn_id"), {})
     return {"drafted": (t.get("verification") or {}).get("draft"), "models": t.get("models") or [],
-            "check": (t.get("check") or {}).get("result")}
+            "check": (t.get("check") or {}).get("result"), "draft_error": t.get("draft_error")}
+
+
+FIXED_SHAPE = {"4", "4-pending", "6", "9", "10", "11"}   # decision traces, pending, unanswerable, recall, counts,
+# rankings: fixed shapes the drafter never writes
+
+
+def fell_back(r: dict) -> bool:
+    """The drafter should have written it and didn't. A checker block returns the verified draft by design
+    and is reported separately (user decision, Oct 16)."""
+    blocked = str(r.get("check") or "").startswith(("fail", "escalation"))
+    return r.get("label") not in FIXED_SHAPE and not r.get("abstained") and r.get("drafted") == "deterministic" \
+        and not blocked
+
+
+class Guard:
+    """Abort a live run early (item 20 gate B3): after min_n answers, stop when more than 10% of the answers
+    the drafter should have written fell back to the graph's draft, any role's error rate passes 5%, the cost
+    per answer passes 3x the A/B figure, or p95 latency passes 15 s."""
+
+    def __init__(self, ab_cost_per_answer: float = 0.0, min_n: int = 15):
+        self.ab_cost, self.min_n = ab_cost_per_answer, min_n
+
+    def reason(self, rows: list[dict], stats: dict, answer_cost: float) -> str | None:
+        if len(rows) < self.min_n:
+            return None
+        eligible = [r for r in rows if r.get("label") not in FIXED_SHAPE and not r.get("abstained")]
+        fell = [r for r in eligible if fell_back(r)]
+        if eligible and len(fell) / len(eligible) > 0.10:
+            return f"{len(fell)} of {len(eligible)} answers fell back to the deterministic draft"
+        for role, s in sorted(stats.items()):
+            if s["calls"] and s["errors"] / s["calls"] > 0.05:
+                return f"{role} error rate {s['errors']}/{s['calls']}"
+        if self.ab_cost and answer_cost / len(rows) > 3 * self.ab_cost:
+            return f"cost per answer {answer_cost / len(rows):.5f} is over 3x the A/B's {self.ab_cost:.5f}"
+        p95 = _pct([r["latency_ms"] for r in rows if r.get("latency_ms") is not None], .95)
+        if p95 > 15_000:
+            return f"p95 latency {p95:.0f} ms is over 15 s"
+        return None
+
+
+class Progress:
+    """Completed rows, appended as they finish, so a crashed run resumes on the same cache (gate B4)."""
+
+    def __init__(self, out: Path, variant: str):
+        self.path = out / f"answer-{variant}.progress.jsonl"
+        self.rows = [json.loads(l) for l in self.path.read_text().splitlines()] if self.path.exists() else []
+        self._done = {(r["seed"], r["id"]) for r in self.rows}
+        self._lock = threading.Lock()
+
+    def done(self, q: dict) -> bool:
+        return (q["_seed"], q["id"]) in self._done
+
+    def add(self, row: dict) -> None:
+        with self._lock:
+            self.rows.append(row)
+            self._done.add((row["seed"], row["id"]))
+            with self.path.open("a") as f:
+                f.write(json.dumps(row) + "\n")
 
 
 def judge_agreement(rows: list[dict]) -> tuple[float | None, int]:
@@ -427,11 +486,52 @@ def _pool_map(fn, xs: list) -> list:
         return list(pool.map(fn, xs))
 
 
+def run_report(rows: list[dict]) -> list[str]:
+    """Gate B7: fallback, escalation and checker-block rates, and the models and providers that served."""
+    n = len(rows)
+    eligible = [r for r in rows if r.get("label") not in FIXED_SHAPE and not r.get("abstained")]
+    fell = sum(fell_back(r) for r in eligible)
+    esc = sum(any(m.get("role") == "escalation" for m in r.get("models") or []) for r in rows)
+    blocked = sum(bool(r.get("check")) and not str(r["check"]).startswith(("pass", "skipped")) or
+                  r.get("check") == "pass after escalation" for r in rows)
+    out = ["", "## Run report", "", "| Rate | Value |", "|---|---|",
+           f"| deterministic fallback | {fell} of {len(eligible)} answers the drafter should have written |",
+           f"| escalation | {esc} of {n} |", f"| checker blocked | {blocked} of {n} |"]
+    served: dict[str, int] = defaultdict(int)
+    for r in rows:
+        for m in r.get("models") or []:
+            served[f"{m.get('role')}: {m.get('model')} via {m.get('provider') or 'unknown'}"] += 1
+    out += ["", "Served: " + ("; ".join(f"{k} ({v})" for k, v in sorted(served.items())) or "no model calls")]
+    return out
+
+
+def write_question_hashes(out: Path, seeds: list[int]) -> None:
+    """Gate B6: the exact question files a run used."""
+    lines = [f"{hashlib.sha256((out / f'questions-seed{s}.jsonl').read_bytes()).hexdigest()}  questions-seed{s}.jsonl"
+             for s in seeds]
+    (out / "questions.sha256").write_text("\n".join(lines) + "\n")
+
+
+class EvalAborted(Exception):
+    pass
+
+
 def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None = None,
-        variants: list[str] | None = None, total: int = 0) -> str:
+        variants: list[str] | None = None, total: int = 0, ab_cost: float = 0.0) -> str:
     variants = variants or ["A", "D"]
     rows_by_v: dict[str, list[dict]] = defaultdict(list)
     setup_log: list[dict] = []
+    prog = {v: Progress(out, v) for v in variants}
+    write_question_hashes(out, seeds)
+    guard, aborted = Guard(ab_cost), {}
+
+    def one(agent, q: dict, v: str, seed: int, as_of: int) -> None:
+        if prog[v].done(q) or aborted:   # resumed, or the run is stopping
+            return
+        prog[v].add({"seed": seed, "variant": v, **evaluate(agent, q, as_of, v)})
+        why = guard.reason(prog[v].rows, providers.STATS, cost_per_answer(1))
+        if why and not aborted:
+            aborted["reason"] = why
     for seed in seeds:
         seed_dir = ROOT / "world" / "seeds" / str(seed)
         world = World.load(seed_dir)
@@ -451,11 +551,13 @@ def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None =
             if k:
                 groups[k].append(q)
         for v in variants:
-            if plain:
+            if plain and not aborted:
                 agent = VARIANT_AGENTS[v](g)
-                rows_by_v[v] += _pool_map(lambda q: {"seed": seed, "variant": v, **evaluate(agent, q, world.today, v)}, plain)
+                _pool_map(lambda q: one(agent, q, v, seed, world.today), plain)
         # scripted questions: one scratch graph per script, torn down afterwards (A63)
         for key, qsg in groups.items():
+            if aborted or all(prog[v].done(q) for v in variants for q in qsg):
+                continue
             from brain.cli import reset_seed
             sg = Graph(name=f"eval_scratch_{seed}_{key}")
             t0 = time.time()
@@ -469,14 +571,14 @@ def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None =
                 resolved = [resolve(q, refs) for q in qsg]
                 for v in variants:
                     agent = VARIANT_AGENTS[v](sg)
-                    rows_by_v[v] += _pool_map(lambda q: {"seed": seed, "variant": v, **evaluate(agent, q, world.today, v)},
-                                              resolved)
+                    _pool_map(lambda q: one(agent, q, v, seed, world.today), resolved)
             finally:
                 try:
                     sg.delete()
                 except Exception:  # noqa: BLE001
                     pass
     for v in variants:
+        rows_by_v[v] = prog[v].rows
         (out / f"answer-{v}.jsonl").write_text("\n".join(json.dumps(r) for r in rows_by_v[v]))
     (out / "answer-setup.json").write_text(json.dumps(setup_log, indent=1))
     n = sum(len(r) for r in rows_by_v.values())
@@ -485,9 +587,16 @@ def run(seeds: list[int], out: Path, per_cat: int = 10, cats: list[str] | None =
         "judge": providers.role_models("judge"), "judge2": providers.role_models("judge2"),
         "answer_models": {r: providers.role_models(r) for r in ("planner", "drafter", "checker", "escalation")},
         "agreement": agree, "agreement_n": both, "cost_per_answer_usd": round(cost_per_answer(n), 6),
+        "role_calls": providers.STATS, "aborted": aborted.get("reason"),
         "cost_usd": {f"{r}:{m}": round(c, 6) for (r, m), c in providers.COSTS.items()}}, indent=1))
     text = summary(rows_by_v, variants, seeds, per_cat, setup_log)
+    for v in variants:
+        text += "\n".join(run_report(rows_by_v[v])) + "\n"
+    if aborted:
+        text = f"# ABORTED after {n} answers: {aborted['reason']}\n\nResume with the same command and cache.\n\n" + text
     (out / "answer-summary.md").write_text(text)
+    if aborted:
+        raise EvalAborted(aborted["reason"])
     return text
 
 
@@ -581,6 +690,7 @@ def main() -> None:
     ap.add_argument("--cats", nargs="*", default=None, help="category labels, e.g. 7 9 10 4-pending")
     ap.add_argument("--variants", nargs="*", default=None, choices=list(VARIANT_AGENTS))
     ap.add_argument("--per-cat", type=int, default=10)
+    ap.add_argument("--ab-cost", type=float, default=0.0, help="the A/B's cost per answer: abort over 3x it")
     ap.add_argument("--total", type=int, default=0, help="a stratified subset of this many questions, split evenly across seeds")
     ap.add_argument("--out", default=None, help="results dir (default evals/results/<git-sha>)")
     ap.add_argument("seeds_pos", nargs="*", type=int, help="(legacy) seeds as positional args")
@@ -588,7 +698,10 @@ def main() -> None:
     seeds = a.seeds_pos or a.seeds
     out = Path(a.out) if a.out else ROOT / "evals" / "results" / sha()
     out.mkdir(parents=True, exist_ok=True)
-    print(run(seeds, out, a.per_cat, a.cats, a.variants, a.total))
+    try:
+        print(run(seeds, out, a.per_cat, a.cats, a.variants, a.total, a.ab_cost))
+    except EvalAborted as e:
+        raise SystemExit(f"ABORTED: {e}") from None
 
 
 if __name__ == "__main__":

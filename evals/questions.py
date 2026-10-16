@@ -411,6 +411,29 @@ class Generator:
         leaderless = [x["id"] for x in self.world.w["teams"] if not self.cg.state(("LEADS", "", x["id"]), T)]
         if leaderless:
             algo.append(("Which teams have no lead right now?", sorted(leaderless)[0], ["LEADS"]))
+        ranked = sorted(systems, key=lambda x: (-len(dependents(x)), n[x]))
+        if dependents(top):   # gate C14: more phrasings and the top two, same declaration gold
+            algo += [("What is our most depended-on system?", top, ["DEPENDS_ON"]),
+                     ("Which system has the most other systems relying on it?", top, ["DEPENDS_ON"])]
+            if len(ranked) > 1 and dependents(ranked[1]) and len(dependents(ranked[1])) < len(dependents(top)):
+                algo.append(("Which two systems are the most critical?", ranked[1], ["DEPENDS_ON"]))
+        for x in sorted(systems, key=lambda x: n[x]):   # an owner team with no lead: a knowledge gap
+            own = self.cg.state(("OWNS", "", x), T)
+            if own and own["value"] in leaderless and not own["disputes"]:
+                algo.append((f"Is {n[x]} a knowledge gap, owned by a team with no lead?", own["value"], ["OWNS", "LEADS"]))
+                break
+        if leaderless:
+            algo.append(("Where are our knowledge gaps?", sorted(leaderless)[0], ["LEADS"]))
+        pairs = []
+        for x in sorted(systems, key=lambda x: n[x]):   # how a person reaches a system their team owns
+            own = self.cg.state(("OWNS", "", x), T)
+            if not own or own["disputes"] or not own["value"].startswith("team:"):
+                continue
+            ps = sorted(p for p in members.get(own["value"], set()))
+            if ps:
+                pairs.append((ps[len(pairs) % len(ps)], x, own["value"]))
+        for p, x, team in pairs[:6]:
+            algo.append((f"How is {n[p]} connected to {n[x]}?", team, ["MEMBER_OF", "OWNS"]))
         for text, gold, rel in algo:   # category 11: few enough to be asked every run, never sampled away
             self.out[11].append(self.q(11, text, expected_entities=[gold], groups=[], rel=rel,
                                        expected_answer={"entity": gold}, acceptable=["correct", "abstain"]))

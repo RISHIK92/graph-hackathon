@@ -105,5 +105,5 @@ def test_rows_record_how_each_answer_was_drafted():
         turn_log = {"t1": {"verification": {"draft": "llm"}, "models": [{"role": "drafter", "model": "m"}],
                            "check": {"result": "pass"}}}
     assert ev._trace_fields(A(), {"turn_id": "t1"}) == {"drafted": "llm", "models": [{"role": "drafter", "model": "m"}],
-                                                       "check": "pass"}
+                                                       "check": "pass", "draft_error": None}
     assert ev._trace_fields(A(), {"turn_id": "nope"})["drafted"] is None

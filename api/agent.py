@@ -146,6 +146,7 @@ class Agent:
                                and (recall or it["facts"] or x.get("source_id") != s.id)]   # learned here keeps its turn
         packs = {k: v for k, v in ctx.packs.items() if not k.startswith("_")}
         answer = {"claims": [], "explanation": ""} if gap else self.draft(text, plan, packs)
+        trace["draft_error"] = answer.get("llm_error")   # a timeout or failure, never a silent fallback
         yield {"event": "draft", "claims": len(answer["claims"])}
         ver = verify(answer, ctx.packs)
         redraft = ""
@@ -166,7 +167,8 @@ class Agent:
                 answer, ver, drafted = base, bver, "deterministic"
         answer, ver, drafted, trace["check"], checked = self._checked(text, plan, packs, answer, ver, drafted)
         trace["models"] = [*(plan.get("models") or []),
-                           *([{"role": "drafter", "model": answer["model"]}] if answer.get("model") else []), *checked]
+                           *([{"role": "drafter", "model": answer["model"], "provider": answer.get("provider")}]
+                             if answer.get("model") else []), *checked]
         trace["verification"] = {"kept": len(ver["kept"]), "dropped": ver["dropped"], "rewritten": ver["rewritten"],
                                  "draft": drafted, "redraft": redraft, "checks": ver["checks"]}
         yield {"event": "verification", "kept": len(ver["kept"]), "dropped": ver["dropped"],
@@ -210,7 +212,10 @@ class Agent:
         for key in re.findall(r"\b[A-Z][A-Z0-9]+-\d+\b", text):
             if key.lower() not in [x["text"].lower() for x in mentions]:
                 mentions.append({"text": key, "entity_id": ""})
-        if providers.llm_available():
+        h = heuristic_plan(text)
+        # The LLM's intent is used only where the rules say fact/other, and its date only when one is named
+        # (gate C12): a confident rule plan with no date skips the call.
+        if providers.llm_available() and (h["intent"] in ("fact", "other") or _DATED.search(text)):
             try:
                 res = providers.complete([
                     {"role": "system", "content": "Classify the user's request. intents: " + ", ".join(INTENTS)
@@ -222,17 +227,17 @@ class Agent:
                         "as_of": {"type": "string"}}, "required": ["intent", "wants_action"]}, role="planner",
                     timeout=PLAN_TIMEOUT_S)
                 j = res.get("json") or {}
-                h = heuristic_plan(text)
                 # Heuristic-first: the rules recognise the named intents and the explicit action verbs
                 # precisely; the LLM only classifies what they leave as "fact" or "other". A write is
                 # never requested on the LLM's word alone (A54: arguments and intent from the user's turn).
                 intent = h["intent"] if h["intent"] not in ("fact", "other") else \
                     (j.get("intent") if j.get("intent") in INTENTS and j.get("intent") != "action" else h["intent"])
                 return {"intent": intent, "mentions": mentions, "wants_action": h["wants_action"],
-                        "as_of": j.get("as_of", ""), "models": [{"role": "planner", "model": res.get("model")}]}
+                        "as_of": j.get("as_of", ""), "models": [{"role": "planner", "model": res.get("model"),
+                                                                 "provider": res.get("provider")}]}
             except Exception:  # noqa: BLE001
                 pass
-        return {**heuristic_plan(text), "mentions": mentions}
+        return {**h, "mentions": mentions}
 
     # tools
     def tool_calls(self, plan: dict, text: str, ctx: Ctx, s: Session) -> list[tuple[str, dict]]:
@@ -359,6 +364,11 @@ class Agent:
             return {**base, "llm_error": "failed"}
         if not llm["claims"]:   # an empty or abstaining LLM draft never vetoes the graph's answer (item 18)
             return base
+        ix = index_packs(packs)
+        for c in llm["claims"]:   # gate C10: a dropped or invented citation means the verified draft
+            cites = [*(c.get("span_ids") or []), *(c.get("assertion_ids") or [])]
+            if not cites or any(x not in ix.spans and x not in ix.facts for x in cites):
+                return {**base, "llm_error": "citation"}
         # Hybrid: the LLM's claims and explanation, plus any graph fact it left out. Free-tier models
         # often return no claims for large packs; the deterministic claims are always complete.
         kept = verify({"claims": [dict(c) for c in llm["claims"]]}, packs)["kept"]   # only survivors count as covered
@@ -367,7 +377,8 @@ class Agent:
         for i, c in enumerate(extra):
             c["claim_id"] = f"d{i + 1}"
         return {"claims": unresolved(relevant_claims(plan, llm["claims"] + extra), packs),
-                "explanation": llm.get("explanation", ""), "drafted": "llm", "model": llm.get("model")}
+                "explanation": llm.get("explanation", ""), "drafted": "llm", "model": llm.get("model"),
+                "provider": llm.get("provider")}
 
     def _llm_draft(self, text: str, plan: dict, packs: dict[str, dict], errors: list | None,
                    timeout: float | None = None, role: str = "drafter") -> dict:
@@ -397,7 +408,7 @@ class Agent:
                                  timeout=timeout, role=role)
         j = res.get("json") or {}
         return {"claims": normalise_claims(j.get("claims", []), packs), "explanation": j.get("explanation", ""),
-                "model": res.get("model")}
+                "model": res.get("model"), "provider": res.get("provider")}
 
     def _check(self, text: str, kept: list[dict], packs: dict[str, dict]) -> dict:
         """The live checker (item 20 step 0) on one claim and its cited spans: supported, answerable from the
@@ -411,7 +422,7 @@ class Agent:
         res = providers.decide("checker", state, CHECK_QUESTIONS, timeout=CHECK_TIMEOUT_S)
         p = {k: providers.decision_p(res, k) for k in CHECK_QUESTIONS}
         ok = (p["supported"] or 0) >= 0.5 and (p["answerable"] or 0) >= 0.5 and (p["injection"] or 0) < 0.5
-        return {"pass": ok, "model": res["model"], "p": p, "claim": claim}
+        return {"pass": ok, "model": res["model"], "p": p, "claim": claim, "provider": res.get("provider")}
 
     def _checked(self, text: str, plan: dict, packs: dict[str, dict], answer: dict, ver: dict,
                  drafted: str) -> tuple[dict, dict, str, dict, list[dict]]:
@@ -428,7 +439,8 @@ class Agent:
             first = self._check(text, ver["kept"], packs)
         except Exception as e:  # noqa: BLE001 - both checker models unavailable
             return answer, ver, drafted, {"result": "skipped", "reason": str(e)[:200]}, models
-        models.append({"role": "checker", "model": first["model"], "result": "pass" if first["pass"] else "fail"})
+        models.append({"role": "checker", "model": first["model"], "provider": first.get("provider"),
+                       "result": "pass" if first["pass"] else "fail"})
         if first["pass"]:
             return answer, ver, drafted, {"result": "pass", "model": first["model"], "p": first["p"]}, models
         base = deterministic_draft(plan, packs, text)
@@ -443,14 +455,15 @@ class Agent:
             how = "timed out" if esc.get("llm_error") == "timeout" else "failed"
             return (*fallback, {"result": f"escalation {how}; returned the graph's verified draft",
                                 "model": first["model"], "p": first["p"]}, models)
-        models.append({"role": "escalation", "model": esc.get("model")})
+        models.append({"role": "escalation", "model": esc.get("model"), "provider": esc.get("provider")})
         ever = verify(esc, packs)
         try:
             second = self._check(text, ever["kept"], packs) if ever["kept"] and not ever["abstained"] else None
         except Exception:  # noqa: BLE001
             second = None
         if second:
-            models.append({"role": "checker", "model": second["model"], "result": "pass" if second["pass"] else "fail"})
+            models.append({"role": "checker", "model": second["model"], "provider": second.get("provider"),
+                           "result": "pass" if second["pass"] else "fail"})
         if second and second["pass"]:
             return esc, ever, "llm", {"result": "pass after escalation", "model": second["model"], "p": second["p"]}, models
         return (*fallback, {"result": "failed twice; returned the graph's verified draft", "model": first["model"],
@@ -636,7 +649,9 @@ REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first veri
 ESCALATION_TIMEOUT_S = 5   # the escalation redraft after a failed check (item 20 step 0)
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
 DRAFT_TIMEOUT_S = 10
-CHECK_TIMEOUT_S = 5
+CHECK_TIMEOUT_S = 2   # gate C12: about 2 s
+_DATED = re.compile(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(19|20)\d\d\b|\bago\b|"
+                    r"yesterday|last (week|month|quarter|year)|\bas of\b", re.I)
 CHECK_QUESTIONS = {
     "supported": {"type": "noul", "instructions": "Is everything the CLAIM says stated by the EVIDENCE?",
                   "criteria": {"true": "The evidence states it; a paraphrase is fine.",

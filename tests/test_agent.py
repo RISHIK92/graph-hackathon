@@ -469,7 +469,9 @@ def test_redraft_after_verifier_errors_has_a_hard_timeout(world, monkeypatch):
         if errors:
             raise httpx.ReadTimeout("slow model")
         base = agent_mod.deterministic_draft(plan, packs, text)
-        bogus = {"claim_id": "x1", "text": "made up", "tense": "current", "span_ids": ["sp_missing"],
+        real = next(sp["span_id"] for p in packs.values() for it in p["items"] for sp in it["spans"])
+        # a real span with a quote it doesn't contain: the verifier drops it (an invented id would trip C10)
+        bogus = {"claim_id": "x1", "text": "made up", "tense": "current", "span_ids": [real],
                  "assertion_ids": [], "action_ids": [], "label": "text_only", "quote": "made up"}
         return {"claims": base["claims"] + [bogus], "explanation": ""}
 

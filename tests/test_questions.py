@@ -32,3 +32,15 @@ def test_judged_categories_carry_a_reference_answer_from_declarations(monkeypatc
     for q in judged:
         ref = q.get("reference_answer") or ""
         assert all(names[e] in ref for e in q["expected_entities"]), (q["question"], ref)
+
+
+def test_graph_algorithm_category_has_about_ten_questions_per_seed(monkeypatch):
+    """Gate C14: category 11 grows from 3 to about 10 per seed, gold from the declarations (dependents counted
+    from DEPENDS_ON facts, leads from LEADS, ownership from OWNS), never from the algorithms."""
+    monkeypatch.setattr(SpanGold, "spans", lambda self, ref, latest_only=False, states=None: [ref])
+    for seed in ("1", "2", "3"):
+        world = World.load(ROOT / "world" / "seeds" / seed)
+        algo = [q for q in questions.Generator(world, None, int(seed)).build() if q["category"] == 11]
+        assert 8 <= len(algo) <= 12, (seed, len(algo))
+        assert len({q["question"] for q in algo}) == len(algo)
+        assert all(q["expected_entities"] for q in algo)

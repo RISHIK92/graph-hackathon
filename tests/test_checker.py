@@ -116,6 +116,40 @@ def test_planner_and_drafter_calls_are_bounded(world, monkeypatch):
     monkeypatch.setattr(agent_mod.providers, "complete", complete)
     monkeypatch.setattr(agent_mod.providers, "decide", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("off")))
     ans, trace = _turn(world)
+    Agent(world["g"], world["clock"]).plan("Is Ledger fine?", None)   # the rules can't place it: the LLM plans
     assert ("planner", agent_mod.PLAN_TIMEOUT_S) in seen and ("drafter", agent_mod.DRAFT_TIMEOUT_S) in seen, seen
     assert agent_mod.PLAN_TIMEOUT_S <= 6 and agent_mod.DRAFT_TIMEOUT_S <= 10
     assert not ans["abstained"] and trace["verification"]["draft"] == "deterministic"
+
+
+def test_an_invented_or_missing_citation_returns_the_verified_draft(world, live, monkeypatch):
+    """Gate C10: if the drafter drops or invents a citation, the whole answer is the graph's verified draft."""
+    live([0.95])
+
+    def llm(self, text, plan, packs, errors=None, timeout=None, role="drafter"):
+        base = deterministic_draft(plan, packs, text)["claims"]
+        bad = dict(base[0], claim_id="x1", span_ids=["sp_made_up"], text="Infra owns Ledger")
+        return {"claims": base + [bad], "explanation": "drafted", "model": "deepseek/deepseek-v4.1-flash"}
+    monkeypatch.setattr(Agent, "_llm_draft", llm)
+    ans, trace = _turn(world)
+    assert trace["draft_error"] == "citation" and trace["verification"]["draft"] == "deterministic"
+    assert ans["assembled"]["explanation"] == "" and not ans["abstained"]
+
+
+def test_the_llm_planner_is_skipped_when_the_rules_are_sure(world, monkeypatch):
+    """Gate C12: the LLM's intent is only used when the rules say fact/other, so a confident rule plan with no
+    date in the question skips the planner call."""
+    seen = []
+
+    def complete(messages, schema=None, role=None, timeout=None, **kw):
+        seen.append(role)
+        return {"json": {"intent": "ownership", "wants_action": "none", "as_of": ""}, "model": "m"}
+    monkeypatch.setattr(agent_mod.providers, "llm_available", lambda: True)
+    monkeypatch.setattr(agent_mod.providers, "complete", complete)
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:eve")
+    assert agent.plan("Who owns Ledger?", s)["intent"] == "ownership" and "planner" not in seen
+    agent.plan("Who owned Ledger in March 2026?", s)
+    agent.plan("Is Ledger fine?", s)
+    assert seen.count("planner") == 2
+    assert agent_mod.CHECK_TIMEOUT_S <= 2
