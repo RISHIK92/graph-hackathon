@@ -511,8 +511,12 @@ class Agent:
                     raise Refused("this message reads as an instruction to the system, so it's kept as a chat "
                                   "turn but not recorded as a fact")
                 names = {m.entity_id: text[m.start:m.end] for m in ms}
-                xs = [x for x in extract(text, "", ms, types, names, live=True) if not x.hedged] or \
-                    [x for x in pattern_extract(text, ms, types) if not x.hedged]
+
+                def names_both(x) -> bool:   # the write path refuses a quote that doesn't name both (full run)
+                    q = text[x.quote_start:x.quote_end].lower()
+                    return all(names.get(e, "~").lower() in q for e in (x.subject_id, x.object_id) if e)
+                xs = [x for x in extract(text, "", ms, types, names, live=True) if not x.hedged and names_both(x)] \
+                    or [x for x in pattern_extract(text, ms, types) if not x.hedged]
                 if not xs:
                     raise Refused("I couldn't read a fact about two known entities from that")
                 x = xs[0]
@@ -665,7 +669,7 @@ def step_sentence(name: str, args: dict, pack: dict, entity_name) -> str:
 REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first verified draft stands
 ESCALATION_TIMEOUT_S = 10   # the redraft after a failed check: Haiku needed about 7 s in the A/B (user decision)
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
-DRAFT_TIMEOUT_S = 10
+DRAFT_TIMEOUT_S = 15   # laguna's multi-hop drafts took about 12 s in the full run (user decision)
 CHECK_TIMEOUT_S = 2   # gate C12: about 2 s
 _DATED = re.compile(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(19|20)\d\d\b|\bago\b|"
                     r"yesterday|last (week|month|quarter|year)|\bas of\b", re.I)

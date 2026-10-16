@@ -16,9 +16,11 @@ def _live(monkeypatch):
     monkeypatch.setattr(providers, "llm_available", lambda: True)
 
 
-def _row(i, drafted="llm", label="1", latency=900.0):
+def _row(i, drafted="llm", label="1", latency=900.0, error=None):
+    """drafted="deterministic" is a drafter failure unless error=False (a fixed shape the drafter skips)."""
+    err = ("failed" if drafted == "deterministic" else None) if error is None else (error or None)
     return {"seed": 1, "variant": "D", "id": f"c{label}-{i:03d}", "label": label, "abstained": False,
-            "drafted": drafted, "latency_ms": latency}
+            "drafted": drafted, "latency_ms": latency, "draft_error": err}
 
 
 def test_the_guard_waits_for_fifteen_answers():
@@ -29,8 +31,8 @@ def test_the_guard_waits_for_fifteen_answers():
 def test_the_guard_stops_on_deterministic_fallbacks():
     rows = [_row(i) for i in range(12)] + [_row(12 + i, "deterministic") for i in range(3)]
     assert "fell back" in ev.Guard().reason(rows, {}, 0.0)
-    fixed = [_row(i) for i in range(13)] + [_row(13, "deterministic", "4"), _row(14, "deterministic", "10")]
-    assert ev.Guard().reason(fixed, {}, 0.0) is None   # decision traces and counts never use the drafter
+    fixed = [_row(i) for i in range(12)] + [_row(12 + i, "deterministic", "1", error=False) for i in range(3)]
+    assert ev.Guard().reason(fixed, {}, 0.0) is None   # a fixed shape the drafter skips (full run: ADR status)
 
 
 def test_the_guard_stops_on_role_errors_cost_and_latency():
@@ -98,7 +100,8 @@ def test_run_resumes_and_aborts(monkeypatch, tmp_path):
     def evaluate(agent, q, as_of, v="D"):
         calls.append(q["id"])
         return {"id": q["id"], "category": 1, "label": "1", "abstained": False, "must_abstain": False,
-                "drafted": "deterministic" if len(calls) > 16 else "llm", "latency_ms": 100.0, "draft_citations": 0}
+                "drafted": "deterministic" if len(calls) > 16 else "llm", "latency_ms": 100.0, "draft_citations": 0,
+                "draft_error": "failed" if len(calls) > 16 else None}
     monkeypatch.setattr(ev, "evaluate", evaluate)
     monkeypatch.setattr(ev, "VARIANT_AGENTS", {"D": lambda g: None})
     monkeypatch.setattr(ev, "_pool_map", lambda fn, xs: [fn(x) for x in xs])
@@ -139,10 +142,10 @@ def test_question_files_are_hashed_into_the_results(tmp_path):
 
 
 def test_checker_blocks_are_not_fallbacks():
-    rows = [_row(i) for i in range(12)] + [{**_row(12 + i, "deterministic"), "check": "failed twice; returned the graph's "
-                                            "verified draft"} for i in range(3)]
+    rows = [_row(i) for i in range(12)] + [{**_row(12 + i, "deterministic", error=False), "check": "failed twice; returned "
+                                            "the graph's verified draft"} for i in range(3)]
     assert ev.Guard().reason(rows, {}, 0.0) is None
-    assert ev.fell_back({**_row(1, "deterministic"), "label": "4-pending"}) is False
+    assert ev.fell_back({**_row(1, "deterministic", error=False), "label": "4-pending"}) is False
 
 
 def test_the_guard_needs_three_events_before_it_aborts():

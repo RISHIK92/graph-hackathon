@@ -268,11 +268,9 @@ FIXED_SHAPE = {"4", "4-pending", "6", "9", "10", "11"}   # decision traces, pend
 
 
 def fell_back(r: dict) -> bool:
-    """The drafter should have written it and didn't. A checker block returns the verified draft by design
-    and is reported separately (user decision, Oct 16)."""
-    blocked = str(r.get("check") or "").startswith(("fail", "escalation"))
-    return r.get("label") not in FIXED_SHAPE and not r.get("abstained") and r.get("drafted") == "deterministic" \
-        and not blocked
+    """The drafter was tried and failed (timeout, error, a bad citation). A fixed-shape answer the drafter never
+    writes (full run: decision status in category 1) and a checker block are not fallbacks."""
+    return bool(r.get("draft_error")) and not r.get("abstained")
 
 
 class Guard:

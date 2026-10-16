@@ -84,3 +84,19 @@ def test_flagged_chat_fact_is_refused_and_a_clean_one_uses_the_extractor(world, 
     ev = list(agent.turn(s, "Infra owns Ledger now"))
     act = next(e for e in ev if e["event"] in ("action", "refusal"))
     assert act["event"] == "action" and "extractor" in calls["complete"], act
+
+
+def test_a_chat_fact_whose_llm_quote_misses_a_name_falls_back_to_the_pattern(world, monkeypatch):  # noqa: F811
+    """Full-run finding (action eval): laguna's quote for 'Payments owns Ledger now' left out a name, so the
+    write path refused the learn_fact. An LLM fact whose quote doesn't name both entities yields to the
+    pattern extractor's."""
+    from api import agent as agent_mod
+    from api.agent import Agent
+    from ingest.extract import Extracted
+    monkeypatch.setattr(agent_mod, "screen_injection", lambda text: None)
+    monkeypatch.setattr(agent_mod, "extract", lambda text, *a, **k: [
+        Extracted("OWNS", "team:infra", "system:ledger", quote_start=0, quote_end=5)])
+    agent = Agent(world["g"], world["clock"])
+    s = agent.create_session("judge", "person:bob")
+    act = next(e for e in agent.turn(s, "Infra owns Ledger now") if e["event"] in ("action", "refusal"))
+    assert act["event"] == "action", act

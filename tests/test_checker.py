@@ -118,7 +118,7 @@ def test_planner_and_drafter_calls_are_bounded(world, monkeypatch):
     ans, trace = _turn(world)
     Agent(world["g"], world["clock"]).plan("Is Ledger fine?", None)   # the rules can't place it: the LLM plans
     assert ("planner", agent_mod.PLAN_TIMEOUT_S) in seen and ("drafter", agent_mod.DRAFT_TIMEOUT_S) in seen, seen
-    assert agent_mod.PLAN_TIMEOUT_S <= 6 and agent_mod.DRAFT_TIMEOUT_S <= 10
+    assert agent_mod.PLAN_TIMEOUT_S <= 6 and agent_mod.DRAFT_TIMEOUT_S <= 15
     assert not ans["abstained"] and trace["verification"]["draft"] == "deterministic"
 
 
