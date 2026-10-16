@@ -301,6 +301,7 @@ class Agent:
                 about = self.g.q("ticket_about", {"t": tgt, "m": MAX})
                 if about:
                     calls.append(("get_owner", {"entity_id": about[0]["x"]}))
+                calls.append(("explain_action", _route_action))
             else:
                 pred = "OWNS" if "own" in text.lower() else "LEADS" if "lead" in text.lower() else "OWNS"
                 key = tgt if pred == "OWNS" else tgt
@@ -1086,7 +1087,8 @@ def lead_sentence(plan: dict, kept: list[dict], packs: dict[str, dict], as_of: i
 def _past_lead(kept: list[dict], ix, at: int, acts: list[dict], now_statement) -> str:
     # An action's explanation speaks about the facts it relied on; it says so even when nothing changed.
     relied = set(acts[0].get("based_on") or []) if acts else set()
-    for c in kept:
+    # the owner first: its sentence adds the lead, while a lead alone would hide the owner change
+    for c in sorted(kept, key=lambda c: (ix.facts.get((c.get("assertion_ids") or [""])[0]) or {}).get("predicate") == "LEADS"):
         f = ix.facts.get((c.get("assertion_ids") or [""])[0])
         p = (f or {}).get("predicate")
         if c.get("label") != "graph" or p not in _PAST or not f["valid_from"] <= at < f["valid_to"] \
@@ -1224,6 +1226,14 @@ def _expert_ids(ctx: Ctx) -> dict | None:
     ids = [it["expert"]["person_id"] for p in ctx.packs.values() if p.get("tool") == "find_experts"
            for it in p["items"] if it.get("expert")]
     return {"person_ids": ids} if ids else None
+
+
+def _route_action(ctx: Ctx) -> dict | None:
+    """The ticket's latest routing: what it relied on then, which get_owner no longer returns once the owner
+    changed (item 19 walk)."""
+    acts = [a for p in ctx.packs.values() if p.get("tool") == "get_history" for it in p["items"]
+            for a in it.get("actions") or [] if a.get("kind") == "route_to_owner"]
+    return {"action_id": max(acts, key=lambda a: a.get("recorded_at") or 0)["action_id"]} if acts else None
 
 
 def _ranking_lead(intent: str, kept: list[dict], ix, packs: dict[str, dict]) -> str:

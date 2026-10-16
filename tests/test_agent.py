@@ -456,6 +456,24 @@ def test_action_explanation_leads_with_what_it_relied_on_then(world):
     assert answer_of(run(agent, s, "Who owns Ledger?"))["assembled"]["lead"] == "Payments owns Ledger. Priya Raman leads Payments."
 
 
+def test_action_explanation_survives_an_owner_change(world):
+    """Item 19 walk: once the owner changed, "Why did you route X?" still reads the routing's own record, so the
+    lead names the owner it relied on then and the change."""
+    g, wp, clock = world["g"], world["wp"], world["clock"]
+    r = Actions(g, clock).route_to_owner(Actor("person:eve"), ticket_id="ticket:rds-42")
+    clock.tick()
+    make_span(g, "sp_new_owner", "platform owns ledger", clock())
+    _fact(wp, "OWNS", "team:platform", "system:ledger", clock(), "sp_new_owner")
+    clock.tick()
+    agent = Agent(g, clock)
+    s = agent.create_session("judge", "person:eve")
+    ev = run(agent, s, "Why did you route RDS-42 to Priya?")
+    assert r["action_id"] in [e["args"].get("action_id") for e in ev if e["event"] == "tool_call"
+                              and e["name"] == "explain_action"]
+    lead = answer_of(ev)["assembled"]["lead"]
+    assert "Payments owned Ledger and Priya Raman led Payments" in lead and "(changed to Platform on " in lead, lead
+
+
 def test_a_draft_with_dropped_claims_is_not_redrafted(world, monkeypatch):
     """User decision after the full run: the verifier-driven redraft rescued at most 8 of 33 answers and drove the
     slow tail (verify p95 13.9 s). A dropped claim stays dropped; the surviving verified claims answer."""
