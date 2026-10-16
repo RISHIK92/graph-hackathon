@@ -1,0 +1,26 @@
+[
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_f996c5f3a9",
+  "steps": 6,
+  "questions": 1,
+  "refused": {},
+  "seconds": 9.0
+ },
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_9ebf485ae0",
+  "steps": 24,
+  "questions": 1,
+  "refused": {},
+  "seconds": 8.6
+ },
+ {
+  "seed": 1,
+  "graph": "eval_scratch_1_97d170e155",
+  "steps": 0,
+  "questions": 1,
+  "refused": {},
+  "seconds": 9.0
+ }
+]
