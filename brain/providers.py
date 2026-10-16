@@ -51,10 +51,32 @@ class LLMUnavailable(Exception):
     pass
 
 
-def llm_available() -> bool:
-    """Completions are on when a key is set and BRAIN_LLM isn't "off". Embeddings are independent
-    (see `embed`), so a retrieval run can use the graph's real embeddings with the LLM switched off."""
-    return bool(settings.openrouter_key) and os.environ.get("BRAIN_LLM", "on") != "off"
+DAILY: dict[str, object] = {}   # {"day": "YYYY-MM-DD", "n": uncached model requests that day}
+
+
+def _day() -> str:
+    return time.strftime("%Y-%m-%d", time.gmtime())
+
+
+def _tick() -> None:
+    if DAILY.get("day") != _day():
+        DAILY.update(day=_day(), n=0)
+    DAILY["n"] = int(DAILY["n"]) + 1
+
+
+def _under_cap() -> bool:
+    """BRAIN_LLM_DAILY_CAP (deploy): model requests per UTC day; past it, the graph's deterministic path."""
+    cap = int(os.environ.get("BRAIN_LLM_DAILY_CAP") or 0)
+    return not cap or DAILY.get("day") != _day() or int(DAILY.get("n") or 0) < cap
+
+
+def _llm_on() -> bool:
+    """Completions are on when a key is set, BRAIN_LLM isn't "off" and the daily cap isn't reached. Embeddings
+    are independent (see `embed`), so a retrieval run can use the graph's real embeddings with the LLM off."""
+    return bool(settings.openrouter_key) and os.environ.get("BRAIN_LLM", "on") != "off" and _under_cap()
+
+
+llm_available = _llm_on
 
 
 def embed_available() -> bool:
@@ -195,6 +217,7 @@ def _complete_one(messages: list[dict], schema: dict | None, tools: list[dict] |
     def call() -> dict:
         if not llm_available():
             raise LLMUnavailable("OPENROUTER_API_KEY not set")
+        _tick()
         def post(msgs: list[dict], use_schema: bool) -> httpx.Response:
             body: dict[str, Any] = {"model": model, "messages": msgs, "temperature": temperature, **extra,
                                     "usage": {"include": True}}
@@ -245,6 +268,7 @@ def decide(role: str, state: str, questions: dict, timeout: float | None = None)
         def call(model: str = model) -> dict:
             if not llm_available():
                 raise LLMUnavailable("OPENROUTER_API_KEY not set")
+            _tick()
             limit = {"timeout": timeout, "attempts": 1} if timeout else {}
             r = _post_retry(DECISIONS_URL, {"model": model, "state": state, "questions": questions}, **limit)
             r.raise_for_status()

@@ -1,0 +1,12 @@
+# Automatic HTTPS for the subdomain in BRAIN_DOMAIN (set in deploy/.env; never the apex).
+{$BRAIN_DOMAIN} {
+	encode gzip
+	handle_path /api/* {
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
+	}
+	handle {
+		reverse_proxy ui:3000
+	}
+}

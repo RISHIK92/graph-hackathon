@@ -181,3 +181,21 @@ def test_a_bounded_call_has_a_wall_clock_deadline(monkeypatch):
     fast = httpx.MockTransport(lambda req: httpx.Response(200, json={"ok": 1}))
     monkeypatch.setattr(providers, "TRANSPORT", fast)
     assert providers._post_retry(providers.CHAT_URL, {"model": "m"}, timeout=0.5, attempts=1).json() == {"ok": 1}
+
+
+def test_a_daily_cap_on_model_requests_falls_back_to_the_graph(live, monkeypatch):
+    """Deploy (item 21): BRAIN_LLM_DAILY_CAP bounds model requests per UTC day; past it the app answers from the
+    graph's deterministic path (llm_available is False) until the next day."""
+    monkeypatch.setenv("BRAIN_LLM_DAILY_CAP", "2")
+    monkeypatch.setattr(providers, "llm_available", providers._llm_on)   # the real check, not the fixture's
+    monkeypatch.setattr(providers, "settings", __import__("dataclasses").replace(providers.settings, openrouter_key="k"))
+    providers.DAILY.clear()
+    m = providers.role_models("planner")[0]
+    live({m: chat("ok")})
+    monkeypatch.setattr(providers, "llm_available", providers._llm_on)
+    for i in range(2):
+        assert providers.llm_available()
+        providers.complete([{"role": "user", "content": f"q{i}"}], role="planner")
+    assert not providers.llm_available()
+    providers.DAILY["day"] = "1999-01-01"   # a new day
+    assert providers.llm_available()

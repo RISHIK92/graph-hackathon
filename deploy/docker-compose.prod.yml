@@ -1,0 +1,35 @@
+# Public deploy (item 21): Caddy is the only service with host ports (80/443). FalkorDB, the API and the UI
+# are reachable only on the compose network; FalkorDB has no host port and no Browser.
+services:
+  falkordb:
+    image: falkordb/falkordb-server:6.0.1      # the tested pin (README A46)
+    volumes: ["falkor-data:/var/lib/falkordb/data"]
+    restart: unless-stopped
+  api:
+    build: { context: .., dockerfile: deploy/Dockerfile.api }
+    env_file: .env                             # on the VM only; see .env.prod.example
+    environment:
+      FALKOR_HOST: falkordb
+      FALKOR_PORT: "6379"
+      PAST_BELIEF_ENGINE: cypher                 # A46: goldens and full parity pass on the pin
+      BRAIN_TRUST_PROXY: "on"                    # the client IP comes from Caddy's X-Forwarded-For
+    depends_on: [falkordb]
+    restart: unless-stopped
+  ui:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.ui
+      args: { NEXT_PUBLIC_API_URL: "https://${BRAIN_DOMAIN}/api" }
+    depends_on: [api]
+    restart: unless-stopped
+  caddy:
+    image: caddy:2.8.4
+    ports: ["80:80", "443:443"]
+    environment: { BRAIN_DOMAIN: "${BRAIN_DOMAIN}" }
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy-data:/data", "caddy-config:/config"]
+    depends_on: [api, ui]
+    restart: unless-stopped
+volumes:
+  falkor-data:
+  caddy-data:
+  caddy-config:

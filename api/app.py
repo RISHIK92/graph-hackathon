@@ -52,8 +52,16 @@ def caller(request: Request, authorization: str | None = Header(default=None)) -
     has = admin or (bool(tok) and tok == settings.public_write_token)
     if has:
         STATE["last_token_activity"] = now_ms()
-    return Caller(token=has, admin=admin, user_id="judge" if has else "anonymous",
-                  ip=request.client.host if request.client else "?")
+    ip = request.client.host if request.client else "?"
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd and os.environ.get("BRAIN_TRUST_PROXY") == "on":   # behind Caddy (deploy): the client's own address
+        ip = fwd.split(",")[0].strip()
+    return Caller(token=has, admin=admin, user_id="judge" if has else "anonymous", ip=ip)
+
+
+def turn_limit(c: Caller) -> None:
+    """Every session's turns, per client IP and hour (deploy); anonymous turns also have their own limit."""
+    _rate(f"turn:{c.ip}", int(os.environ.get("BRAIN_TURNS_PER_IP_HOUR", "60")), 3_600_000)
 
 
 def _rate(key: str, limit: int, window_ms: int) -> None:
@@ -123,6 +131,7 @@ class TurnBody(BaseModel):
 @app.post("/sessions/{sid}/turns")
 def post_turn(sid: str, body: TurnBody, c: Caller = Depends(caller)):
     s = _session(sid, c)
+    turn_limit(c)
     if s.anonymous:
         _rate(f"anon:{c.ip}", 20, 600_000)
 
@@ -140,6 +149,7 @@ def post_turn(sid: str, body: TurnBody, c: Caller = Depends(caller)):
 def post_turn_sync(sid: str, body: TurnBody, c: Caller = Depends(caller)) -> dict:
     """Non-streaming variant (tests, MCP-less clients)."""
     s = _session(sid, c)
+    turn_limit(c)
     if s.anonymous:
         _rate(f"anon:{c.ip}", 20, 600_000)
     return {"events": [ev for ev in AGENT.turn(s, body.text, as_of=body.as_of, belief_at=body.belief_at)]}

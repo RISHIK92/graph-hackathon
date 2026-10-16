@@ -383,3 +383,20 @@ def test_gaps_endpoint_lists_cited_knowledge_gaps(api_client):
     systems = next(it for it in pack["items"] if "system" in it["aggregate"]["text"])
     assert "Orphan" in {m["name"] for m in systems["aggregate"]["members"]} and systems["facts"]
     assert client.get("/gaps", params={"as_of": 1}).status_code == 200
+
+
+def test_turns_are_rate_limited_per_client_ip_behind_the_proxy(api_client, monkeypatch):
+    """Deploy (item 21): behind Caddy, the client IP comes from X-Forwarded-For (BRAIN_TRUST_PROXY=on), and every
+    session's turns are limited per IP (BRAIN_TURNS_PER_IP_HOUR)."""
+    client, world = api_client
+    monkeypatch.setenv("BRAIN_TRUST_PROXY", "on")
+    monkeypatch.setenv("BRAIN_TURNS_PER_IP_HOUR", "2")
+    api_app.RATE.clear()
+    sid = client.post("/sessions", json={"user_id": "u", "acting_as": ""},
+                      headers={"Authorization": f"Bearer {settings.public_write_token}"}).json()["session_id"]
+    h = {"Authorization": f"Bearer {settings.public_write_token}", "X-Forwarded-For": "203.0.113.7, 10.0.0.2"}
+    for _ in range(2):
+        assert client.post(f"/sessions/{sid}/turns/sync", json={"text": "Who owns Ledger?"}, headers=h).status_code == 200
+    assert client.post(f"/sessions/{sid}/turns/sync", json={"text": "Who owns Ledger?"}, headers=h).status_code == 429
+    other = {**h, "X-Forwarded-For": "198.51.100.9"}
+    assert client.post(f"/sessions/{sid}/turns/sync", json={"text": "Who owns Ledger?"}, headers=other).status_code == 200
