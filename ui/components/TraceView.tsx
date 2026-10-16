@@ -35,7 +35,6 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
   if (!trace) return <div style={{ padding: 16 }} className="stack-3"><Skeleton w="40%" /><Skeleton h={80} /><Skeleton h={80} /></div>;
   const v = trace.verification;
   const queries = trace.tool_calls.flatMap((c) => c.queries);
-  const ms = queries.reduce((a, q) => a + (Number(q.ms) || 0), 0);
   const cited = spans || [];
   const openSpan = (sp: SpanItem) => openEvidence({ tab: "source", spanId: sp.span_id, sourceId: sp.source_id, quote: { start: sp.quote_start, end: sp.quote_end }, title: sp.title, path: path || null }, "push");
   return (
@@ -83,7 +82,7 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
 
         {tab === "cypher" && (
           <>
-            <div className="proof-meta">{queries.length} {queries.length === 1 ? "query" : "queries"} · {ms.toFixed(0)} ms</div>
+            <div className="proof-meta">{queries.length} {queries.length === 1 ? "query" : "queries"}</div>
             <div className="t-small text-2">What I looked up, in order. Each step shows the graph query it ran; a generated query is marked unverified.</div>
             {trace.tool_calls.map((c, i) => (
               <section key={i} className="inspector-section">
@@ -101,8 +100,6 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
                           <div className="row-wrap t-small text-2">
                             <Chip tone="neutral">{q.template}</Chip>
                             <span className="tnum">{q.rows} {q.rows === 1 ? "row" : "rows"}</span>
-                            <span>·</span>
-                            <span className="tnum">{q.ms.toFixed ? q.ms.toFixed(1) : q.ms} ms</span>
                           </div>
                           <pre className="code">{q.cypher}</pre>
                           {debug && <div className="t-small text-3"><code>{JSON.stringify(q.params)}</code></div>}

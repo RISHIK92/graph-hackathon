@@ -9,11 +9,11 @@ import { ConfirmControl, RefusalCard, WhoCan } from "@/components/ConfirmControl
 import { collectDisputes, DisputeLine } from "@/components/Dispute";
 import { nodeTone } from "@/components/TraceView";
 import { Button, Chip, Notice, Placeholder } from "@/components/ui";
-import { get, qs, streamTurn, type StreamEvent } from "@/lib/api";
+import { qs, streamTurn, type StreamEvent } from "@/lib/api";
 import { fmtDate, fmtDateTime, plural } from "@/lib/format";
 import { actionKindLabel, displayText, intentLabel, predicateLabel } from "@/lib/labels";
 import { type Turn, useApi, useStore } from "@/lib/store";
-import type { Claim, Directory, Fact, Pack, Path, Refusal, SpanItem, Trace } from "@/lib/types";
+import type { Claim, Directory, Fact, Pack, Path, Refusal, SpanItem } from "@/lib/types";
 
 
 // The empty state (design brief addendum, AskStart board): six questions on keys 1-6, each saying what it returns
@@ -253,10 +253,6 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
   nowTurn?: Turn; onThen: (asOf: number) => void; onFill: (q: string, caret?: number) => void;
 }) {
   const s = useStore();
-  const [trace, setTrace] = useState<Trace | null>(null);
-  useEffect(() => {
-    if (t.done && t.turnId && !t.error) get<Trace>(`/turns/${encodeURIComponent(t.turnId)}/trace`).then(setTrace).catch(() => setTrace(null));
-  }, [t.done, t.turnId, t.error]);
   const packs = useMemo(() => Object.values(t.answer?.packs || {}), [t.answer]);
   const spanIndex = useMemo(() => {
     const m = new Map<string, SpanItem>();
@@ -332,7 +328,6 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
   const proofPath = connectPath || (t.answer?.assembled.lead_claims || []).map((id) => claims.get(id)?.path_id).map((pid) => (pid ? pathIndex.get(pid) : undefined)).find((p) => !!p && p.steps.length > 1);
   const allSpans = useMemo(() => [...new Set((t.answer?.claims || []).flatMap((c) => c.span_ids))], [t.answer]);
   const openProof = (tab?: string) => t.turnId && s.openInspector({ kind: "trace", turnId: t.turnId, path: proofPath || null, spans: leadSpans.length ? leadSpans : allSpans.map((id) => spanIndex.get(id)).filter((sp): sp is SpanItem => !!sp).slice(0, 6), tab });
-  const ms = trace ? trace.tool_calls.flatMap((c) => c.queries).reduce((a, q) => a + (Number(q.ms) || 0), 0) : null;
   const pastAt = leadFact && leadFact.valid_from > 86_400_000 && !t.asOf && t.thenOf === undefined ? leadFact.valid_from - 86_400_000 : null;
   const disputable = leadFact && /^(.+?) (owns|leads) (.+)$/.exec(leadFact.statement);
   const limited = !!t.error && /429|rate limited/i.test(t.error);
@@ -417,7 +412,7 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
                       </span>
                     )) : <span>How I answered</span>}
                     <span className="meta">
-                      {proofPath ? `${plural(proofPath.steps.length - 1, "hop")} · ` : ""}{ms !== null ? `${ms.toFixed(0)} ms · ` : ""}{plural(allSpans.length, "source")}
+                      {proofPath ? `${plural(proofPath.steps.length - 1, "hop")} · ` : ""}{plural(allSpans.length, "source")}
                     </span>
                   </button>
                 )}
