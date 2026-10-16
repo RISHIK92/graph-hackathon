@@ -454,6 +454,9 @@ class Agent:
         if drafted != "llm":
             return answer, ver, drafted, {"result": "fail; the answer is the graph's verified draft",
                                           "model": first["model"], "p": first["p"]}, models
+        if os.environ.get("BRAIN_ESCALATION", "on") == "off":   # arm C: a blocked answer is the verified draft
+            return (*fallback, {"result": "fail; escalation off, returned the graph's verified draft",
+                                "model": first["model"], "p": first["p"]}, models)
         why = [f"checker: the claim “{first['claim']}” is not clearly supported by its evidence"]
         esc = self.draft(text, plan, packs, errors=why, timeout=ESCALATION_TIMEOUT_S, role="escalation")
         if esc.get("llm_error") or esc.get("drafted") != "llm":

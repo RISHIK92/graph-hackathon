@@ -200,3 +200,14 @@ def test_the_checker_sees_a_current_claim_and_the_whole_answers_evidence(world, 
     assert "ANSWER EVIDENCE" in seen[0] and "draft: Infra owns Ledger" in seen[0].split("ANSWER EVIDENCE", 1)[1]
     agent._check("Is a change pending for Ledger?", kept[:1], packs)
     assert "CLAIM (proposed, not yet confirmed): Infra owns Ledger" in seen[1]
+
+
+def test_escalation_can_be_switched_off(world, live, monkeypatch):
+    """Arm C (user decision): BRAIN_ESCALATION=off returns the graph's verified draft on a failed check, with
+    no redraft call."""
+    monkeypatch.setenv("BRAIN_ESCALATION", "off")
+    seen, drafts = live([0.1])
+    ans, trace = _turn(world)
+    assert drafts == [("drafter", agent_mod.DRAFT_TIMEOUT_S)]
+    assert trace["check"]["result"] == "fail; escalation off, returned the graph's verified draft"
+    assert trace["verification"]["draft"] == "deterministic" and not ans["abstained"]
