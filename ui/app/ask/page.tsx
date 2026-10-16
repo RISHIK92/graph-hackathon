@@ -242,8 +242,8 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain }: {
   const leadSpans = useMemo(() => [...new Set((t.answer?.assembled.lead_claims || []).flatMap((id) => claims.get(id)?.span_ids || []))]
     .map((id) => spanIndex.get(id)).filter((sp): sp is SpanItem => sp !== undefined).slice(0, 3), [t.answer, claims, spanIndex]);
   const lead = useMemo(() => {
+    if (answerLead) return answerLead;   // a lead that states every claim leaves no lines (item 20 contract)
     if (!lines.length) return "";
-    if (answerLead) return answerLead;
     const intent = String(plan?.intent || "");
     if (intent === "impact") {
       const breaks = groups.find(([k]) => k === "What breaks")?.[1].length || 0;
