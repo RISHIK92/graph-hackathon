@@ -38,7 +38,8 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          printf '%s' "$OPENROUTER_API_KEY" | ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" "NODUS_DOMAIN=$NODUS_DOMAIN bash -s" <<'SH'
+          # the script goes over first; then only the key is on stdin (a heredoc would replace the pipe)
+          ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" 'cat > /tmp/nodus-configure.sh' <<'SH'
           set -e
           key=$(cat)
           f=~/nodus/deploy/.env
@@ -63,6 +64,10 @@ jobs:
           open(path, "w").write(text)
           PY
           SH
+          printf '%s' "$OPENROUTER_API_KEY" | ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" \
+            "NODUS_DOMAIN=$NODUS_DOMAIN bash /tmp/nodus-configure.sh; rc=\$?; rm -f /tmp/nodus-configure.sh; exit \$rc"
+          ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" 'grep -q "^OPENROUTER_API_KEY=..*" ~/nodus/deploy/.env' \
+            || { echo "OpenRouter key missing on the VM (is the secret set?)"; exit 1; }
       - name: Start and seed
         run: |
           ssh -i ~/.ssh/nodus "ubuntu@$NODUS_HOST" 'set -e; cd ~/nodus
