@@ -604,3 +604,23 @@ svg.flag { color: var(--error-700); width: 12px; height: 12px; vertical-align: -
 }
 .nodus-tag { align-self: flex-start; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--primary); border: 1px solid var(--accent-100); border-radius: 999px; padding: 1px 8px; }
 .reply-text p { margin: 0; font-size: 16px; line-height: 1.6; }
+
+/* log-in and sign-up (item 24 step 1) */
+.auth { min-height: 100%; display: grid; place-items: center; padding: 48px 16px; }
+.auth-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px; }
+.auth-card h1 { margin: 0; font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; }
+.auth-card p { margin: 0; }
+.auth-card .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text-label); }
+.auth-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-label); }
+.auth-field input { font: inherit; font-size: 15px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; min-height: 44px; }
+.auth-field input:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+.auth-err { color: var(--dispute-text); background: var(--dispute-bg); border: 1px solid var(--dispute-border); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+.auth-submit { justify-content: center; width: 100%; min-height: 44px; }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--text-3); font-size: 12px; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.auth-demo { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; width: 100%; border: 1px solid var(--border-strong); border-radius: 12px; padding: 12px 14px; color: var(--text); font-weight: 500; transition: border-color var(--t-fast); }
+.auth-demo:hover:not(:disabled) { border-color: var(--primary); }
+.auth-demo small { color: var(--text-3); font-weight: 400; font-size: 12.5px; }
+.acct-menu { width: 280px; padding: 6px; }
+.acct-menu .who { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.demo-banner { background: var(--then-bg); border-bottom: 1px solid var(--then-border); color: var(--then); font-size: 13px; padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }

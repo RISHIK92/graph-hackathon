@@ -1,12 +1,12 @@
 "use client";
 
-import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, Search, Settings2, UserRound, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, LogOut, Search, Settings2, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dateInputValue, fmtDate, fmtDateTime, fromDateInput, initials } from "@/lib/format";
 import { useStore } from "@/lib/store";
-import { API_URL } from "@/lib/api";
+import { ACCOUNTS, API_URL } from "@/lib/api";
 import { CodingAgentHelp } from "./CodingAgentHelp";
 import { CommandPalette } from "./CommandPalette";
 import Inspector from "./Inspector";
@@ -65,6 +65,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [s, router]);
 
+  // item 24: with accounts on, the app pages need a log-in; the homepage and the log-in page don't
+  const open = path === "/" || path.startsWith("/login");
+  useEffect(() => {
+    if (ACCOUNTS && s.ready && s.account === null && !open) router.replace(`/login?next=${encodeURIComponent(path)}`);
+  }, [s.ready, s.account, open, path, router]);
   const past = !!s.asOf;
   return (
     <div className={`app ${hasInspector ? "has-inspector" : ""}`}>
@@ -93,12 +98,15 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <LiveStatus />
           <AsOfPill />
           <ActingMenu />
-          <AccessBadge />
+          {ACCOUNTS ? <AccountMenu /> : <AccessBadge />}
           <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
         </div>
       </header>
 
       <div className="main">
+        {ACCOUNTS && s.account?.demo && (
+          <div className="demo-banner" role="status">Shared demo workspace: anyone with the demo login sees this data. It&apos;s emptied every night.</div>
+        )}
         <div className={`content ${past ? "past" : ""}`}>
           {s.sessionError ? <ApiDown /> : children}
         </div>
@@ -121,6 +129,37 @@ function LiveStatus() {
     <button className={`live-dot ${state}`} onClick={() => s.setSessionSheetOpen(true)} title="Session settings">
       <span>{s.sessionError ? "API unreachable" : !s.session ? "Starting" : "Graph live"}</span>
     </button>
+  );
+}
+
+/** The account menu (item 24): who is logged in, their workspace, log out. Logged out: a Log in link. */
+function AccountMenu() {
+  const s = useStore();
+  const router = useRouter();
+  if (s.account === undefined) return null;
+  if (!s.account) return <Link href="/login" className="pill">Log in</Link>;
+  const a = s.account;
+  return (
+    <Popover
+      align="right"
+      trigger={({ toggle, open }) => (
+        <button className="pill" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title={a.email}>
+          <span className="truncate" style={{ maxWidth: 160 }}>{a.demo ? "Demo account" : a.email}</span>
+          <ChevronDown className="icon-sm" />
+        </button>
+      )}
+    >
+      {(close) => (
+        <div className="acct-menu" role="menu">
+          <div className="who">
+            <span className="t-strong truncate">{a.email}</span>
+            <span className="t-small text-3">Workspace {a.workspace}{a.demo ? " · shared demo" : ""}</span>
+          </div>
+          <div className="divider" />
+          <button className="menu-item" role="menuitem" onClick={async () => { close(); await s.logout(); router.push("/"); }}><LogOut className="icon-sm" />Log out</button>
+        </div>
+      )}
+    </Popover>
   );
 }
 

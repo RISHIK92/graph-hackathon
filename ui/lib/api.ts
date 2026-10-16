@@ -4,6 +4,13 @@ export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:800
 
 const TOKEN_KEY = "brain.token";
 
+/** Accounts and workspaces (item 24): a build flag, since a credentialed request needs the API's matching CORS. */
+export const ACCOUNTS = process.env.NEXT_PUBLIC_NODUS_ACCOUNTS === "on";
+const CREDENTIALS: RequestCredentials = ACCOUNTS ? "include" : "same-origin";
+let csrf = "";
+/** The session's CSRF token, echoed on every state-changing request made with the session cookie. */
+export function setCsrf(t: string): void { csrf = t; }
+
 export function getToken(): string {
   try {
     return localStorage.getItem(TOKEN_KEY) || "";
@@ -34,6 +41,7 @@ function headers(json = false): HeadersInit {
   const t = getToken();
   if (t) h["Authorization"] = `Bearer ${t}`;
   if (json) h["Content-Type"] = "application/json";
+  if (json && csrf) h["X-CSRF-Token"] = csrf;
   return h;
 }
 
@@ -74,15 +82,15 @@ export function get<T>(path: string): Promise<T> {
   const key = `${path}|${getToken()}`;
   const hit = inflight.get(key);
   if (hit) return hit as Promise<T>;
-  const req = fetch(`${API_URL}${path}`, { headers: headers(), cache: "no-store" })
+  const req = fetch(`${API_URL}${path}`, { headers: headers(), cache: "no-store", credentials: CREDENTIALS })
     .then((r) => parseResponse<T>(r))
     .finally(() => inflight.delete(key));
   inflight.set(key, req);
   return req;
 }
 
-export async function send<T>(method: "POST" | "PUT", path: string, body: unknown): Promise<T> {
-  const r = await fetch(`${API_URL}${path}`, { method, headers: headers(true), body: JSON.stringify(body ?? {}) });
+export async function send<T>(method: "POST" | "PUT" | "DELETE", path: string, body: unknown): Promise<T> {
+  const r = await fetch(`${API_URL}${path}`, { method, headers: headers(true), body: JSON.stringify(body ?? {}), credentials: CREDENTIALS });
   return parseResponse<T>(r);
 }
 
@@ -103,6 +111,7 @@ export async function streamTurn(
     headers: { ...headers(true), Accept: "text/event-stream" },
     body: JSON.stringify(body),
     signal,
+    credentials: CREDENTIALS,
   });
   if (!r.ok || !r.body) {
     await parseResponse(r);

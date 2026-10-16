@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { fetchNames, get, getToken, send, setToken as saveToken, type StreamEvent } from "./api";
+import { ACCOUNTS, fetchNames, get, getToken, send, setCsrf, setToken as saveToken, type StreamEvent } from "./api";
 import type { Claim, Line, NameMap, Pack, Path, Person, SpanItem } from "./types";
 
 // inspector views (DESIGN.md §2.3: one panel, one level, breadcrumb inside)
@@ -72,8 +72,15 @@ interface Session {
 }
 
 
+/** The logged-in account (item 24, NODUS_ACCOUNTS=on): its workspace is its own graph. */
+export interface Account { id: string; email: string; workspace: string; demo: boolean }
+
 interface Store {
   ready: boolean;
+  /** null: logged out; undefined: still checking (or accounts are off). */
+  account: Account | null | undefined;
+  login: (mode: "login" | "signup" | "demo", email?: string, password?: string) => Promise<void>;
+  logout: () => Promise<void>;
   token: string;
   setToken: (t: string) => void;
   session: Session | null;
@@ -164,16 +171,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     bump();
   }, [bump]);
 
-  // first load: token, debug flag, people, health
+  const [account, setAccount] = useState<Account | null | undefined>(undefined);
+  const takeMe = useCallback((m: { account: Account | null; csrf?: string }) => {
+    setCsrf(m.csrf || "");
+    setAccount(m.account);
+  }, []);
+  // first load: token, debug flag, health, and the logged-in account when accounts are on
   useEffect(() => {
     setTokenState(getToken());
     setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
-    get<Person[]>("/people").then(setPeople).catch(() => setPeople([]));
     get<{ next_reset_at: number | null }>("/health")
       .then((h) => setNextResetAt(h.next_reset_at ?? null))
       .catch(() => undefined);
-    setReady(true);
-  }, []);
+    if (!ACCOUNTS) { setReady(true); return; }
+    get<{ account: Account | null; csrf?: string }>("/auth/me").then(takeMe).catch(() => setAccount(null)).finally(() => setReady(true));
+  }, [takeMe]);
+  // people come from the account's workspace, so they reload when the account changes
+  useEffect(() => {
+    if (!ready) return;
+    get<Person[]>("/people").then(setPeople).catch(() => setPeople([]));
+  }, [ready, account?.workspace]);
+  const login = useCallback(async (mode: "login" | "signup" | "demo", email = "", password = "") => {
+    const m = await send<{ account: Account | null; csrf?: string }>("POST", `/auth/${mode}`, mode === "demo" ? {} : { email, password });
+    setThread([]);
+    takeMe(m);
+  }, [takeMe]);
+  const logout = useCallback(async () => {
+    await send("POST", "/auth/logout", {});
+    setThread([]);
+    takeMe({ account: null });
+  }, [takeMe]);
 
   // a session per page load and token: POST /sessions, acting-as restored from localStorage
   useEffect(() => {
@@ -193,7 +220,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setActing(s.acting_as);
       })
       .catch((e) => setSessionError(String(e.message || e)));
-  }, [ready, token, sessionTry]);
+  }, [ready, token, sessionTry, account?.id]);
 
   const refreshPending = useCallback(() => {
     if (!actingAs) return;
@@ -270,7 +297,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(
     () => ({
-      ready, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
+      ready, account, login, logout, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
       people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, pendingCount, debug,
       nextResetAt, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
@@ -279,7 +306,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       openEvidence: (t, mode = "replace") => (t ? openInspector({ kind: "evidence", target: t }, mode) : closeInspector()),
       toasts, toast, dismissToast, holdToasts: (on: boolean) => { toastHover.current = on; }, names, resolveNames,
     }),
-    [ready, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
+    [ready, account, login, logout, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
       lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],

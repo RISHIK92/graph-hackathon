@@ -23,11 +23,17 @@ from brain.config import MAX, settings
 from brain.db import Graph, GuardFailed, WriteMismatch
 from brain.tools import Ctx, chain_view, evidence, facts, run_tool, span_items
 
+from . import accounts
 from .agent import Agent, Session
 from brain.ids import now_ms
 
 app = FastAPI(title="Nodus")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+if accounts.enabled():   # a session cookie needs credentialed CORS, so only the UI's own origins (item 24)
+    app.add_middleware(CORSMiddleware, allow_origins=os.environ.get("NODUS_UI_ORIGINS", "http://localhost:3000").split(","),
+                       allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+else:
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.include_router(accounts.router)
 
 G = Graph()
 AGENT = Agent(G)
@@ -44,18 +50,23 @@ class Caller(BaseModel):
     admin: bool
     user_id: str
     ip: str
+    workspace: str | None = None   # the logged-in account's workspace graph (NODUS_ACCOUNTS=on)
 
 
 def caller(request: Request, authorization: str | None = Header(default=None)) -> Caller:
     tok = (authorization or "").removeprefix("Bearer ").strip()
     admin = bool(tok) and tok == settings.admin_token
-    has = admin or (bool(tok) and tok == settings.public_write_token)
-    if has:
-        STATE["last_token_activity"] = now_ms()
+    has = admin or (bool(tok) and tok == settings.public_write_token and not accounts.enabled())
     ip = request.client.host if request.client else "?"
     fwd = request.headers.get("x-forwarded-for", "")
     if fwd and os.environ.get("BRAIN_TRUST_PROXY") == "on":   # behind Caddy (deploy): the client's own address
         ip = fwd.split(",")[0].strip()
+    acct = None if has else accounts.current(request)
+    if acct:   # the account owner writes in their own workspace; this replaces the public write token (item 24)
+        accounts.check_csrf(request, acct)
+        return Caller(token=True, admin=False, user_id=f"acct_{acct['id']}", ip=ip, workspace=acct["workspace"])
+    if has:
+        STATE["last_token_activity"] = now_ms()
     return Caller(token=has, admin=admin, user_id="judge" if has else "anonymous", ip=ip)
 
 
