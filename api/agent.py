@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -442,6 +443,10 @@ class Agent:
         ok = (p["supported"] or 0) >= 0.5 and (p["answerable"] or 0) >= 0.5 and (p["injection"] or 0) < 0.5
         return {"pass": ok, "model": res["model"], "p": p, "claim": claim, "provider": res.get("provider")}
 
+    def _check_within(self, text: str, kept: list[dict], packs: dict[str, dict]) -> dict:
+        """_check under a hard wall-clock budget (CHECK_BUDGET_S, fallback included); raises TimeoutError."""
+        return _CHECKS.submit(self._check, text, kept, packs).result(timeout=CHECK_BUDGET_S)
+
     def _checked(self, text: str, plan: dict, packs: dict[str, dict], answer: dict, ver: dict,
                  drafted: str) -> tuple[dict, dict, str, dict, list[dict]]:
         """Checker, then escalation (item 20 step 0). The checker can only make an answer more cautious: a
@@ -454,7 +459,9 @@ class Agent:
         if ver["abstained"] or not ver["kept"]:
             return answer, ver, drafted, {"result": "skipped", "reason": "no answer to check"}, models
         try:
-            first = self._check(text, ver["kept"], packs)
+            first = self._check_within(text, ver["kept"], packs)
+        except FutureTimeout:   # over budget: the drafted, verified answer stands
+            return answer, ver, drafted, {"result": "skipped (budget)", "reason": f"over {CHECK_BUDGET_S:g} s"}, models
         except Exception as e:  # noqa: BLE001 - both checker models unavailable
             return answer, ver, drafted, {"result": "skipped", "reason": str(e)[:200]}, models
         models.append({"role": "checker", "model": first["model"], "provider": first.get("provider"),
@@ -479,7 +486,7 @@ class Agent:
         models.append({"role": "escalation", "model": esc.get("model"), "provider": esc.get("provider")})
         ever = verify(esc, packs)
         try:
-            second = self._check(text, ever["kept"], packs) if ever["kept"] and not ever["abstained"] else None
+            second = self._check_within(text, ever["kept"], packs) if ever["kept"] and not ever["abstained"] else None
         except Exception:  # noqa: BLE001
             second = None
         if second:
@@ -686,7 +693,9 @@ REDRAFT_TIMEOUT_S = 5   # the verifier-driven redraft; on timeout the first veri
 ESCALATION_TIMEOUT_S = 10   # the redraft after a failed check: Haiku needed about 7 s in the A/B (user decision)
 PLAN_TIMEOUT_S = 6   # one bounded attempt per model (A/B finding: an unbounded drafter call took 94 s)
 DRAFT_TIMEOUT_S = 15   # laguna's multi-hop drafts took about 12 s in the full run (user decision)
-CHECK_TIMEOUT_S = 2   # gate C12: about 2 s
+CHECK_BUDGET_S = 0.8   # the whole checker stage, fallback included (user decision): a safety layer, not a wait
+CHECK_TIMEOUT_S = CHECK_BUDGET_S
+_CHECKS = ThreadPoolExecutor(max_workers=8)   # a check over budget finishes in the background, unused
 _DATED = re.compile(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(19|20)\d\d\b|\bago\b|"
                     r"yesterday|last (week|month|quarter|year)|\bas of\b", re.I)
 CHECK_QUESTIONS = {

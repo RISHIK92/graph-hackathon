@@ -10,7 +10,7 @@ from api.agent import Agent, deterministic_draft
 
 from .test_actions import world  # noqa: F401
 from .test_templates import fx  # noqa: F401
-from .test_agent import answer_of, run
+from .test_agent import answer_of, run, shown
 
 
 @pytest.fixture
@@ -234,3 +234,21 @@ def test_post_run_fixes(fx, monkeypatch):  # noqa: F811
     ans = answer_of(run(agent, s, "Who owns Ledger?"))
     assert any(c.get("disputed") for c in ans["claims"]), ans["claims"]
     assert ans["assembled"]["explanation"] == ""
+
+
+def test_the_checker_has_a_hard_wall_clock_budget(world, live, monkeypatch):
+    """User decision: the whole checker stage (fallback included) gets 0.8 s; over budget the check is skipped,
+    the drafted answer stands with the deterministic guards applied, and the trace says so."""
+    import time as _t
+    live([0.95])
+
+    def slow(role, state, questions, timeout=None):
+        _t.sleep(2)
+        return {"model": "typesafe/jev-1.14", "answers": {k: {"noul": 0.1} for k in questions}}
+    monkeypatch.setattr(agent_mod.providers, "decide", slow)
+    t0 = _t.time()
+    ans, trace = _turn(world)
+    assert _t.time() - t0 < agent_mod.CHECK_BUDGET_S + 0.7 and agent_mod.CHECK_BUDGET_S <= 0.8
+    assert trace["check"]["result"] == "skipped (budget)"
+    assert not ans["abstained"] and ans["claims"] and trace["verification"]["dropped"] == []
+    assert any("Payments owns Ledger" in l["text"] for l in shown(ans))
