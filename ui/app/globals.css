@@ -631,3 +631,6 @@ svg.flag { color: var(--error-700); width: 12px; height: 12px; vertical-align: -
 .job-bar i { display: block; height: 100%; background: var(--primary); transition: width .4s var(--ease); }
 .start-card .text svg { vertical-align: -2px; color: var(--text-3); }
 a.start-card { text-decoration: none; }
+.source-card { border: 1px solid #1E2A26; background: #0F1513; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.source-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .source-fields { grid-template-columns: 1fr; } }

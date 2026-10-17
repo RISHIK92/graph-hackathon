@@ -6,13 +6,17 @@ The queries are account plumbing, not brain reads, so they stay inline like sche
 """
 from __future__ import annotations
 
+import base64
 import hashlib
+import json
+import os
 import re
 import secrets
 import uuid
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
+from cryptography.fernet import Fernet
 
 from .db import Graph
 from .ids import now_ms
@@ -28,6 +32,15 @@ class AccountError(Exception):
 
 def _h(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def _fernet() -> Fernet:
+    """Connector tokens are encrypted at rest with a key derived from NODUS_SECRET_KEY (a placeholder until the
+    user sets it); without it no token is stored."""
+    secret = os.environ.get("NODUS_SECRET_KEY", "")
+    if not secret:
+        raise AccountError("connecting a source needs NODUS_SECRET_KEY on the server")
+    return Fernet(base64.urlsafe_b64encode(hashlib.sha256(secret.encode()).digest()))
 
 
 def _account(row: dict) -> dict:
@@ -107,6 +120,37 @@ class AccountStore:
     def revoke_keys(self, account_id: str) -> None:
         self.g.write("MATCH (k:ApiKey)-[:OF_ACCOUNT]->(:Account {id:$id}) DELETE k", {"id": account_id},
                      template="accounts")
+
+    def set_connection(self, account_id: str, kind: str, cfg: dict) -> None:
+        enc = _fernet().encrypt(json.dumps(cfg).encode()).decode()
+        self.g.write("MATCH (a:Account {id:$id}) MERGE (a)<-[:OF_ACCOUNT]-(c:Connection {account:$id, kind:$k}) "
+                     "SET c.cfg = $enc, c.updated_at = $now", {"id": account_id, "k": kind, "enc": enc, "now": now_ms()},
+                     template="accounts")
+
+    def get_connection(self, account_id: str, kind: str) -> dict | None:
+        rows = self.g.ro("MATCH (c:Connection {account:$id, kind:$k}) RETURN c.cfg AS cfg", {"id": account_id, "k": kind},
+                         template="accounts")
+        return json.loads(_fernet().decrypt(rows[0]["cfg"].encode())) if rows else None
+
+    def connections(self, account_id: str) -> list[str]:
+        return [r["k"] for r in self.g.ro("MATCH (c:Connection {account:$id}) RETURN c.kind AS k ORDER BY k",
+                                          {"id": account_id}, template="accounts")]
+
+    def delete_connection(self, account_id: str, kind: str) -> None:
+        self.g.write("MATCH (c:Connection {account:$id, kind:$k}) DETACH DELETE c", {"id": account_id, "k": kind},
+                     template="accounts")
+
+    def oauth_state(self, account_id: str) -> str:
+        """A one-time state for an OAuth redirect (CSRF on the callback), valid for 10 minutes."""
+        state = secrets.token_urlsafe(24)
+        self.g.write("MATCH (a:Account {id:$id}) CREATE (a)<-[:OF_ACCOUNT]-(:OAuthState {token:$t, expires:$x})",
+                     {"id": account_id, "t": _h(state), "x": now_ms() + 600_000}, template="accounts")
+        return state
+
+    def check_oauth_state(self, account_id: str, state: str) -> bool:
+        rows = self.g.write("MATCH (s:OAuthState {token:$t})-[:OF_ACCOUNT]->(:Account {id:$id}) WITH s, s.expires > $now AS ok "
+                            "DELETE s RETURN ok", {"t": _h(state), "id": account_id, "now": now_ms()}, template="accounts").rows
+        return bool(rows and rows[0][0])
 
     def ensure_demo(self, email: str, password: str) -> dict:
         """The one shared demo account (user decision): created on first start, the same account after."""

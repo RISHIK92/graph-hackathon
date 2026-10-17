@@ -62,3 +62,21 @@ def test_ensure_demo_creates_the_shared_account_once(store):
     d2 = store.ensure_demo("demo@nodus.test", "demo password 1")
     assert d1["id"] == d2["id"] and d1["demo"] is True
     assert store.login("demo@nodus.test", "demo password 1")
+
+
+def test_connector_tokens_are_encrypted_at_rest(store, monkeypatch):
+    monkeypatch.setenv("NODUS_SECRET_KEY", "a test secret key")
+    a = store.signup("ana@example.com", "a long password")
+    store.set_connection(a["id"], "github", {"token": "ghp_secret123", "repo": "acme/x"})
+    assert "ghp_secret123" not in repr(store.g.ro("MATCH (n) RETURN properties(n) AS p"))
+    assert store.get_connection(a["id"], "github") == {"token": "ghp_secret123", "repo": "acme/x"}
+    assert store.connections(a["id"]) == ["github"]
+    store.delete_connection(a["id"], "github")
+    assert store.get_connection(a["id"], "github") is None
+
+
+def test_no_secret_key_means_no_stored_tokens(store, monkeypatch):
+    monkeypatch.delenv("NODUS_SECRET_KEY", raising=False)
+    a = store.signup("bo@example.com", "a long password")
+    with pytest.raises(AccountError, match="NODUS_SECRET_KEY"):
+        store.set_connection(a["id"], "linear", {"token": "lin_x"})

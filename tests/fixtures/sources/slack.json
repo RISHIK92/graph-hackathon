@@ -1,0 +1,58 @@
+{
+ "auth.test": {
+  "ok": true,
+  "url": "https://acme.slack.com/",
+  "team": "Acme"
+ },
+ "users.list": {
+  "ok": true,
+  "members": [
+   {
+    "id": "U1",
+    "name": "maya",
+    "real_name": "Maya Chen"
+   },
+   {
+    "id": "U2",
+    "name": "omar",
+    "real_name": "Omar Haddad"
+   }
+  ]
+ },
+ "conversations.history": {
+  "ok": true,
+  "messages": [
+   {
+    "type": "message",
+    "user": "U1",
+    "text": "Heads up: the Ledger Service migration to Aurora is done. <@U2> can you check the replica lag?",
+    "ts": "1767225600.000100",
+    "reply_count": 1
+   },
+   {
+    "type": "message",
+    "subtype": "channel_join",
+    "user": "U2",
+    "text": "joined",
+    "ts": "1767225500.000100"
+   }
+  ]
+ },
+ "conversations.replies": {
+  "ok": true,
+  "messages": [
+   {
+    "type": "message",
+    "user": "U1",
+    "text": "Heads up: the Ledger Service migration to Aurora is done.",
+    "ts": "1767225600.000100"
+   },
+   {
+    "type": "message",
+    "user": "U2",
+    "text": "Replica lag is under a second on Ledger Service.",
+    "ts": "1767225660.000200"
+   }
+  ]
+ }
+}

@@ -97,6 +97,7 @@ class Caller(BaseModel):
     user_id: str
     ip: str
     workspace: str | None = None   # the logged-in account's workspace graph (NODUS_ACCOUNTS=on)
+    account_id: str | None = None
 
 
 def caller(request: Request, authorization: str | None = Header(default=None)) -> Caller:
@@ -110,7 +111,8 @@ def caller(request: Request, authorization: str | None = Header(default=None)) -
     acct = None if has else accounts.current(request)
     if acct:   # the account owner writes in their own workspace; this replaces the public write token (item 24)
         accounts.check_csrf(request, acct)
-        return Caller(token=True, admin=False, user_id=f"acct_{acct['id']}", ip=ip, workspace=acct["workspace"])
+        return Caller(token=True, admin=False, user_id=f"acct_{acct['id']}", ip=ip, workspace=acct["workspace"],
+                      account_id=acct["id"])
     if has:
         STATE["last_token_activity"] = now_ms()
     return Caller(token=has, admin=admin, user_id="judge" if has else "anonymous", ip=ip)
@@ -673,7 +675,7 @@ def _progress(job: dict, ing: Any) -> None:
 
 
 @app.post("/workspace/ingest")
-async def workspace_ingest(filename: str, request: Request, c: Caller = Depends(caller)) -> dict:
+async def workspace_ingest(filename: str, request: Request, url: str = "", c: Caller = Depends(caller)) -> dict:
     """Ingest one uploaded file into the workspace as a job; poll /workspace/jobs/{id} for its progress."""
     name = _need_workspace(c)
     data = await request.body()
@@ -687,7 +689,7 @@ async def workspace_ingest(filename: str, request: Request, c: Caller = Depends(
         ing = Ingestor(g)
         _progress(job, ing)
         try:
-            ing.ingest_upload(filename, data)
+            ing.ingest_upload(filename, data, url)
         except (ValueError, UnicodeDecodeError, KeyError, zipfile.BadZipFile) as e:
             raise ValueError(f"can't read {filename}: {e}") from e
         agent._index = None
@@ -718,6 +720,120 @@ def workspace_job(job_id: str, c: Caller = Depends(caller)) -> dict:
     if not j:
         raise HTTPException(404, "no such job")
     return j
+
+
+def _source_http(kind: str) -> Any:
+    import httpx
+    return httpx.Client(timeout=20, follow_redirects=True)
+
+
+@app.get("/workspace/sources")
+def workspace_sources(c: Caller = Depends(caller)) -> list[dict]:
+    """Each source a workspace can connect: what it asks for, what the server still needs, whether it's on."""
+    _need_workspace(c)
+    from ingest.sources import CONNECTORS
+    on = set(accounts.store().connections(c.account_id or ""))
+    rows = [{"kind": k, "label": x.label, "fields": x.fields, "missing": [e for e in x.needs if not os.environ.get(e)],
+             "connected": k in on} for k, x in CONNECTORS.items()]
+    return rows + [{"kind": "docs", "label": "Docs", "fields": ["file", "url"], "missing": [], "connected": True}]
+
+
+class SourceConfig(BaseModel):
+    config: dict
+
+
+@app.post("/workspace/sources/{kind}")
+def workspace_connect(kind: str, body: SourceConfig, c: Caller = Depends(caller)) -> dict:
+    """Connect a source with a key (Linear, GitHub, Jira) or choose a connected Slack's channels. The config
+    is stored encrypted and never returned."""
+    _need_workspace(c)
+    from brain.accounts import AccountError
+    from ingest.sources import CONNECTORS
+    if kind not in CONNECTORS:
+        raise HTTPException(404, "no such source")
+    cfg = dict(accounts.store().get_connection(c.account_id or "", kind) or {})
+    cfg.update({k: v for k, v in body.config.items() if v not in (None, "")})
+    need = [f for f in CONNECTORS[kind].fields if f not in ("jql", "channels") and not cfg.get(f)]
+    if kind == "slack" and not cfg.get("token"):
+        need = ["a Slack connection (Connect with Slack)"]
+    if need:
+        raise HTTPException(400, "missing " + ", ".join(need))
+    try:
+        accounts.store().set_connection(c.account_id or "", kind, cfg)
+    except AccountError as e:
+        raise HTTPException(503, str(e)) from e
+    return {"kind": kind, "connected": True}
+
+
+@app.delete("/workspace/sources/{kind}")
+def workspace_disconnect(kind: str, c: Caller = Depends(caller)) -> dict:
+    """Forget a source's stored key. What it already ingested stays in the workspace."""
+    _need_workspace(c)
+    accounts.store().delete_connection(c.account_id or "", kind)
+    return {"kind": kind, "connected": False}
+
+
+@app.post("/workspace/sources/{kind}/sync")
+def workspace_sync(kind: str, c: Caller = Depends(caller)) -> dict:
+    """Fetch a connected source and ingest it into the workspace, as a job."""
+    name = _need_workspace(c)
+    from brain.accounts import AccountError
+    from ingest.pipeline import Ingestor
+    from ingest.sources import fetch_docs
+    try:
+        cfg = accounts.store().get_connection(c.account_id or "", kind)
+    except AccountError as e:
+        raise HTTPException(503, str(e)) from e
+    if not cfg:
+        raise HTTPException(400, f"connect {kind} first")
+    _workspace_room()
+    g, agent = G._target(), AGENT._target()
+
+    def run(job: dict) -> None:
+        with _source_http(kind) as http:
+            docs = fetch_docs(kind, cfg, http)
+        ing = Ingestor(g)
+        ing.live = True   # the extractor model reads it within the daily cap; otherwise the pattern extractor
+        _progress(job, ing)
+        job["total"] = len(docs)
+        ing.ingest_docs(docs)
+        agent._index = None
+    return {"job_id": jobs.start(name, f"sync:{kind}", run)["id"]}
+
+
+@app.get("/auth/slack/start")
+def slack_start(c: Caller = Depends(caller)) -> Any:
+    """Start the Slack OAuth flow (needs the Slack app's SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_REDIRECT_URL)."""
+    _need_workspace(c)
+    from fastapi.responses import RedirectResponse
+    cid, redirect = os.environ.get("SLACK_CLIENT_ID", ""), os.environ.get("SLACK_REDIRECT_URL", "")
+    if not (cid and redirect and os.environ.get("SLACK_CLIENT_SECRET")):
+        raise HTTPException(503, "Slack isn't configured: add SLACK_CLIENT_ID, SLACK_CLIENT_SECRET and SLACK_REDIRECT_URL")
+    state = accounts.store().oauth_state(c.account_id or "")
+    return RedirectResponse("https://slack.com/oauth/v2/authorize" + _qs_url(
+        {"client_id": cid, "scope": "channels:history,channels:read,users:read", "redirect_uri": redirect, "state": state}))
+
+
+@app.get("/auth/slack/callback")
+def slack_callback(code: str, state: str, c: Caller = Depends(caller)) -> Any:
+    """Slack's OAuth redirect: exchange the code for a bot token and store it for the workspace."""
+    _need_workspace(c)
+    from fastapi.responses import RedirectResponse
+    if not accounts.store().check_oauth_state(c.account_id or "", state):
+        raise HTTPException(400, "this Slack sign-in expired; start again")
+    with _source_http("slack") as http:
+        r = http.post("https://slack.com/api/oauth.v2.access", data={
+            "code": code, "client_id": os.environ.get("SLACK_CLIENT_ID", ""),
+            "client_secret": os.environ.get("SLACK_CLIENT_SECRET", ""), "redirect_uri": os.environ.get("SLACK_REDIRECT_URL", "")}).json()
+    if not r.get("ok"):
+        raise HTTPException(400, f"Slack refused: {r.get('error', 'unknown error')}")
+    accounts.store().set_connection(c.account_id or "", "slack", {"token": r["access_token"], "channels": []})
+    return RedirectResponse(os.environ.get("NODUS_UI_ORIGINS", "http://localhost:3000").split(",")[0] + "/sources?connected=slack")
+
+
+def _qs_url(params: dict) -> str:
+    from urllib.parse import urlencode
+    return "?" + urlencode(params)
 
 
 @app.post("/workspace/reset")

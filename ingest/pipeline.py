@@ -65,10 +65,13 @@ class Ingestor:
         docs = read_render(Path(render_dir))
         return self.ingest_docs(docs, seed)
 
-    def ingest_upload(self, name: str, data: bytes) -> Report:
+    def ingest_upload(self, name: str, data: bytes, url: str = "") -> Report:
         """An uploaded file (connectors.upload_docs) through the same pipeline. Slack display names become
-        Person ids where a person has that name or alias; other authors are left empty."""
+        Person ids where a person has that name or alias; other authors are left empty. `url` is where a
+        single document lives, so its citations link back to it (item 24)."""
         docs = upload_docs(name, data, self.clock())
+        if url and len(docs) == 1:
+            docs[0].uri = url
         self._load_entities()
         people = {n.lower(): eid for eid, e in self.entities.items() if eid.startswith("person:")
                   for n in [e["name"], *e["aliases"]] if n}

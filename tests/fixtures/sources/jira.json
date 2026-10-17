@@ -1,0 +1,67 @@
+{
+ "issues": [
+  {
+   "key": "ING-3",
+   "fields": {
+    "summary": "Card settlement file arrives late",
+    "description": {
+     "type": "doc",
+     "content": [
+      {
+       "type": "paragraph",
+       "content": [
+        {
+         "type": "text",
+         "text": "The settlement file from the processor lands after the batch window."
+        }
+       ]
+      }
+     ]
+    },
+    "assignee": {
+     "displayName": "Omar Haddad"
+    },
+    "reporter": {
+     "displayName": "Maya Chen"
+    },
+    "status": {
+     "name": "To Do"
+    },
+    "components": [
+     {
+      "name": "Settlement"
+     }
+    ],
+    "created": "2026-01-08T07:00:00.000+0000",
+    "project": {
+     "name": "Ingestion"
+    },
+    "comment": {
+     "comments": [
+      {
+       "id": "101",
+       "author": {
+        "displayName": "Maya Chen"
+       },
+       "created": "2026-01-08T09:00:00.000+0000",
+       "body": {
+        "type": "doc",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Asked the processor for an earlier cut-off."
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "data": {
+  "issues": {
+   "nodes": [
+    {
+     "identifier": "PAY-7",
+     "title": "Reconcile ledger totals nightly",
+     "description": "Totals drift by a few cents after month-end.",
+     "url": "https://linear.app/acme/issue/PAY-7/reconcile-ledger-totals-nightly",
+     "createdAt": "2026-01-05T09:00:00.000Z",
+     "state": {
+      "name": "In Progress"
+     },
+     "assignee": {
+      "name": "Maya Chen"
+     },
+     "creator": {
+      "name": "Omar Haddad"
+     },
+     "project": {
+      "name": "Core Banking"
+     },
+     "team": {
+      "name": "Payments",
+      "members": {
+       "nodes": [
+        {
+         "name": "Maya Chen"
+        },
+        {
+         "name": "Omar Haddad"
+        }
+       ]
+      }
+     },
+     "comments": {
+      "nodes": [
+       {
+        "body": "The drift comes from rounding in the FX step.",
+        "url": "https://linear.app/acme/issue/PAY-7#comment-1",
+        "createdAt": "2026-01-06T10:00:00.000Z",
+        "user": {
+         "name": "Maya Chen"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

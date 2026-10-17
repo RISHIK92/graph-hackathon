@@ -1,0 +1,62 @@
+{
+ "contents/.github/CODEOWNERS": {
+  "content": "IyBPd25lcnMKKiBAYWNtZS9wYXltZW50cwovbWlncmF0aW9ucy8gQGFjbWUvcGF5bWVudHMgQG9tYXIK",
+  "html_url": "https://github.com/acme/ledger-service/blob/main/.github/CODEOWNERS"
+ },
+ "pulls/comments": [
+  {
+   "pull_request_url": "https://api.github.com/repos/acme/ledger-service/pulls/13",
+   "user": {
+    "login": "omar"
+   },
+   "created_at": "2026-01-07T12:00:00Z",
+   "body": "Please add an index on posted_at before this ships.",
+   "html_url": "https://github.com/acme/ledger-service/pull/13#discussion_r1"
+  }
+ ],
+ "issues": [
+  {
+   "number": 12,
+   "title": "Write latency spikes at month-end",
+   "body": "p99 write latency doubles during close.",
+   "html_url": "https://github.com/acme/ledger-service/issues/12",
+   "user": {
+    "login": "maya"
+   },
+   "created_at": "2026-01-02T08:00:00Z",
+   "state": "open",
+   "assignee": {
+    "login": "maya"
+   },
+   "comments": 1,
+   "comments_url": "https://api.github.com/repos/acme/ledger-service/issues/12/comments"
+  },
+  {
+   "number": 13,
+   "title": "Partition the postings table",
+   "body": "Splits postings by month.",
+   "html_url": "https://github.com/acme/ledger-service/pull/13",
+   "user": {
+    "login": "maya"
+   },
+   "created_at": "2026-01-07T09:00:00Z",
+   "state": "open",
+   "assignee": null,
+   "comments": 0,
+   "comments_url": "",
+   "pull_request": {
+    "url": "x"
+   }
+  }
+ ],
+ "issues/12/comments": [
+  {
+   "user": {
+    "login": "omar"
+   },
+   "created_at": "2026-01-03T09:00:00Z",
+   "body": "Seen the same on Aurora readers.",
+   "html_url": "https://github.com/acme/ledger-service/issues/12#issuecomment-1"
+  }
+ ]
+}

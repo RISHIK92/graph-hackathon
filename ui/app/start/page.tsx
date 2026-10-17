@@ -2,32 +2,22 @@
 
 import { Building2, FileText, Upload } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { get, qs, send, upload } from "@/lib/api";
+import { useRef } from "react";
+import { JobProgress, useJob } from "@/components/JobProgress";
+import { qs, send, upload } from "@/lib/api";
 import { useApi, useStore } from "@/lib/store";
 import type { Directory } from "@/lib/types";
-
-interface Job { id: string; state: "running" | "done" | "failed"; docs: number; total: number; facts: number; disputes: number; error: string; kind: string }
 
 /** "Bring your company's context" (item 24 step 3): an empty workspace's two paths, the ingest's live
  * progress, then first questions built from what was ingested. */
 export default function StartPage() {
   const s = useStore();
-  const [job, setJob] = useState<Job | null>(null);
+  const [job, track] = useJob();
   const fileRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (!job || job.state !== "running") return;
-    const t = setInterval(() => get<Job>(`/workspace/jobs/${job.id}`).then((j) => {
-      setJob(j);
-      if (j.state !== "running") s.bump();
-    }).catch(() => undefined), 600);
-    return () => clearInterval(t);
-  }, [job, s]);
 
   const run = async (p: Promise<{ job_id: string }>, kind: string) => {
     try {
-      const { job_id } = await p;
-      setJob({ id: job_id, state: "running", docs: 0, total: 0, facts: 0, disputes: 0, error: "", kind });
+      track((await p).job_id, kind);
     } catch (e) {
       s.toast({ tone: "error", title: "Couldn't start", body: String((e as Error).message || e) });
     }
@@ -43,7 +33,7 @@ export default function StartPage() {
           <p className="text-2" style={{ margin: 0, fontSize: 16 }}>Nodus turns your messages, tickets and docs into one graph of dated, cited facts. Start with a source, or load the demo company to look around.</p>
         </div>
 
-        {job && <Progress job={job} />}
+        {job && <JobProgress job={job} />}
         {done && <FirstQuestions />}
 
         {!job || job.state !== "running" ? (
@@ -68,24 +58,6 @@ export default function StartPage() {
         <input ref={fileRef} type="file" hidden accept=".md,.markdown,.txt,.json,.zip"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) void run(upload(`/workspace/ingest${qs({ filename: f.name })}`, f), "ingest"); e.target.value = ""; }} />
       </div>
-    </div>
-  );
-}
-
-function Progress({ job }: { job: Job }) {
-  const pct = job.total ? Math.round((job.docs / job.total) * 100) : 0;
-  return (
-    <div className="job nx-rise" role="status" aria-live="polite">
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <span className="t-strong">{job.state === "running" ? (job.kind === "demo" ? "Loading the demo company…" : "Reading your source…") : job.state === "done" ? "Done" : "That didn't work"}</span>
-        <span className="home-mono t-small text-3">{job.docs}{job.total ? ` of ${job.total}` : ""} documents</span>
-      </div>
-      <div className="job-bar"><i style={{ width: `${job.state === "done" ? 100 : pct}%` }} /></div>
-      <div className="row-wrap t-small">
-        <span><b>{job.facts}</b> facts</span>
-        <span><b className="disp">{job.disputes}</b> disputes</span>
-      </div>
-      {job.error && <div className="auth-err">{job.error}</div>}
     </div>
   );
 }
