@@ -108,7 +108,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   }, [s.ready, s.account, open, signedIn, path, router]);
   const past = !!s.asOf;
   const ws = s.account?.demo ? "Demo workspace" : "Your workspace";
-  const page = RAIL.find((n) => n.match(path))?.label || JUMPS.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path.startsWith("/start") ? "Get started" : "");
+  const page = RAIL.find((n) => n.match(path))?.label || JUMPS.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path.startsWith("/start") ? "Get started" : path.startsWith("/s/") ? "Source" : "");
   return (
     <div className={`app ${signedIn ? "has-rail" : ""} ${hasInspector ? "has-inspector" : ""}`}>
       {signedIn ? (

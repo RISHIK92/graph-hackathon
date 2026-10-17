@@ -743,6 +743,7 @@ a.start-card { text-decoration: none; }
 .ev-toggle { font-size: 11.5px; color: var(--text-3); text-decoration: underline; text-underline-offset: 3px; }
 .ev-toggle:hover { color: var(--text); }
 .origin-code .code-row { padding: 6px 0; border-top: 1px solid var(--border); }
+.origin-code .code-row.hl { padding: 6px 8px; }   /* the highlight's -8px margin needs its 8px padding back */
 
 /* Explore (design brief step 6) */
 .explore { display: flex; flex-wrap: wrap; align-items: stretch; min-height: 100%; }
