@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import type { Core, ElementDefinition } from "cytoscape";
+import { useStore } from "@/lib/store";
 
 export interface CanvasEdge {
   source: string;
@@ -22,14 +23,14 @@ export interface GraphHandle {
 }
 
 /** Node encoding (DESIGN.md §3.2): shape by type, a restrained neutral/accent ramp, one legend. */
-// Phosphor entity colours: systems and projects teal, teams and people violet, records grey (item 19)
+// Phosphor entity colours, as theme tokens: systems and projects teal, teams and people violet, records grey
 export const NODE_STYLE: Record<string, { colour: string; shape: string; size: number }> = {
-  Team: { colour: "#BBA6FF", shape: "round-rectangle", size: 26 },
-  System: { colour: "#74D9C3", shape: "diamond", size: 20 },
-  Project: { colour: "#74D9C3", shape: "round-rectangle", size: 18 },
-  Person: { colour: "#BBA6FF", shape: "ellipse", size: 14 },
-  Decision: { colour: "#C9D2CE", shape: "triangle", size: 18 },
-  Ticket: { colour: "#C9D2CE", shape: "ellipse", size: 10 },
+  Team: { colour: "--entity-person", shape: "round-rectangle", size: 26 },
+  System: { colour: "--entity-system", shape: "diamond", size: 20 },
+  Project: { colour: "--entity-system", shape: "round-rectangle", size: 18 },
+  Person: { colour: "--entity-person", shape: "ellipse", size: 14 },
+  Decision: { colour: "--entity-record", shape: "triangle", size: 18 },
+  Ticket: { colour: "--entity-record", shape: "ellipse", size: 10 },
 };
 
 function cssVar(name: string, fallback: string): string {
@@ -48,6 +49,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
   layout?: "cose" | "concentric" | "breadthfirst";
   onReady?: () => void;
 }>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady }, ref) {
+  const { theme } = useStore();   // colours come from theme tokens, so a theme switch redraws
   const el = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
   const handlers = useRef({ onNode, onEdge, onBackground, onReady });
@@ -75,7 +77,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
           const st = NODE_STYLE[lab] || NODE_STYLE.Person;
           const pos = positions.current.get(n.id);
           return {
-            data: { id: n.id, label: n.name, colour: st.colour, shape: st.shape, size: st.size, type: lab },
+            data: { id: n.id, label: n.name, colour: cssVar(st.colour, "#888"), shape: st.shape, size: st.size, type: lab },
             ...(pos ? { position: { ...pos } } : {}),
           };
         }),
@@ -153,7 +155,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes, edges, layout]);
+  }, [nodes, edges, layout, theme]);
 
   useEffect(() => { if (cyRef.current) applySelection(cyRef.current, selected); }, [selected]);
   useEffect(() => () => cyRef.current?.destroy(), []);

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, LogOut, Search, Settings2, Trash2, UserRound, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, LogOut, Moon, Search, Settings2, Sun, Trash2, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -76,7 +76,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <div className={`app ${hasInspector ? "has-inspector" : ""}`}>
       <header className="topbar">
         <Link href="/" className="brand" aria-label="Nodus home">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" aria-hidden><circle cx="5" cy="6" r="2.4" /><circle cx="19" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7 7.2l3.8 8.6M17 7.2l-3.8 8.6M7.4 6h9.2" /></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-text)" strokeWidth="1.8" aria-hidden><circle cx="5" cy="6" r="2.4" /><circle cx="19" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7 7.2l3.8 8.6M17 7.2l-3.8 8.6M7.4 6h9.2" /></svg>
           Nodus
         </Link>
         <nav className="topnav" aria-label="Main">
@@ -100,6 +100,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <AsOfPill />
           <ActingMenu />
           {ACCOUNTS ? <AccountMenu onReset={() => setResetOpen(true)} /> : <AccessBadge />}
+          <ThemeToggle />
           <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
         </div>
       </header>
@@ -133,6 +134,17 @@ function LiveStatus() {
   return (
     <button className={`live-dot ${state}`} onClick={() => s.setSessionSheetOpen(true)} title="Session settings">
       <span>{s.sessionError ? "API unreachable" : !s.session ? "Starting" : "Graph live"}</span>
+    </button>
+  );
+}
+
+/** Sun/moon: Phosphor dark or light (item 24 step 7); also in the account menu and as "Switch theme" in ⌘K. */
+function ThemeToggle() {
+  const s = useStore();
+  const next = s.theme === "dark" ? "light" : "dark";
+  return (
+    <button className="icon-btn" onClick={() => s.setTheme(next)} title={`Switch to the ${next} theme`} aria-label={`Switch to the ${next} theme`}>
+      {s.theme === "dark" ? <Sun className="icon-sm" /> : <Moon className="icon-sm" />}
     </button>
   );
 }
@@ -187,6 +199,7 @@ function AccountMenu({ onReset }: { onReset: () => void }) {
             <span className="t-small text-3">Workspace {a.workspace}{a.demo ? " · shared demo" : ""}</span>
           </div>
           <div className="divider" />
+          <button className="menu-item" role="menuitem" onClick={() => s.setTheme(s.theme === "dark" ? "light" : "dark")}>{s.theme === "dark" ? <Sun className="icon-sm" /> : <Moon className="icon-sm" />}{s.theme === "dark" ? "Light theme" : "Dark theme"}</button>
           <button className="menu-item" role="menuitem" onClick={() => { close(); onReset(); }}><Trash2 className="icon-sm" />Empty this workspace</button>
           <button className="menu-item" role="menuitem" onClick={async () => { close(); await s.logout(); router.push("/"); }}><LogOut className="icon-sm" />Log out</button>
         </div>

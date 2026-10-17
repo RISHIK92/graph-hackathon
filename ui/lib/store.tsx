@@ -75,8 +75,14 @@ interface Session {
 /** The logged-in account (item 24, NODUS_ACCOUNTS=on): its workspace is its own graph. */
 export interface Account { id: string; email: string; workspace: string; demo: boolean }
 
+export type Theme = "dark" | "light";
+const THEME_KEY = "nodus.theme";
+
 interface Store {
   ready: boolean;
+  /** Phosphor dark (the default) or light (item 24 step 7); set before paint by the layout's script. */
+  theme: Theme;
+  setTheme: (t: Theme) => void;
   /** null: logged out; undefined: still checking (or accounts are off). */
   account: Account | null | undefined;
   login: (mode: "login" | "signup" | "demo", email?: string, password?: string) => Promise<void>;
@@ -174,6 +180,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [bump]);
 
   const [account, setAccount] = useState<Account | null | undefined>(undefined);
+  const [theme, setThemeState] = useState<Theme>("dark");
+  useEffect(() => { setThemeState(document.documentElement.dataset.theme === "light" ? "light" : "dark"); }, []);
+  const setTheme = useCallback((t: Theme) => {
+    document.documentElement.dataset.theme = t;
+    setThemeState(t);
+    try { localStorage.setItem(THEME_KEY, t); } catch { /* storage unavailable: this page only */ }
+  }, []);
   const takeMe = useCallback((m: { account: Account | null; csrf?: string }) => {
     setCsrf(m.csrf || "");
     setAccount(m.account);
@@ -302,7 +315,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(
     () => ({
-      ready, account, login, logout, workspace, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
+      ready, theme, setTheme, account, login, logout, workspace, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
       people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, pendingCount, debug,
       nextResetAt, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
@@ -311,7 +324,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       openEvidence: (t, mode = "replace") => (t ? openInspector({ kind: "evidence", target: t }, mode) : closeInspector()),
       toasts, toast, dismissToast, holdToasts: (on: boolean) => { toastHover.current = on; }, names, resolveNames,
     }),
-    [ready, account, login, logout, workspace, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
+    [ready, theme, setTheme, account, login, logout, workspace, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
       lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Calendar, GitBranch, Inbox, MessageSquare, Search, UserRound } from "lucide-react";
+import { BookOpen, Calendar, GitBranch, Inbox, MessageSquare, Moon, Search, Sun, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { get, qs } from "@/lib/api";
@@ -36,6 +36,8 @@ export function CommandPalette() {
       { id: "p-graph", kind: "Page", title: "Graph", icon: GitBranch, run: () => router.push("/graph") },
       { id: "p-inbox", kind: "Page", title: "Inbox", icon: Inbox, run: () => router.push("/inbox") },
       { id: "p-today", kind: "Time", title: "View today", icon: Calendar, run: () => s.setAsOf(null) },
+      { id: "p-theme", kind: "Theme", title: "Switch theme", sub: s.theme === "dark" ? "to light" : "to dark", icon: s.theme === "dark" ? Sun : Moon,
+        run: () => s.setTheme(s.theme === "dark" ? "light" : "dark") },
     ];
     // m21: opens on questions to try; entities only once you type, shown by name and kind, never by raw id
     const ents: Item[] = t ? nodes

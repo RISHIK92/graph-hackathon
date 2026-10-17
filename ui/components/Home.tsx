@@ -197,7 +197,7 @@ function Moments({ onMcp }: { onMcp: () => void }) {
     <span key="p" className="nx-demo"><span className="e-sys">Reporting</span><span className="nx-rel">←</span><span className="e-per">Platform</span><span className="nx-rel">←</span><span className="e-per">Tomas Reyes</span><span className="nx-meta" style={{ marginLeft: "auto" }}>2 hops · each cited</span></span>,
     <span key="t" className="nx-thennow"><span className="then"><span className="tag">THEN · TO 31 MAR 2026</span>Platform owned Ledger</span><span className="now"><span className="tag">NOW · SINCE 1 APR 2026</span>Payments owns Ledger</span></span>,
     <span key="d" className="nx-demo col"><span className="row" style={{ gap: 8 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--dispute)" }} />A chat message says “Infra owns Ledger now”</span><span style={{ color: "var(--text-label)" }}>Can settle: <span className="e-per">Priya Raman</span>, lead of the owning team</span></span>,
-    <span key="m" className="nx-demo col home-mono" style={{ fontSize: 12.5 }}><span style={{ color: "var(--text-label)" }}>› get_owner(&quot;system:checkout&quot;)</span><span>Payments · Priya Raman <span style={{ color: "var(--primary)" }}>[cited]</span></span></span>,
+    <span key="m" className="nx-demo col home-mono" style={{ fontSize: 12.5 }}><span style={{ color: "var(--text-label)" }}>› get_owner(&quot;system:checkout&quot;)</span><span>Payments · Priya Raman <span style={{ color: "var(--primary-text)" }}>[cited]</span></span></span>,
   ][i];
   return (
     <section className="home-section" aria-labelledby="moments-title">
@@ -268,7 +268,7 @@ const F = [
   { title: "Decisions you can trace", body: "Why something is the way it is: the decision, who made it, and what it changed.", nodes: ["adr", "ledger", "aurora"], edges: ["aff", "runs"], caption: "Why was ADR-007 accepted? → it moved Ledger to Aurora (10 Feb 2026), because “Postgres Main could not sustain Ledger write volume during month-end close”." },
   { title: "Built for coding agents", body: "Claude Code asks the same graph over MCP. Writes follow the same permissions, and every one can be undone.", nodes: ["priya", "payments", "ledger", "checkout", "reporting", "statements"], edges: ["lead", "owns", "d1", "d2", "d3"], caption: "get_owner · critical_systems · connection_between · knowledge_gaps: 16 read tools, 6 write tools" },
 ];
-const KC: Record<Kind, [string, string, string]> = { s: ["#10302A", "#74D9C3", "#1E4A40"], p: ["#241D3D", "#BBA6FF", "#3A2F63"], d: ["#1E2321", "#C9D2CE", "#3A4440"] };
+const KC: Record<Kind, [string, string, string]> = { s: ["var(--entity-system-bg)", "var(--entity-system)", "var(--entity-system-border)"], p: ["var(--entity-person-bg)", "var(--entity-person)", "var(--entity-person-border)"], d: ["var(--entity-record-bg)", "var(--entity-record)", "var(--entity-record-border)"] };
 
 function GraphSection({ still }: { still: boolean }) {
   const [locked, setLocked] = useState(false);
@@ -296,14 +296,14 @@ function GraphSection({ still }: { still: boolean }) {
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
                 {E.map((e) => {
                   const a = N[e.a], b = N[e.b], lit = cur.edges.includes(e.id);
-                  const stroke = e.kind === "dispute" ? (lit ? "#FF6F4F" : "#3A2420") : e.kind === "then" ? (lit ? "#D9B48A" : "#2E2A20") : lit ? "#C4F25A" : "#22302B";
+                  const stroke = e.kind === "dispute" ? (lit ? "var(--dispute)" : "var(--dispute-border)") : e.kind === "then" ? (lit ? "var(--then)" : "var(--then-border)") : lit ? "var(--primary-text)" : "var(--line-mid)";
                   const cls = e.kind ? "nx-edge nx-dashed" : lit ? "nx-edge nx-flow" : "nx-edge";
                   return <line key={e.id} x1={a.x} y1={a.y} x2={b.x} y2={b.y} className={cls} vectorEffect="non-scaling-stroke" style={{ stroke, strokeWidth: lit ? 2.4 : 1.2 }} />;
                 })}
               </svg>
               {E.map((e) => {
                 const a = N[e.a], b = N[e.b], lit = cur.edges.includes(e.id);
-                const color = e.kind === "dispute" ? "#FF6F4F" : e.kind === "then" ? "#D9B48A" : "#C4F25A";
+                const color = e.kind === "dispute" ? "var(--dispute)" : e.kind === "then" ? "var(--then)" : "var(--primary-text)";
                 return <span key={e.id} className="nx-elabel" style={{ left: `${(a.x + b.x) / 2}%`, top: `${(a.y + b.y) / 2}%`, color, opacity: lit ? 1 : 0 }}>{e.label}</span>;
               })}
               {Object.entries(N).map(([id, n]) => {
@@ -314,11 +314,11 @@ function GraphSection({ still }: { still: boolean }) {
             <div className="graph-foot">
               <span key={feat} className="graph-caption">{cur.caption}</span>
               <span className="graph-legend">
-                <span><i style={{ background: "#74D9C3" }} />Systems</span>
-                <span><i style={{ background: "#BBA6FF" }} />Teams, people</span>
-                <span><i style={{ background: "#C9D2CE" }} />Decisions</span>
-                <span><i className="line" style={{ background: "#D9B48A" }} />Then</span>
-                <span><i className="line" style={{ background: "#FF6F4F" }} />Disputed</span>
+                <span><i style={{ background: "var(--entity-system)" }} />Systems</span>
+                <span><i style={{ background: "var(--entity-person)" }} />Teams, people</span>
+                <span><i style={{ background: "var(--entity-record)" }} />Decisions</span>
+                <span><i className="line" style={{ background: "var(--then)" }} />Then</span>
+                <span><i className="line" style={{ background: "var(--dispute)" }} />Disputed</span>
               </span>
             </div>
           </div>
@@ -335,12 +335,12 @@ const PHASES = [
   ["ANSWER", "The next answer tells the truth, with receipts."],
 ];
 type Tok = { text: string; x: number; y: number; fs: number; bg: string; fg: string; bd: string; pad: string; mono?: boolean; bs?: string };
-const plain = (text: string, x: number): Tok => ({ text, x, y: 32, fs: 40, bg: "transparent", fg: "#E8EFEB", bd: "transparent", pad: "0px 0px" });
+const plain = (text: string, x: number): Tok => ({ text, x, y: 32, fs: 40, bg: "transparent", fg: "var(--text)", bd: "transparent", pad: "0px 0px" });
 const TOKENS: Tok[][] = [
-  [plain("“Infra", 28), { text: "Infra", x: 20, y: 40, fs: 16, bg: "#241D3D", fg: "#BBA6FF", bd: "#BBA6FF", pad: "7px 14px" }, { text: "Infra", x: 30, y: 58, fs: 15, bg: "#2A1A15", fg: "#FF8C70", bd: "#FF6F4F", pad: "6px 13px", bs: "dashed" }],
-  [plain("owns", 41), { text: "—OWNS→", x: 38, y: 40, fs: 14, bg: "transparent", fg: "#C9D6D0", bd: "transparent", pad: "0px 0px", mono: true }, { text: "OWNS? · DISPUTES", x: 47, y: 51, fs: 11, bg: "#0B0F0E", fg: "#FF6F4F", bd: "transparent", pad: "1px 6px", mono: true }],
-  [plain("Ledger", 55.5), { text: "Ledger", x: 56, y: 40, fs: 16, bg: "#10302A", fg: "#74D9C3", bd: "#74D9C3", pad: "7px 14px" }, { text: "Ledger", x: 64, y: 38, fs: 18, bg: "#10302A", fg: "#74D9C3", bd: "#74D9C3", pad: "9px 18px" }],
-  [plain("now.”", 71.5), { text: "valid from: today", x: 78, y: 40, fs: 13, bg: "#1B2410", fg: "#C4F25A", bd: "#2B3A12", pad: "6px 12px", mono: true }, { text: "claimed today", x: 30, y: 67, fs: 11, bg: "transparent", fg: "#93A69D", bd: "transparent", pad: "0px 0px", mono: true }],
+  [plain("“Infra", 28), { text: "Infra", x: 20, y: 40, fs: 16, bg: "var(--entity-person-bg)", fg: "var(--entity-person)", bd: "var(--entity-person)", pad: "7px 14px" }, { text: "Infra", x: 30, y: 58, fs: 15, bg: "var(--dispute-bg)", fg: "var(--dispute-text)", bd: "var(--dispute)", pad: "6px 13px", bs: "dashed" }],
+  [plain("owns", 41), { text: "—OWNS→", x: 38, y: 40, fs: 14, bg: "transparent", fg: "var(--text-quote)", bd: "transparent", pad: "0px 0px", mono: true }, { text: "OWNS? · DISPUTES", x: 47, y: 51, fs: 11, bg: "var(--bg)", fg: "var(--dispute)", bd: "transparent", pad: "1px 6px", mono: true }],
+  [plain("Ledger", 55.5), { text: "Ledger", x: 56, y: 40, fs: 16, bg: "var(--entity-system-bg)", fg: "var(--entity-system)", bd: "var(--entity-system)", pad: "7px 14px" }, { text: "Ledger", x: 64, y: 38, fs: 18, bg: "var(--entity-system-bg)", fg: "var(--entity-system)", bd: "var(--entity-system)", pad: "9px 18px" }],
+  [plain("now.”", 71.5), { text: "valid from: today", x: 78, y: 40, fs: 13, bg: "var(--now-bg)", fg: "var(--primary-text)", bd: "var(--now-border)", pad: "6px 12px", mono: true }, { text: "claimed today", x: 30, y: 67, fs: 11, bg: "transparent", fg: "var(--text-label)", bd: "transparent", pad: "0px 0px", mono: true }],
 ];
 
 function HowItWorks({ still }: { still: boolean }) {
@@ -370,14 +370,14 @@ function HowItWorks({ still }: { still: boolean }) {
           <figure className="how-fig" role="img" aria-label={`Step ${String(ph).padStart(2, "0")}, ${PHASES[ph][0]}: ${PHASES[ph][1]}`}>
             {ph === 1 && <span className="nx-scan" aria-hidden />}
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-              <line className="g" x1="12" y1="15" x2="30" y2="26" vectorEffect="non-scaling-stroke" style={{ stroke: "#3A2F63", strokeWidth: 1.6, opacity: g }} />
-              <line className="g nx-flow" x1="30" y1="26" x2="64" y2="38" vectorEffect="non-scaling-stroke" style={{ stroke: "#C4F25A", strokeWidth: 2.2, opacity: g }} />
-              <line className="g nx-dashed" x1="30" y1="58" x2="64" y2="38" vectorEffect="non-scaling-stroke" style={{ stroke: "#FF6F4F", strokeWidth: 2, opacity: g }} />
+              <line className="g" x1="12" y1="15" x2="30" y2="26" vectorEffect="non-scaling-stroke" style={{ stroke: "var(--entity-person-border)", strokeWidth: 1.6, opacity: g }} />
+              <line className="g nx-flow" x1="30" y1="26" x2="64" y2="38" vectorEffect="non-scaling-stroke" style={{ stroke: "var(--primary-text)", strokeWidth: 2.2, opacity: g }} />
+              <line className="g nx-dashed" x1="30" y1="58" x2="64" y2="38" vectorEffect="non-scaling-stroke" style={{ stroke: "var(--dispute)", strokeWidth: 2, opacity: g }} />
             </svg>
-            <span className="nx-node g" style={{ left: "12%", top: "15%", background: "#241D3D", color: "#BBA6FF", borderColor: "#3A2F63", opacity: g }}>Priya Raman</span>
-            <span className="nx-elabel g" style={{ left: "21%", top: "20.5%", color: "#8E7FC9", opacity: g }}>LEADS</span>
-            <span className="nx-node g" style={{ left: "30%", top: "26%", background: "#241D3D", color: "#BBA6FF", borderColor: "#BBA6FF", opacity: g }}>Payments</span>
-            <span className="nx-elabel g" style={{ left: "47%", top: "29%", color: "#C4F25A", opacity: g }}>OWNS · since 1 Apr 2026</span>
+            <span className="nx-node g" style={{ left: "12%", top: "15%", background: "var(--entity-person-bg)", color: "var(--entity-person)", borderColor: "var(--entity-person-border)", opacity: g }}>Priya Raman</span>
+            <span className="nx-elabel g" style={{ left: "21%", top: "20.5%", color: "var(--entity-person)", opacity: g }}>LEADS</span>
+            <span className="nx-node g" style={{ left: "30%", top: "26%", background: "var(--entity-person-bg)", color: "var(--entity-person)", borderColor: "var(--entity-person)", opacity: g }}>Payments</span>
+            <span className="nx-elabel g" style={{ left: "47%", top: "29%", color: "var(--primary-text)", opacity: g }}>OWNS · since 1 Apr 2026</span>
             {TOKENS.map((t, i) => {
               const k = t[Math.min(ph, 2)];
               return (
