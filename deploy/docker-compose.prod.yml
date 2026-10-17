@@ -19,7 +19,9 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.ui
-      args: { NEXT_PUBLIC_API_URL: "https://${BRAIN_DOMAIN}/api" }
+      args:
+        NEXT_PUBLIC_API_URL: "https://${BRAIN_DOMAIN}/api"
+        NEXT_PUBLIC_NODUS_ACCOUNTS: "${NEXT_PUBLIC_NODUS_ACCOUNTS:-off}"   # from .env; set with NODUS_ACCOUNTS
     depends_on: [api]
     restart: unless-stopped
   caddy:
