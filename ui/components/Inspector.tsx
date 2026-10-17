@@ -40,7 +40,8 @@ export default function Inspector() {
   useEffect(() => {
     if (!top) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !document.querySelector(".modal-overlay")) {
+      // a modal or an open menu takes the Escape first; the panel closes on the next one
+      if (e.key === "Escape" && !document.querySelector(".modal-overlay, .popover")) {
         const tag = (document.activeElement as HTMLElement)?.tagName;
         if (tag === "TEXTAREA" || tag === "INPUT") return;
         s.closeInspector();
