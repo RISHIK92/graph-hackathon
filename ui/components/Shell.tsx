@@ -67,26 +67,29 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [s, router]);
 
-  // item 24: with accounts on, the app pages need a log-in; the homepage and the log-in page don't
+  // item 24: with accounts on, the app pages need a log-in; the homepage and the log-in page don't. Once
+  // logged in, Ask is home (user decision): the marketing homepage is for visitors only.
   const open = path === "/" || path.startsWith("/login");
+  const signedIn = ACCOUNTS && !!s.account;
   useEffect(() => {
     if (ACCOUNTS && s.ready && s.account === null && !open) router.replace(`/login?next=${encodeURIComponent(path)}`);
-  }, [s.ready, s.account, open, path, router]);
+    if (signedIn && path === "/") router.replace("/ask");
+  }, [s.ready, s.account, open, signedIn, path, router]);
   const past = !!s.asOf;
   return (
     <div className={`app ${hasInspector ? "has-inspector" : ""}`}>
       <header className="topbar">
-        <Link href="/" className="brand" aria-label="Nodus home">
+        <Link href={signedIn ? "/ask" : "/"} className="brand" aria-label="Nodus home">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-text)" strokeWidth="1.8" aria-hidden><circle cx="5" cy="6" r="2.4" /><circle cx="19" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7 7.2l3.8 8.6M17 7.2l-3.8 8.6M7.4 6h9.2" /></svg>
           Nodus
         </Link>
         <nav className="topnav" aria-label="Main">
-          {NAV.map((n) => {
+          {NAV.filter((n) => !(signedIn && n.href === "/")).map((n) => {
             const active = n.match(path);
             return (
               <Link key={n.href} href={n.href} className={`nav-item ${active ? "active" : ""}`} title={`${n.label}  g ${n.key}`} aria-current={active ? "page" : undefined}>
                 {n.label}
-                {n.href === "/inbox" && s.pendingCount > 0 && <span className="nav-count" aria-label={`${s.pendingCount} awaiting you`}>{s.pendingCount}</span>}
+                {n.href === "/inbox" && s.pendingCount > 0 && (!ACCOUNTS || s.account) && <span className="nav-count" aria-label={`${s.pendingCount} awaiting you`}>{s.pendingCount}</span>}
               </Link>
             );
           })}
@@ -99,8 +102,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </button>
           <LiveStatus />
           <AsOfPill />
-          {s.people.length > 0 && <ActingMenu />}
+          {s.people.length > 0 && (!ACCOUNTS || s.account) && <ActingMenu />}
           {ACCOUNTS ? <AccountMenu onReset={() => setResetOpen(true)} /> : <AccessBadge />}
+          {signedIn && (
+            <button className="pill" onClick={() => logOut(s.logout)} title="Log out">
+              <LogOut className="icon-sm" />Log out
+            </button>
+          )}
           <ThemeToggle />
           <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
         </div>
@@ -177,9 +185,15 @@ function ResetWorkspace({ onClose }: { onClose: () => void }) {
 }
 
 /** The account menu (item 24): who is logged in, their workspace, log out. Logged out: a Log in link. */
+/** A full load of the homepage: the log-in guard can't race it to /login, and no workspace state (people,
+ * Inbox count, thread) outlives the account. */
+async function logOut(logout: () => Promise<void>) {
+  await logout();
+  window.location.assign("/");
+}
+
 function AccountMenu({ onReset }: { onReset: () => void }) {
   const s = useStore();
-  const router = useRouter();
   if (s.account === undefined) return null;
   if (!s.account) return <Link href="/login" className="pill">Log in</Link>;
   const a = s.account;
@@ -202,7 +216,7 @@ function AccountMenu({ onReset }: { onReset: () => void }) {
           <div className="divider" />
           <button className="menu-item" role="menuitem" onClick={() => s.setTheme(s.theme === "dark" ? "light" : "dark")}>{s.theme === "dark" ? <Sun className="icon-sm" /> : <Moon className="icon-sm" />}{s.theme === "dark" ? "Light theme" : "Dark theme"}</button>
           <button className="menu-item" role="menuitem" onClick={() => { close(); onReset(); }}><Trash2 className="icon-sm" />Empty this workspace</button>
-          <button className="menu-item" role="menuitem" onClick={async () => { close(); await s.logout(); router.push("/"); }}><LogOut className="icon-sm" />Log out</button>
+          <button className="menu-item" role="menuitem" onClick={() => { close(); void logOut(s.logout); }}><LogOut className="icon-sm" />Log out</button>
         </div>
       )}
     </Popover>
