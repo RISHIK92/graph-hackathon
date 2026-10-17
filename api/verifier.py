@@ -194,7 +194,7 @@ _LEAD_WORDS = {"ownership": (" owns ", " owned ", " leads ", " led ", " is assig
                "expertise": ("Ask ",), "impact": ("would be affected",), "dependency": ("depend",),
                "critical": ("Most depended-on",), "key_people": ("connections run through",), "gaps": ("with no",),
                "path": ("is connected to",),
-               "decision_trace": ("because", " is ", "pending", "proposal"), "history": (" on ",),
+               "decision_trace": ("because", " is ", "pending", "proposal"), "history": (" on ", " until "),
                "action": ("Route ", "Recorded", " owns ")}
 
 

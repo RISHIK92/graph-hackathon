@@ -772,3 +772,39 @@ def test_draft_adr_turn_reads_the_decision_and_shows_proposals_as_proposed(world
     statuses = {f["status"] for it in act["pack"]["items"] for f in it["facts"] if f["assertion_id"] in act["result"]["proposals"]}
     assert statuses == {"proposed"}, statuses
     assert "Awaiting approval from Bob Okafor (ADR-001 deciders)." in act["summary"]
+
+
+def test_summaries_and_absent_relations_say_what_the_graph_knows(fx):  # noqa: F811
+    """A question about a known entity never says "nothing in the graph" when the graph holds facts about it:
+    a ticket summary reads state, subject and assignee; a team summary its systems and lead; a relation with
+    no current fact is said to be missing, followed by what is recorded (cited)."""
+    fa = Agent(fx.g, Clock(fx.now + 10))
+    fs = fa.create_session("judge", "person:eve")
+
+    def ask(q):
+        a = answer_of(run(fa, fs, q))
+        return a, a["assembled"]["lead"]
+
+    a, lead = ask("Tell me about RDS-42")
+    assert not a["abstained"] and lead == "RDS-42: about Ledger; not assigned to anyone.", lead
+    a, lead = ask("Tell me about Platform")
+    assert not a["abstained"] and lead == "Platform: owns Commerce; no current lead.", lead
+    a, lead = ask("Who leads Platform?")
+    assert not a["abstained"] and lead.startswith("The graph records no current lead for Platform."), lead
+    assert lead.endswith("What it does record: Platform: owns Commerce."), lead
+    assert all(c["span_ids"] or c["action_ids"] for c in a["claims"])
+    a, lead = ask("What does Ledger depend on?")
+    assert not a["abstained"] and lead.startswith("The graph records no current dependency for Ledger."), lead
+    a, lead = ask("Who is RDS-42 assigned to?")
+    assert lead.startswith("RDS-42 isn't assigned to anyone."), lead
+    assert ask("Who owned Ledger before?")[1].startswith("Platform owned Ledger until "), ask("Who owned Ledger before?")[1]
+    assert ask("Who owned Ledger before?")[1].endswith("; Payments owns Ledger now (disputed).")
+    assert ask("Tell me about ADR-002")[1] == "ADR-002: accepted; replaces ADR-001; affects Ledger; decided by Priya Raman."
+    assert ask("Tell me about Priya Raman")[1] == "Priya Raman: leads Payments."
+
+
+def test_a_negated_fact_reads_as_a_sentence():
+    from api.agent import _no_longer
+    assert _no_longer("NOT: Ledger depends on Postgres Main") == "Ledger no longer depends on Postgres Main"
+    assert _no_longer("NOT: Bob Okafor is a member of Infra") == "Bob Okafor is no longer a member of Infra"
+    assert _no_longer("Payments owns Ledger") == "Payments owns Ledger"

@@ -124,31 +124,16 @@ class Agent:
         help_text = self._help(plan, text, s)
         gap = help_text or unmodelled(plan, text) or stale_docs_refusal(plan)
         calls = [] if gap else self.tool_calls(plan, text, ctx, s)
-        for name, args in calls[:6]:
-            if callable(args):   # arguments that depend on an earlier call's pack
-                args = args(ctx)
-                if args is None:
-                    continue
-            q0 = len(ctx.queries)
-            yield {"event": "tool_call", "name": name, "args": args}
-            try:
-                pack = run_tool(ctx, name, args)
-            except Exception as e:  # noqa: BLE001
-                yield {"event": "error", "stage": "tool", "message": f"{name}: {e}"}
-                continue
-            qs = ctx.queries[q0:]
-            trace["tool_calls"].append({"name": name, "args": args, "pack_id": pack["pack_id"], "queries": qs,
-                                        "sentence": step_sentence(name, args, pack, self._entity_name)})
-            labels = sorted({it["label"] for it in pack["items"]})
-            yield {"event": "tool_result", "name": name, "pack_id": pack["pack_id"], "items": len(pack["items"]),
-                   "labels": labels, "queries": qs}
-
+        yield from self._run_calls(ctx, calls, trace)
         recall = plan["intent"] == "memory"
-        for p in ctx.packs.values():   # the current turn is never evidence for its own answer; this chat's
-            for it in p.get("items", []):   # earlier turns are, as text, only for a question about the chat
-                it["spans"] = [x for x in it["spans"] if x.get("span_id") != turn_span   # (item 20); a fact
-                               and (recall or it["facts"] or x.get("source_id") != s.id)]   # learned here keeps its turn
-        packs = {k: v for k, v in ctx.packs.items() if not k.startswith("_")}
+
+        def evidence_packs() -> dict[str, dict]:
+            for p in ctx.packs.values():   # the current turn is never evidence for its own answer; this chat's
+                for it in p.get("items", []):   # earlier turns are, as text, only for a question about the chat
+                    it["spans"] = [x for x in it["spans"] if x.get("span_id") != turn_span   # (item 20); a fact
+                                   and (recall or it["facts"] or x.get("source_id") != s.id)]   # learned here keeps its turn
+            return {k: v for k, v in ctx.packs.items() if not k.startswith("_")}
+        packs = evidence_packs()
         answer = {"claims": [], "explanation": ""} if gap else self.draft(text, plan, packs)
         trace["draft_error"] = answer.get("llm_error")   # a timeout or failure, never a silent fallback
         yield {"event": "draft", "claims": len(answer["claims"])}
@@ -163,6 +148,21 @@ class Agent:
             bver = verify(base, ctx.packs)
             if not bver["abstained"]:
                 answer, ver, drafted = base, bver, "deterministic"
+        absent = ""
+        known = next((m for m in plan.get("mentions") or [] if m.get("entity_id")), None)
+        if ver["abstained"] and not gap and known and plan["intent"] not in ("summary", "memory", *GLOBAL_INTENTS):
+            # A known entity with no answer to the question: say what's missing, then what the graph does
+            # record about it (cited), never "nothing in the graph" while it holds facts about the entity.
+            pred = _pred(text.lower())
+            yield from self._run_calls(ctx, ([("get_history", {"entity_id": known["entity_id"], "predicate": pred})]
+                                             if pred else []) + _summary_calls(known["entity_id"]), trace)
+            packs = evidence_packs()
+            base = deterministic_draft({**plan, "intent": "summary"}, packs, text)
+            bver = verify(base, ctx.packs)
+            if not bver["abstained"]:
+                answer, ver, drafted = base, bver, "deterministic"
+                when = "earlier" if plan["intent"] == "history" else "current"
+                absent = f"The graph records no {when} {_ABSENT.get(pred or '', 'answer to that')} for {known['text']}."
         answer, ver, drafted, trace["check"], checked = self._checked(text, plan, packs, answer, ver, drafted)
         trace["models"] = [*(plan.get("models") or []),
                            *([{"role": "drafter", "model": answer["model"], "provider": answer.get("provider")}]
@@ -175,7 +175,13 @@ class Agent:
                  "assembled": assemble(ver["kept"], ctx.packs, answer.get("explanation", "")),
                  "packs": {pid: packs[pid] for pid in packs}}
         lead = lead_sentence(plan, ver["kept"], packs, ctx.as_of, lambda a: self._settlers(s, a), self._now_statement, text)
-        if not check_lead(plan, lead):   # a first sentence that misses the question is dropped, not shown
+        if absent:
+            known_lead = lead_sentence({**plan, "intent": "summary"}, ver["kept"], packs, ctx.as_of,
+                                       lambda a: self._settlers(s, a), self._now_statement, text)
+            for said in ("; no current lead", "; not assigned to anyone"):   # the first sentence said it
+                known_lead = known_lead.replace(said, "")
+            lead = f"{absent} What it does record: {known_lead}" if known_lead else absent
+        elif not check_lead(plan, lead):   # a first sentence that misses the question is dropped, not shown
             trace["verification"]["lead_rejected"] = lead
             lead = ""
         final["assembled"]["lead"] = lead
@@ -204,6 +210,26 @@ class Agent:
         trace["queries"] = ctx.queries
         trace["packs"] = packs
         yield {"event": "done", "turn_id": turn_id}
+
+    def _run_calls(self, ctx: Ctx, calls: list, trace: dict) -> Iterator[dict]:
+        for name, args in calls[:6]:
+            if callable(args):   # arguments that depend on an earlier call's pack
+                args = args(ctx)
+                if args is None:
+                    continue
+            q0 = len(ctx.queries)
+            yield {"event": "tool_call", "name": name, "args": args}
+            try:
+                pack = run_tool(ctx, name, args)
+            except Exception as e:  # noqa: BLE001
+                yield {"event": "error", "stage": "tool", "message": f"{name}: {e}"}
+                continue
+            qs = ctx.queries[q0:]
+            trace["tool_calls"].append({"name": name, "args": args, "pack_id": pack["pack_id"], "queries": qs,
+                                        "sentence": step_sentence(name, args, pack, self._entity_name)})
+            labels = sorted({it["label"] for it in pack["items"]})
+            yield {"event": "tool_result", "name": name, "pack_id": pack["pack_id"], "items": len(pack["items"]),
+                   "labels": labels, "queries": qs}
 
     # plan
     def plan(self, text: str, s: Session) -> dict:
@@ -312,9 +338,7 @@ class Agent:
                     calls.append(("get_owner", {"entity_id": about[0]["x"]}))
                 calls.append(("explain_action", _route_action))
             else:
-                pred = "OWNS" if "own" in text.lower() else "LEADS" if "lead" in text.lower() else "OWNS"
-                key = tgt if pred == "OWNS" else tgt
-                calls.append(("get_history", {"entity_id": key, "predicate": pred}))
+                calls.append(("get_history", {"entity_id": tgt, "predicate": _pred(text.lower()) or "OWNS"}))
         elif intent == "impact" and tgt:
             calls.append(("find_paths", {"from_id": tgt}))
             if tgt.startswith("system:"):
@@ -346,7 +370,7 @@ class Agent:
 
     def _display(self, text: str) -> str:
         """M17: raw ids in shown text ("person:priya commented ...") read as names."""
-        return _RAW_ID.sub(lambda m: self._entity_name(m.group(0)), text)
+        return _no_longer(_RAW_ID.sub(lambda m: self._entity_name(m.group(0)), text))
 
     def _route(self, text: str, prev: str = "") -> dict | None:
         """The router's intent and reply kind for a message, each only when confident; None if it is slow or
@@ -858,12 +882,12 @@ def _summary_calls(x: str) -> list[tuple[str, dict]]:
         return [("get_owner", {"entity_id": x}), ("get_history", {"entity_id": x, "predicate": "DEPENDS_ON", **current}),
                 ("trace_decision", {"entity_id": x})]
     if kind == "team":
-        return [("get_history", {"entity_id": x, "predicate": "LEADS", **current})]
+        return [("get_history", {"entity_id": x, "predicate": p, **current}) for p in ("LEADS", "OWNS")]
     if kind == "person":
         return [("get_history", {"entity_id": x, "predicate": p, **current}) for p in ("MEMBER_OF", "LEADS")]
     if kind == "decision":
         return [("trace_decision", {"decision_id": x})]
-    return [("get_history", {"entity_id": x, "predicate": "ASSIGNED_TO", **current})]
+    return [("get_history", {"entity_id": x, "predicate": p, **current}) for p in ("HAS_STATE", "ABOUT", "ASSIGNED_TO")]
 
 
 def heuristic_plan(text: str) -> dict:
@@ -1014,7 +1038,11 @@ _LABELS = [("architecture decisions", "Decision"), ("decisions", "Decision"), ("
            ("persons", "Person"), ("members", "Person"), ("projects", "Project"), ("tickets", "Ticket")]
 _PREDS = [(r"primary members? of|members? of", "MEMBER_OF"), (r"depend", "DEPENDS_ON"),
           (r"part of|belongs? to", "PART_OF"), (r"\baffect", "AFFECTS"), (r"\bown", "OWNS"),
-          (r"work(s|ing)? on", "WORKS_ON"), (r"\blead", "LEADS"), (r"assigned to", "ASSIGNED_TO")]
+          (r"work(s|ing)? on", "WORKS_ON"), (r"\blead|\bled\b", "LEADS"), (r"assigned to", "ASSIGNED_TO")]
+
+
+_ABSENT = {"LEADS": "lead", "OWNS": "owner", "DEPENDS_ON": "dependency", "ASSIGNED_TO": "assignee",
+           "MEMBER_OF": "team", "PART_OF": "project", "WORKS_ON": "work", "AFFECTS": "decision"}
 
 
 def _pred(s: str) -> str | None:
@@ -1097,7 +1125,8 @@ def _content(t: str) -> set[str]:
 # Relations each intent asks about (item 18): other graph facts stay in the packs for the citation panel,
 # not in the prose. Intents not listed keep every claim.
 _INTENT_PREDS = {"ownership": {"OWNS", "LEADS", "ASSIGNED_TO", "PART_OF", "MEMBER_OF"},
-                 "summary": {"OWNS", "LEADS", "DEPENDS_ON", "PART_OF", "HAS_STATUS", "MEMBER_OF", "ASSIGNED_TO"},
+                 "summary": {"OWNS", "LEADS", "DEPENDS_ON", "PART_OF", "HAS_STATUS", "MEMBER_OF", "ASSIGNED_TO",
+                             "HAS_STATE", "ABOUT"},
                  "dependency": {"DEPENDS_ON"},
                  "critical": {"DEPENDS_ON"}, "key_people": {"LEADS", "MEMBER_OF", "WORKS_ON"},
                  "impact": {"DEPENDS_ON", "OWNS", "LEADS", "PART_OF"}}
@@ -1111,6 +1140,8 @@ def unresolved(claims: list[dict], packs: dict[str, dict]) -> list[dict]:
 
 def relevant_claims(plan: dict, claims: list[dict]) -> list[dict]:
     keep = _INTENT_PREDS.get(plan.get("intent", ""))
+    if plan.get("intent") == "summary" and any(m.get("entity_id", "").startswith("decision:") for m in plan.get("mentions") or []):
+        keep = {*keep, "REPLACES", "AFFECTS", "DECIDED_BY"}
     if not keep:
         return claims
     return [c for c in claims if c.get("label") != "graph"
@@ -1129,6 +1160,18 @@ def lead_sentence(plan: dict, kept: list[dict], packs: dict[str, dict], as_of: i
                   now_statement, question: str = "") -> str:
     """The fixed first sentence for disputes and past belief (item 18 fix 5; the item 16 M4/M11 wording),
     built from verified claims only. Other answers have none ("")."""
+    ticket = next((m for m in plan.get("mentions") or [] if m.get("entity_id", "").startswith("ticket:")), None)
+    if ticket and plan.get("intent") == "ownership" and plan.get("wants_action") != "route_to_owner" \
+            and re.search(r"assigned|working on|who has", question.lower()) \
+            and not any(c.get("tense") == "current" and (c.get("fact") or {}).get("predicate") == "ASSIGNED_TO"
+                        and (c.get("fact") or {}).get("subject_id") == ticket["entity_id"] for c in kept):
+        rest = _lead_sentence(plan, kept, packs, as_of, settlers, now_statement, question)
+        return f"{ticket['text']} isn't assigned to anyone." + (f" {rest}" if rest else "")
+    return _lead_sentence(plan, kept, packs, as_of, settlers, now_statement, question)
+
+
+def _lead_sentence(plan: dict, kept: list[dict], packs: dict[str, dict], as_of: int | None, settlers,
+                   now_statement, question: str = "") -> str:
     ix = index_packs(packs)
     intent = plan.get("intent", "")
     if intent == "decision_trace" and re.search(r"pending|\bdrafts?\b|propos", question.lower()):
@@ -1277,29 +1320,77 @@ def shape_answer(assembled: dict, kept: list[dict], packs: dict[str, dict], as_o
             "next": nxt}, claims
 
 
+def _no_longer(text: str) -> str:
+    """A negated fact's statement ("NOT: Ledger depends on Postgres Main") as a sentence."""
+    if not text.startswith("NOT: "):
+        return text
+    body = text[5:]
+    for v in sorted({*_PRESENT.values()}, key=len, reverse=True):
+        if v in body:
+            a, b = body.split(v, 1)
+            verb = v.strip()
+            return f"{a} {'is no longer ' + verb[3:] if verb.startswith('is ') else 'no longer ' + verb} {b}"
+    return "No longer true: " + body
+
+
 def _names_list(xs: list[str]) -> str:
+    xs = list(dict.fromkeys(xs))   # two chains can carry the same fact (Wallet Launch from roster and wiki)
     return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
 
 
 def _summary_lead(plan: dict, graph: list, current: list, leads: dict) -> str:
-    """M9: "Ledger: owned by Payments, led by Priya Raman; depends on Aurora; decisions: ADR-007 (accepted)."."""
-    x = next((m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")), "")
-    if not x:
+    """M9: "Ledger: owned by Payments, led by Priya Raman; depends on Aurora; decisions: ADR-007 (accepted).";
+    a team says what it owns and who leads it, a ticket its subject, state and assignee."""
+    m = next((m for m in plan.get("mentions") or [] if m.get("entity_id")), None)
+    if not m:
         return ""
+    x, eid = m["text"], m["entity_id"]
+    kind = eid.split(":")[0]
     parts = []
-    own = next((f for _, f in current if f["predicate"] == "OWNS"), None)
-    if own:
-        team = own["statement"].split(" owns ", 1)[0]
-        lead = leads.get(own["subject_id"])
-        parts.append(f"owned by {team}" + (f", led by {lead['statement'].split(' leads ', 1)[0]}" if lead else ""))
-    deps = [f["statement"].split(" depends on ", 1)[1] for _, f in current if f["predicate"] == "DEPENDS_ON"
-            and f["statement"].startswith(x + " ")]
-    if deps:
-        parts.append(f"depends on {_names_list(deps)}")
-    dec = [f["statement"].replace(" is ", " (", 1) + ")" for _, f in current if f["predicate"] == "HAS_STATUS"]
-    if dec:
-        parts.append("decisions: " + ", ".join(dict.fromkeys(dec)))
-    if any(c.get("disputed") for c, _ in graph):
+    if kind == "ticket":
+        about = [f["statement"].split(" is about ", 1)[1] for _, f in current if f["predicate"] == "ABOUT"]
+        state = next((f["object_value"] or f["statement"].rsplit(" is ", 1)[-1] for _, f in current
+                      if f["predicate"] == "HAS_STATE"), "")
+        who = [f["statement"].split(" is assigned to ", 1)[1] for _, f in current if f["predicate"] == "ASSIGNED_TO"]
+        parts = [f"about {_names_list(about)}" if about else "", state.replace("_", " "),
+                 f"assigned to {_names_list(who)}" if who else "not assigned to anyone"]
+    elif kind == "team":
+        owns = [f["statement"].split(" owns ", 1)[1] for _, f in current if f["predicate"] == "OWNS" and f["subject_id"] == eid]
+        contested = {f["object_id"] for c, f in graph if c.get("disputed") and f["predicate"] == "OWNS"
+                     and f["subject_id"] == eid and f["status"] == "current"}
+        lead = leads.get(eid)
+        parts = [f"owns {_names_list(owns)}" if owns else "",
+                 f"{len(contested)} more {'is' if len(contested) == 1 else 'are'} disputed" if contested else "",
+                 f"led by {lead['statement'].split(' leads ', 1)[0]}" if lead else "no current lead"]
+    elif kind == "person":
+        teams = [f["statement"].split(" of ", 1)[1] for _, f in current if f["predicate"] == "MEMBER_OF"]
+        led = [f["statement"].split(" leads ", 1)[1] for _, f in current if f["predicate"] == "LEADS"]
+        parts = [f"member of {_names_list(teams)}" if teams else "", f"leads {_names_list(led)}" if led else ""]
+    elif kind == "decision":
+        mine = [f for _, f in current if f["subject_id"] == eid]
+        status = next((f["object_value"] for f in mine if f["predicate"] == "HAS_STATUS"), "")
+        replaced = [f["statement"].split(" replaces ", 1)[1] for f in mine if f["predicate"] == "REPLACES"]
+        affects = [f["statement"].split(" affects ", 1)[1] for f in mine if f["predicate"] == "AFFECTS"]
+        by = [f["statement"].split(" decided by ", 1)[1] for f in mine if f["predicate"] == "DECIDED_BY"]
+        parts = [status, f"replaces {_names_list(replaced)}" if replaced else "",
+                 f"affects {_names_list(affects)}" if affects else "", f"decided by {_names_list(by)}" if by else ""]
+    else:
+        own = next((f for _, f in current if f["predicate"] == "OWNS" and f["object_id"] == eid), None)
+        if own:
+            team = own["statement"].split(" owns ", 1)[0]
+            lead = leads.get(own["subject_id"])
+            parts.append(f"owned by {team}" + (f", led by {lead['statement'].split(' leads ', 1)[0]}" if lead else ""))
+        deps = [f["statement"].split(" depends on ", 1)[1] for _, f in current if f["predicate"] == "DEPENDS_ON"
+                and f["subject_id"] == eid]
+        if deps:
+            parts.append(f"depends on {_names_list(deps)}")
+        dec = [f["statement"].replace(" is ", " (", 1) + ")" for _, f in current if f["predicate"] == "HAS_STATUS"]
+        if dec:
+            parts.append("decisions: " + ", ".join(dict.fromkeys(dec)))
+    parts = [p for p in parts if p]
+    if not current:
+        return ""
+    if kind != "team" and any(c.get("disputed") and eid in (f["subject_id"], f["object_id"]) for c, f in graph):
         parts.append("an open dispute needs review")
     return f"{x}: " + "; ".join(parts) + "." if parts else ""
 
@@ -1354,7 +1445,7 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: di
     intent = plan.get("intent", "")
     graph = [(c, ix.facts[c["assertion_ids"][0]]) for c in kept
              if c.get("label") == "graph" and c.get("assertion_ids") and c["assertion_ids"][0] in ix.facts]
-    current = [(c, f) for c, f in graph if c.get("tense") == "current" and not c.get("disputed")]
+    current = [(c, f) for c, f in graph if c.get("tense") == "current" and not c.get("disputed") and not f.get("negated")]
     leads = {f["object_id"]: f for _, f in current if f["predicate"] == "LEADS"}
     route = plan.get("wants_action") == "route_to_owner"
     if intent == "ownership" or route:
@@ -1376,6 +1467,18 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: di
         return " ".join(c["text"] for c in kept if c.get("label") == "aggregate")
     if intent == "summary":
         return _summary_lead(plan, graph, current, leads)
+    if intent == "history" and re.search(r"\b(before|previously|used to|originally)\b", question.lower()):
+        # "Who owned Ledger before the reorg?" names no date: the last ended run answers it
+        ended = sorted((f for c, f in graph if c.get("tense") == "historical" and f["predicate"] in _PAST
+                        and f["valid_to"] < MAX and not f.get("negated") and f["predicate"] == (_pred(question.lower()) or f["predicate"])),
+                       key=lambda f: -f["valid_to"])
+        if ended:
+            f = ended[0]
+            now = next(((c, g) for c, g in graph if c.get("tense") == "current" and not g.get("negated")
+                        and g["predicate"] == f["predicate"] and g["object_id"] == f["object_id"]
+                        and g["subject_id"] != f["subject_id"]), None)
+            return (f["statement"].replace(_PRESENT[f["predicate"]], _PAST[f["predicate"]], 1) + f" until {_day(f['valid_to'])}"
+                    + (f"; {now[1]['statement']} now" + (" (disputed)." if now[0].get("disputed") else ".") if now else "."))
     if intent == "dependency":
         x = next((m["text"] for m in plan.get("mentions") or [] if m.get("entity_id")), "")
         deps = [f["statement"].split(" depends on ", 1) for _, f in current if f["predicate"] == "DEPENDS_ON"]
@@ -1385,7 +1488,8 @@ def _intent_lead(plan: dict, kept: list[dict], ix, question: str = "", packs: di
         if asks_out and out:
             return f"{x} depends on {_names_list(out)}."
         if inc:
-            return f"{_names_list(inc)} depend{'s' if len(inc) == 1 else ''} on {x}."
+            return ("The graph records no current dependency for " + x + ". " if asks_out else "") + \
+                f"{_names_list(inc)} depend{'s' if len(inc) == 1 else ''} on {x}."
         return f"{x} depends on {_names_list(out)}." if out else ""
     if intent == "impact":
         deps = list(dict.fromkeys(f["statement"].split(" depends on ", 1)[0] for _, f in graph if f["predicate"] == "DEPENDS_ON"))
@@ -1550,8 +1654,12 @@ def deterministic_draft(plan: dict, packs: dict[str, dict], question: str = "") 
                 continue
             if it.get("note") == "open dispute":
                 continue
+            ended = {(f["subject_id"], f["predicate"], f["object_id"]) for f in it["facts"]
+                     if f["negated"] and f["status"] == "current"}
             for f in it["facts"]:
                 st = f["status"]
+                if st == "superseded" and plan.get("intent") != "history" and (f["subject_id"], f["predicate"], f["object_id"]) in ended:
+                    continue   # "no longer depends on" says it; the ended fact would repeat it as history
                 if st == "current":
                     if f.get("open_disputes"):
                         add_fact_claim(it, f, "current", True, f["open_disputes"])

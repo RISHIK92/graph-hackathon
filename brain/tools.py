@@ -398,8 +398,9 @@ def get_history(ctx: Ctx, entity_id: str, predicate: str, belief_at: int | None 
         fs = facts(ctx, aids)
         fs = [f for f in fs if f["status"] not in ("retracted", "unknown_at_T")]
         if current_only:
+            # a chain the entity left (Platform once owned Ledger) holds no current fact about the entity
             fs = [f for f in fs if f["status"] == "current" and not f["negated"]
-                  and f["valid_from"] <= ctx.V < f["valid_to"]]
+                  and f["valid_from"] <= ctx.V < f["valid_to"] and entity_id in (f["subject_id"], f["object_id"])]
             if fs:
                 fact_item(ctx, pb, [f["assertion_id"] for f in fs], None, 1.0, "graph", f"current {predicate}")
             continue
