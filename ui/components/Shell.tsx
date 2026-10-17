@@ -150,6 +150,7 @@ function ResetWorkspace({ onClose }: { onClose: () => void }) {
           await send("POST", "/workspace/reset", {});
           s.setThread([]);
           s.bump();
+          s.retrySession();   // the session lived in the dropped graph
           s.toast({ tone: "info", title: "Workspace emptied" });
           onClose();
         } catch (e) {

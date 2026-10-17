@@ -14,7 +14,7 @@ export function useJob(): [Job | null, (id: string, kind: string) => void] {
     if (!job || job.state !== "running") return;
     const t = setInterval(() => get<Job>(`/workspace/jobs/${job.id}`).then((j) => {
       setJob(j);
-      if (j.state !== "running") s.bump();
+      if (j.state !== "running") { s.bump(); s.retrySession(); }   // a demo load replaces the graph, sessions included
     }).catch(() => undefined), 600);
     return () => clearInterval(t);
   }, [job, s]);

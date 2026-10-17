@@ -249,7 +249,7 @@ def get_span(span_id: str) -> dict:
     return r[0]
 
 
-@app.get("/sources/{source_id}")
+@app.get("/sources/{source_id:path}")   # a chat message's id has a "/" (channel/ts)
 def get_source(source_id: str) -> dict:
     r = G.q("source_view", {"id": source_id})
     if not r:

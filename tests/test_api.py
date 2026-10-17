@@ -400,3 +400,13 @@ def test_turns_are_rate_limited_per_client_ip_behind_the_proxy(api_client, monke
     assert client.post(f"/sessions/{sid}/turns/sync", json={"text": "Who owns Ledger?"}, headers=h).status_code == 429
     other = {**h, "X-Forwarded-For": "198.51.100.9"}
     assert client.post(f"/sessions/{sid}/turns/sync", json={"text": "Who owns Ledger?"}, headers=other).status_code == 200
+
+
+def test_a_source_whose_id_has_a_slash_opens(api_client):
+    """Item 24 step 5: a chat message's Source id is channel/ts; the in-app source view must open it."""
+    client, w = api_client
+    from brain import store
+    store.create_source(w["g"], {"id": "chat:slack:eng/17@ab", "doc_key": "chat:slack:eng/17", "kind": "chat", "status": "active",
+                                 "is_latest": True, "ingested_at": 1, "updated_at": 1, "title": "#eng message", "uri": "https://chat.example/eng/17"})
+    r = client.get("/sources/chat%3Aslack%3Aeng%2F17%40ab")
+    assert r.status_code == 200 and r.json()["link"] == {"url": "", "demo": True}
