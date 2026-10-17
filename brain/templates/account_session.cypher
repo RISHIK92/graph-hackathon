@@ -5,5 +5,5 @@
 // golden: tests/test_templates.py::test_goldens[account_session]
 MATCH (s:Source {user_id:$user})
 WHERE s.kind = 'chat_session'
-RETURN s.id AS id
+RETURN s.id AS id, s.created_at AS at
 ORDER BY s.created_at DESC LIMIT 1

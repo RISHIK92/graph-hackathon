@@ -19,7 +19,7 @@ import httpx
 
 from brain import ids, providers, registry, store
 from brain.actions import Actions, Actor, Refused
-from brain.config import MAX
+from brain.config import MAX, chat_ttl_ms
 from brain.db import Graph
 from brain.tools import Ctx, run_tool
 from ingest.extract import AliasIndex, extract, pattern_extract, screen_injection
@@ -70,14 +70,21 @@ class Agent:
         return Session(sid, r[0]["u"], r[0]["a"] or "") if r else None
 
     def account_session(self, user_id: str) -> str | None:
-        """The account's running chat (chat history, Oct 18): its newest session in this workspace."""
+        """The account's running chat (chat history, Oct 18): its newest session in this workspace, while its
+        last turn (or its start) is within the chat's lifetime; after that the account starts a fresh one."""
         r = self.g.q("account_session", {"user": user_id})
-        return r[0]["id"] if r else None
+        if not r:
+            return None
+        last = max((t["ts"] for t in self.g.q("chat_turns", {"s": r[0]["id"]})), default=r[0]["at"])
+        return r[0]["id"] if last is not None and self.clock() - last <= chat_ttl_ms() else None
 
     def chat(self, sid: str) -> list[dict]:
         """A session's user turns in order, each with the events and trace kept when it finished."""
         out = []
+        since = self.clock() - chat_ttl_ms()   # an account's history lasts an hour (user decision, Oct 18)
         for r in self.g.q("chat_turns", {"s": sid}):
+            if r["ts"] < since:
+                continue
             kept = json.loads(r["chat"]) if r["chat"] else {}
             out.append({"text": r["text"], "at": r["ts"], "actor": r["actor"], "turn_id": kept.get("turn_id"),
                         "as_of": kept.get("as_of"), "events": kept.get("events", []), "trace": kept.get("trace")})

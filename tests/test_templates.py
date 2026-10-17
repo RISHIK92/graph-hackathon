@@ -990,7 +990,7 @@ def g_turn_count(f, rows):
 
 
 def g_account_session(f, rows):
-    assert rows == [{"id": "sess1"}]
+    assert rows == [{"id": "sess1", "at": None}]
 
 
 def g_chat_turns(f, rows):

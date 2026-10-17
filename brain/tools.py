@@ -13,7 +13,7 @@ from typing import Any, Callable
 
 from . import chain as chainmod
 from . import ids, providers, registry, snapshot, templates
-from .config import MAX, settings
+from .config import MAX, chat_ttl_ms, settings
 from .db import Graph
 from .past_belief_cypher import past_belief_cypher
 from .write_path import load_chain, now_ms
@@ -766,6 +766,8 @@ def recall_session(ctx: Ctx, user_id: str, query: str, k: int = 10) -> dict:
         pb.item("text_only", 0.0, [], None, [], note="unavailable without the token (A47)")
         return pb.build()
     rows = ctx.q("session_spans", {"user": user_id})
+    if user_id.startswith("acct_"):   # an account's chat lasts an hour (Oct 18): older turns aren't recalled
+        rows = [r for r in rows if r["ts"] >= ctx.now - chat_ttl_ms()]
     qv = providers.embed([query])[0]
     vecs = providers.embed([r["text"] for r in rows]) if rows else []
     scored = sorted(zip(rows, vecs), key=lambda rv: -sum(a * b for a, b in zip(qv, rv[1])))[:k]

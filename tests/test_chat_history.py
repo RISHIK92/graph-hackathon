@@ -100,3 +100,37 @@ def test_emptying_the_workspace_clears_the_chat(accounts_on):
 
 def test_accounts_off_has_no_chat():
     assert TestClient(api_app.app).get("/chat").status_code == 404   # sessions stay one per page load
+
+
+HOUR = 3_600_000
+
+
+def test_the_chat_is_kept_for_an_hour(world, monkeypatch):
+    """User decision (Oct 18): an account's Ask history lasts an hour. A turn older than NODUS_CHAT_TTL_MIN
+    isn't returned, its session isn't resumed, and a memory question no longer sees it."""
+    g, clock = world["g"], world["clock"]
+    a = Agent(g, clock)
+    s = a.create_session("acct_a", "person:eve")
+    run(a, s, "Who owns Ledger?")
+    clock.tick(HOUR - 60_000)   # 59 minutes on: still kept, and the session resumes
+    assert a.account_session("acct_a") == s.id and [t["text"] for t in a.chat(s.id)] == ["Who owns Ledger?"]
+    run(a, s, "Who leads Payments?")
+    clock.tick(30 * 60_000)   # the first turn is now 89 minutes old, the second 30
+    assert [t["text"] for t in a.chat(s.id)] == ["Who leads Payments?"]
+    assert a.account_session("acct_a") == s.id
+    clock.tick(HOUR)   # every turn is over an hour old: nothing returned, nothing resumed
+    assert a.chat(s.id) == [] and a.account_session("acct_a") is None
+    s2 = a.create_session("acct_a", "person:eve")
+    rec = answer_of(run(a, s2, "What was my last question about?"))
+    assert "Ledger" not in str(rec["assembled"]) and "Payments" not in str(rec["assembled"])
+    monkeypatch.setenv("NODUS_CHAT_TTL_MIN", "120")   # configurable: two hours keeps the 90-minute-old turn
+    assert [t["text"] for t in a.chat(s.id)] == ["Who leads Payments?"]
+
+
+def test_a_session_with_no_turns_resumes_only_within_the_hour(world):
+    g, clock = world["g"], world["clock"]
+    a = Agent(g, clock)
+    s = a.create_session("acct_a", "person:eve")
+    assert a.account_session("acct_a") == s.id
+    clock.tick(HOUR + 1)
+    assert a.account_session("acct_a") is None

@@ -27,6 +27,11 @@ def _load_dotenv() -> None:
 _load_dotenv()
 
 
+def chat_ttl_ms() -> int:
+    """How long an account's Ask history lasts (user decision, Oct 18): NODUS_CHAT_TTL_MIN, default an hour."""
+    return int(os.environ.get("NODUS_CHAT_TTL_MIN", "60")) * 60_000
+
+
 def _get(name: str, default: str = "") -> str:
     return os.environ.get(name, default)
 
