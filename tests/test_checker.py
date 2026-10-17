@@ -336,7 +336,8 @@ def test_router_knows_the_assistants_scope_and_picks_a_fixed_reply(world, monkey
     a = _reply(agent, s, "can you route tickets?")
     assert a["reply"] == "capability_yes" and a["missing"][0].startswith("Yes. Say it like “Route RDS-42 to the owner”")
     a = _reply(agent, s, "what's the weather")
-    assert a["reply"] == "off_topic" and a["missing"] == ["That's outside what I know. I only know this company's graph."]
+    assert a["reply"] == "off_topic" and a["missing"][0].startswith("That's outside what I know.")
+    assert "anything in this workspace" in a["missing"][0] and any("Who owns" in x for x in a["missing"])
     # the router's state names the previous reply's kind, so a repeat can be told apart
     assert "PREVIOUS REPLY KIND: capability_yes" in seen[-1][1]
 
@@ -352,10 +353,10 @@ def test_a_repeated_reply_kind_gets_one_short_line(world, monkeypatch):
 def test_an_unsure_or_slow_router_keeps_the_old_reply(world, monkeypatch):
     agent, s, _ = _reply_world(world, monkeypatch, {"hlo": {"reply": ("greeting", 0.3)}})
     a = _reply(agent, s, "hlo")
-    assert "reply" not in a and a["missing"][0] == "I couldn't tie that to anything in the graph."
+    assert "reply" not in a and a["missing"][0].startswith("I couldn't tie that to anything in the graph.")
     agent, s, _ = _reply_world(world, monkeypatch, {"hlo": {"reply": ("greeting", 0.9)}}, slow=True)
     a = _reply(agent, s, "hlo")
-    assert "reply" not in a and a["missing"][0] == "I couldn't tie that to anything in the graph."
+    assert "reply" not in a and a["missing"][0].startswith("I couldn't tie that to anything in the graph.")
 
 
 def test_a_message_naming_the_graph_never_gets_a_canned_reply(world, monkeypatch):

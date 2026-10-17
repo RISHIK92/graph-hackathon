@@ -163,6 +163,9 @@ class Agent:
             s.transcript.append({"role": "user", "text": text})
 
         plan = self.plan(text, s)
+        general = _general_intent(plan, text)
+        if general:   # an organisation-wide question that names nothing: the graph tool that answers it
+            plan = {**plan, "intent": general, "reply": None}
         if plan.get("as_of") and ctx.as_of is None:   # "who owned X in March 2026?" → valid time from the turn
             try:
                 from ingest.connectors import iso_ms
@@ -246,6 +249,9 @@ class Agent:
         if ver["abstained"]:
             final["nearest"] = [it.get("path") for p in packs.values() for it in p["items"] if it.get("path")][:3]
             final["missing"] = gap or missing(plan, text)
+            if not gap and plan["intent"] != "memory" and _names_nothing(plan, text):
+                # a vague question the graph can't answer as asked: what it can be asked, never a bare abstain
+                help_text = final["missing"] = self._fallback(text)
             if help_text:
                 final["help"] = True
                 if plan.get("reply"):
@@ -452,25 +458,39 @@ class Agent:
             prev = s.last_reply if s else ""
             if s:
                 s.last_reply = kind
-            if kind == prev:
+            if kind == prev and kind in ("greeting", "feedback"):   # small talk repeated: one short line
                 return [REPEAT_LINE]
             return self._reply_lines(kind, plan.get("reply_action"), s)
-        names_nothing = not any(m.get("entity_id") for m in plan.get("mentions") or []) and \
-            not any(m.get("text") for m in plan.get("mentions") or []) and \
-            not re.search(r"\s[A-Z][a-z0-9]+", text)   # "Who leads Nimbus Vault?" names something unknown
+        names_nothing = _names_nothing(plan, text)
         ents = {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
-        if names_nothing and _ABOUT_WS.search(text) and _ABOUT_ASK.search(text):
-            return self._overview(ents) + self._help({**plan, "intent": "help", "reply": None}, "")[1:]
-        if plan["intent"] != "help" and not (plan["intent"] == "other" and names_nothing):
-            return []
+        if names_nothing and plan["intent"] not in ("memory", "action", *GLOBAL_INTENTS):
+            listed = _kind_list(ents, text)
+            if listed:   # "what teams are there?": the graph's own list of that kind
+                return listed + self._examples(ents)
+            if (_ABOUT_WS.search(text) and _ABOUT_ASK.search(text)) or _OVERVIEW_Q.search(text.strip()):
+                return self._overview(ents) + self._examples(ents)
+        if plan["intent"] == "help":
+            return self._examples(ents)
+        return self._fallback(text, ents) if plan["intent"] == "other" and names_nothing else []
+
+    def _fallback(self, text: str, ents: dict[str, str] | None = None) -> list[str]:
+        """A vague or general question the graph can't answer as asked (user feedback: "many vague and general
+        questions"): ask about anything in this workspace, what it holds, and example questions."""
+        ents = ents if ents is not None else {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
+        inbox = ["Open disputes and changes waiting for someone to confirm are in the Inbox."] \
+            if re.search(r"pending|waiting|disputes?|approv|confirm|inbox|review", text, re.I) else []
+        return ["I couldn't tie that to anything in the graph. Ask me about anything in this workspace.", *inbox,
+                *self._overview(ents), *self._examples(ents)]
+
+    @staticmethod
+    def _examples(ents: dict[str, str]) -> list[str]:
         # examples spread over several real systems, not one (user feedback: "Ledger" was in every example)
         systems = [ents[i] for i in ("system:reporting", "system:aurora", "system:checkout", "system:ledger") if i in ents] \
             or sorted(n for i, n in ents.items() if i.startswith("system:")) or ["a system"]
         a, b = systems[0], systems[1 % len(systems)]
         adr = ents.get("decision:adr-007") or next((n for i, n in sorted(ents.items()) if i.startswith("decision:")), "")
         why = f"“Why was {adr} accepted?”" if adr else f"“Why is {b} on its current setup?”"
-        head = [] if plan["intent"] == "help" else ["I couldn't tie that to anything in the graph."]
-        return head + [
+        return [
             "I answer questions about your company from its graph, and every answer cites where it came from.",
             f"Try: “Who owns {a}?”, {why}, “What breaks if {b} goes down, and who do I tell?”, “Who knows about "
             f"{a}?”, “Which systems are most critical?” or “Where are our knowledge gaps?”.",
@@ -512,7 +532,8 @@ class Agent:
                     "what, why it was decided and what breaks if it fails, and with the access token route a ticket, "
                     "record a fact, draft an ADR change or flag outdated docs."]
         if kind == "off_topic":
-            return ["That's outside what I know. I only know this company's graph."]
+            return ["That's outside what I know. I only know this company's graph, so ask me about anything in "
+                    "this workspace.", *self._examples(ents)]
         return ["Thanks for telling me."]
 
     def _entity_name(self, eid: str) -> str:
@@ -916,6 +937,24 @@ _CAN_YOU = re.compile(r"^\s*(can|could|will|would) (you|u|nodus)\b|\b(are you ab
 # "what is this workspace about?" (deployed-site feedback): the workspace as a whole, answered with what it holds
 _ABOUT_WS = re.compile(r"\b(workspace|company|demo|graph|organi[sz]ation|org)\b", re.I)
 _ABOUT_ASK = re.compile(r"\b(about|contains?|includes?|in (it|here|this|the)|cover|overview|what'?s in)\b", re.I)
+# the same overview for a request to summarise everything, with no workspace word
+_OVERVIEW_Q = re.compile(r"^(give me |show me )?(an? )?overview\W*$|^summari[sz]e( everything| it all| it)?\W*$|^tell me everything|"
+                         r"^what do (you|u) know\W*$|\borg(ani[sz]ation(al)?)? (structure|chart)\b|"
+                         r"what does (this|the|our) (company|org|organi[sz]ation|business) do|^where (do|should) i (start|begin)", re.I)
+_LIST_Q = re.compile(r"^(what|which) (\w+ )?(teams|systems|people|persons|employees|staff|projects|decisions|adrs|tickets)"
+                     r"( are there| exist| do we have| are in (it|here|this \w+)| (were|have been|did we) (made|taken|make|take)|\?|$)|^(list|show|name)( me)?( all| the| our)? "
+                     r"(teams|systems|people|employees|staff|projects|decisions|adrs|tickets)\b|^how many (teams|systems|people|"
+                     r"persons|employees|projects|decisions|adrs|tickets)( are there| exist| do we have| work here| are in)?\W*$|"
+                     r"^who works (here|at)\b|^(all|any) (teams|systems|projects|decisions)\W*$", re.I)
+_KIND_WORDS = {"team": "teams", "system": "systems", "person": "people|persons|employees|staff|works", "project": "projects",
+               "decision": "decisions|adrs", "ticket": "tickets"}
+# organisation-wide questions that name nothing, and the global tool (item 17) that answers each
+_GENERAL = (("key_people", re.compile(r"who (knows|matters) (the )?most|most (knowledgeable|important (people|person))|"
+                                      r"key (people|persons?)|who is (the )?most (important|indispensable)", re.I)),
+            ("gaps", re.compile(r"\bgaps?\b|unowned|nobody owns|no(body| one)? (owns|leads)|without an? (owner|lead)|"
+                                r"(has|have) no (owner|lead)", re.I)),
+            ("critical", re.compile(r"\b(risks?|risky|riskiest|most important|matters? most|critical|vital|biggest problems?)\b|"
+                                    r"^what('?s| is| matters) important\W*$", re.I)))
 _KINDS = (("team", "team", "teams"), ("system", "system", "systems"), ("person", "person", "people"),
           ("project", "project", "projects"), ("decision", "decision", "decisions"), ("ticket", "ticket", "tickets"))
 REPEAT_LINE = "Ask me about who owns what, why it was decided, or what breaks if it fails."
@@ -961,6 +1000,34 @@ def _summary_calls(x: str) -> list[tuple[str, dict]]:
     if kind == "decision":
         return [("trace_decision", {"decision_id": x})]
     return [("get_history", {"entity_id": x, "predicate": p, **current}) for p in ("HAS_STATE", "ABOUT", "ASSIGNED_TO")]
+
+
+def _names_nothing(plan: dict, text: str) -> bool:
+    """No resolved entity, no unresolved mention, and no capitalised name ("Who leads Nimbus Vault?" names
+    something unknown, which abstains honestly instead)."""
+    ms = plan.get("mentions") or []
+    return not any(m.get("entity_id") or m.get("text") for m in ms) and not re.search(r"\s[A-Z][a-z0-9]+", text)
+
+
+def _general_intent(plan: dict, text: str) -> str | None:
+    if plan["intent"] in ("action", "memory", *GLOBAL_INTENTS) or not _names_nothing(plan, text):
+        return None
+    return next((intent for intent, rx in _GENERAL if rx.search(text)), None)
+
+
+def _kind_list(ents: dict[str, str], text: str) -> list[str]:
+    """"What teams are there?", "list all systems", "how many people?": the names of that kind in the graph."""
+    if not _LIST_Q.search(text.strip()):
+        return []
+    kind = next((k for k, w in _KIND_WORDS.items() if re.search(rf"\b({w})\b", text, re.I)), None)
+    if not kind:
+        return []
+    names = sorted(v for i, v in ents.items() if i.startswith(kind + ":"))
+    many = dict((k, m) for k, _, m in _KINDS)[kind]
+    if not names:
+        return [f"This workspace has no {many} yet."]
+    shown = ", ".join(names[:15]) + (f" and {len(names) - 15} more" if len(names) > 15 else "")
+    return [f"This workspace has {len(names)} {many if len(names) != 1 else kind}: {shown}."]
 
 
 def heuristic_plan(text: str) -> dict:

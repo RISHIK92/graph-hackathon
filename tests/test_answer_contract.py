@@ -141,3 +141,27 @@ def test_a_question_about_the_workspace_gets_an_overview_of_what_it_holds(fx):  
         assert text.startswith(f"This workspace holds {len(teams)} teams ({', '.join(teams)})"), (q, text)
         assert "Who owns" in text, (q, text)
     assert not answer_of(run(agent, s, "Tell me about Ledger")).get("help")   # an entity summary stays one
+
+
+def test_vague_questions_never_dead_end(fx):  # noqa: F811
+    """User feedback: "many vague and general questions" got "No verified answer". One that names nothing and
+    that the graph can't answer as asked says what can be asked, with what the workspace holds and examples,
+    every time; a list of a kind is the graph's own list; an organisation-wide risk question is the ranking."""
+    agent = Agent(fx.g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    for q in ("what's going on?", "what are the problems?", "who is in charge?", "what's new?", "what's new?"):
+        ans = answer_of(run(agent, s, q))
+        text = " ".join(ans["missing"])
+        assert ans.get("help") and not ans["claims"], (q, text)
+        assert "Ask me about anything in this workspace" in text and "This workspace holds" in text and "Who owns" in text, (q, text)
+    teams = sorted(r["name"] for r in fx.g.q("all_entities") if r["id"].startswith("team:"))
+    listed = " ".join(answer_of(run(agent, s, "what teams are there?"))["missing"])
+    assert listed.startswith(f"This workspace has {len(teams)} teams: {', '.join(teams)}."), listed
+    pend = " ".join(answer_of(run(agent, s, "anything waiting for me?"))["missing"])
+    assert "Inbox" in pend
+    risk = answer_of(run(agent, s, "what are the risks?"))
+    assert not risk["abstained"] and risk["claims"]
+    overview = " ".join(answer_of(run(agent, s, "give me an overview"))["missing"])
+    assert overview.startswith("This workspace holds"), overview
+    unknown = answer_of(run(agent, s, "Who owns Quasar Gateway?"))   # an unknown name still abstains honestly
+    assert unknown["abstained"] and not unknown.get("help")
