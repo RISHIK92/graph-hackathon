@@ -29,8 +29,9 @@ export default function StartPage() {
   const loadDemo = () => run(send("POST", "/workspace/demo", {}), "demo");
   const done = job?.state === "done" || (!job && s.workspace && !s.workspace.empty);
   useEffect(() => {
-    if (job?.state === "done" && job.kind === "demo") router.push("/ask");
-  }, [job, router]);
+    // after the workspace status refreshes, so Ask doesn't open on its empty state for a moment
+    if (job?.state === "done" && job.kind === "demo" && s.workspace && !s.workspace.empty) router.push("/ask");
+  }, [job, router, s.workspace]);
 
   return (
     <div className="ask-start">
