@@ -115,7 +115,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="main">
-        {ACCOUNTS && s.account?.demo && (
+        {ACCOUNTS && s.account?.demo && s.workspace && !s.workspace.empty && (
           <div className="demo-banner" role="status">
             <span>Shared demo workspace: anyone with the demo login sees this data. It&apos;s emptied every night.</span>
             <button type="button" className="composer-chip then" onClick={() => setResetOpen(true)}>Reset workspace</button>
