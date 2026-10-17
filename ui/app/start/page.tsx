@@ -2,7 +2,8 @@
 
 import { Building2, FileText, Upload } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { JobProgress, useJob } from "@/components/JobProgress";
 import { Button, Modal } from "@/components/ui";
 import { qs, send, upload } from "@/lib/api";
@@ -16,6 +17,7 @@ export default function StartPage() {
   const [job, track] = useJob();
   const fileRef = useRef<HTMLInputElement>(null);
   const [showDemo, setShowDemo] = useState(false);
+  const router = useRouter();
 
   const run = async (p: Promise<{ job_id: string }>, kind: string) => {
     try {
@@ -26,6 +28,9 @@ export default function StartPage() {
   };
   const loadDemo = () => run(send("POST", "/workspace/demo", {}), "demo");
   const done = job?.state === "done" || (!job && s.workspace && !s.workspace.empty);
+  useEffect(() => {
+    if (job?.state === "done" && job.kind === "demo") router.push("/ask");
+  }, [job, router]);
 
   return (
     <div className="ask-start">
@@ -41,11 +46,13 @@ export default function StartPage() {
 
         {!job || job.state !== "running" ? (
           <div className="start-grid nx-rise nx-d1">
-            <button type="button" className="start-card" onClick={loadDemo}>
+            <div role="button" tabIndex={0} className="start-card" onClick={loadDemo}
+              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); void loadDemo(); } }}>
               <span className="kind now"><i />LOAD THE DEMO COMPANY</span>
               <span className="text"><Building2 className="icon-sm" /> A fintech with 6 teams, 15 systems and a reorganisation</span>
               <span className="returns">its Slack, docs, ADRs, tickets and roster · ready in seconds</span>
-            </button>
+              <span className="t-small text-2">Not sure what the demo company is? <button type="button" className="link-btn" onClick={(e) => { e.stopPropagation(); setShowDemo(true); }}>View what&apos;s included</button></span>
+            </div>
             <button type="button" className="start-card" onClick={() => fileRef.current?.click()}>
               <span className="kind sys"><i />UPLOAD DOCS OR A SLACK EXPORT</span>
               <span className="text"><Upload className="icon-sm" /> Markdown, text, a channel .json or the export .zip</span>
@@ -58,9 +65,6 @@ export default function StartPage() {
             </Link>
           </div>
         ) : null}
-        {(!job || job.state !== "running") && (
-          <div className="t-small text-2">Not sure what the demo company is? <button type="button" className="link-btn" onClick={() => setShowDemo(true)}>View what&apos;s included</button></div>
-        )}
         {showDemo && <DemoContents onClose={() => setShowDemo(false)} onLoad={() => { setShowDemo(false); void loadDemo(); }} />}
         <input ref={fileRef} type="file" hidden accept=".md,.markdown,.txt,.json,.zip"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) void run(upload(`/workspace/ingest${qs({ filename: f.name })}`, f), "ingest"); e.target.value = ""; }} />
