@@ -120,7 +120,7 @@ function Hero({ still }: { still: boolean }) {
             <div className="hero-source nx-rise">
               <span className="nx-cite">[1]</span>
               <div className="stack" style={{ gap: 4 }}>
-                <q>owner: team:platform · owner_from: 2025-01-01</q>
+                <q>Reporting · Owner: Platform · since 1 Jan 2025</q>
                 <span className="src-meta">Service catalogue · Reporting entry · valid since 1 Jan 2025</span>
               </div>
             </div>
