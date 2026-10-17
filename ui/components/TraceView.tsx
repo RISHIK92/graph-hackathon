@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { fmtDate } from "@/lib/format";
 import { KIND_LABEL } from "@/lib/labels";
 import type { Path, SpanItem, Trace } from "@/lib/types";
+import { EvidenceText } from "./EvidenceText";
 import { SourceLinks } from "./SourceLinks";
 import { Chip, Details, ErrorState, Skeleton } from "./ui";
 
@@ -75,7 +76,7 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
               <div key={sp.span_id} className="proof-quote">
                 <button type="button" className="stack" style={{ gap: 6, textAlign: "left" }} onClick={() => openSpan(sp)}>
                   <span className="n">[{i + 1}]</span>
-                  <span className="q">“{sp.text.trim()}”</span>
+                  <span className="q"><EvidenceText text={sp.text} kind={sp.kind}>“{sp.text.trim()}”</EvidenceText></span>
                   <span className="meta">{KIND_LABEL[sp.kind || ""] || sp.kind || "Source"}{sp.title ? ` · ${sp.title}` : ""}{sp.ts ? ` · ${fmtDate(sp.ts)}` : ""}{sp.live ? "" : " · not in the latest revision"}</span>
                 </button>
                 <SourceLinks sourceId={sp.source_id} spanId={sp.span_id} url={sp.url} system={sp.system} demo={sp.demo} />

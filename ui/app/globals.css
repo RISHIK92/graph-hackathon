@@ -734,3 +734,13 @@ a.start-card { text-decoration: none; }
 .side-history li.at::before { box-shadow: 0 0 0 4px var(--then-bg), 0 0 0 5px var(--then); }
 .side-history .date { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); }
 @media (max-width: 760px) { .entity-head h1 { font-size: 32px; } .entity-side { max-width: none; } }
+.ev-card { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.ev-rows { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; font-size: 13.5px; }
+.ev-rows > span { display: contents; }
+.ev-rows dt { color: var(--text-3); }
+.ev-rows dd { margin: 0; color: var(--text); }
+.ev-line { font-size: 14.5px; }
+.ev-raw { margin: 0; font-family: var(--mono); font-size: 12px; white-space: pre-wrap; color: var(--text-quote); }
+.ev-toggle { font-size: 11.5px; color: var(--text-3); text-decoration: underline; text-underline-offset: 3px; }
+.ev-toggle:hover { color: var(--text); }
+.origin-code .code-row { padding: 6px 0; border-top: 1px solid var(--border); }

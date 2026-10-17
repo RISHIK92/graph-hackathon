@@ -10,6 +10,7 @@ import { edgeVerb, KIND_LABEL, predicateLabel } from "@/lib/labels";
 import type { Fact, Pack, Path, PathStep, SourceView, SpanItem, SpanView } from "@/lib/types";
 import { CitationChip } from "./Chips";
 import GraphCanvas from "./GraphCanvas";
+import { EvidenceText } from "./EvidenceText";
 import { SourceLinks } from "./SourceLinks";
 import { HistoryTimeline } from "./Timeline";
 import { Button, Chip, Details, Empty, ErrorState, Notice, Placeholder, Skeleton, Tabs } from "./ui";
@@ -108,10 +109,10 @@ function SourceTab({ spanId, sourceId, quote }: { spanId: string; sourceId?: str
           src.data.spans.map((s) =>
             s.span === spanId ? (
               <div key={s.span} id={`span-${s.span}`} className="src-span hit">
-                <Quoted text={s.text} start={quote?.start} end={quote?.end} />
+                <EvidenceText text={s.text} kind={span.data?.kind}><Quoted text={s.text} start={quote?.start} end={quote?.end} /></EvidenceText>
               </div>
             ) : (
-              <div key={s.span} className="src-span">{s.text}</div>
+              <div key={s.span} className="src-span"><EvidenceText text={s.text} kind={span.data?.kind} /></div>
             ),
           )}
         {src.data && !src.data.spans.some((s) => s.span === spanId) && (

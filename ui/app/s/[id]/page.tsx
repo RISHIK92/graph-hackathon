@@ -2,6 +2,7 @@
 
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
+import { EvidenceText } from "@/components/EvidenceText";
 import { SourceLinks } from "@/components/SourceLinks";
 import { ErrorState, SkeletonRows } from "@/components/ui";
 import { fmtDateTime, initials } from "@/lib/format";
@@ -70,7 +71,7 @@ function Source() {
           {style === "code" && (
             <div className="origin-code">
               <span className="t-strong">{String(src.title || "")}</span>
-              {data.spans.map((x) => <pre key={x.span} id={`span-${x.span}`} className={x.span === span ? "hl" : ""}>{x.text}</pre>)}
+              {data.spans.map((x) => <div key={x.span} id={`span-${x.span}`} className={`code-row ${x.span === span ? "hl" : ""}`}><EvidenceText text={x.text} kind={kind}><pre>{x.text}</pre></EvidenceText></div>)}
             </div>
           )}
         </article>
