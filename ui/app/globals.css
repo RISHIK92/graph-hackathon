@@ -772,3 +772,7 @@ a.start-card { text-decoration: none; }
 .explore-fact .rel { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
 .explore-fact .link-btn { align-self: flex-start; text-align: left; }
 @media (max-width: 1100px) { .explore-find, .explore-panel { max-width: none; border: 0; } }
+.demo-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.demo-table td { padding: 6px 8px; border-top: 1px solid var(--line-soft); vertical-align: top; }
+.demo-table td.num { font-family: var(--mono); text-align: right; width: 3.5em; color: var(--text); }
+.demo-count b { font-family: var(--mono); font-weight: 500; color: var(--text); }
