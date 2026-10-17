@@ -94,6 +94,14 @@ export async function send<T>(method: "POST" | "PUT" | "DELETE", path: string, b
   return parseResponse<T>(r);
 }
 
+/** POST a file as the raw request body (uploads into a workspace, item 24). */
+export async function upload<T>(path: string, file: File): Promise<T> {
+  const h: Record<string, string> = { "Content-Type": "application/octet-stream" };
+  if (csrf) h["X-CSRF-Token"] = csrf;
+  const r = await fetch(`${API_URL}${path}`, { method: "POST", headers: h, body: file, credentials: CREDENTIALS });
+  return parseResponse<T>(r);
+}
+
 export interface StreamEvent {
   event: string;
   [k: string]: unknown;

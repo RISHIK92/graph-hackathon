@@ -112,7 +112,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <div className={`content ${past ? "past" : ""}`}>
-          {s.sessionError ? <ApiDown /> : children}
+          {s.sessionError ? <ApiDown /> : ACCOUNTS && s.workspace?.empty && /^\/(ask|directory|graph|inbox|e\/)/.test(path) ? <EmptyWorkspace /> : children}
         </div>
       </div>
 
@@ -360,6 +360,20 @@ function SessionSheet({ onHelp }: { onHelp: () => void }) {
       <div className="t-small text-3">Debug panels (raw packs, verifier report) show when the page URL has <code>?debug=1</code>.</div>
       <div className="t-small"><button className="link-btn" onClick={onHelp}>Use from your coding agent (MCP)</button></div>
     </Modal>
+  );
+}
+
+/** Every app page of an empty workspace (item 24 step 3): one way forward, not an empty table. */
+function EmptyWorkspace() {
+  return (
+    <div className="ask-start"><div className="ask-start-inner">
+      <div className="stack" style={{ gap: 10 }}>
+        <span className="eyebrow">THIS WORKSPACE IS EMPTY</span>
+        <h1 className="ask-start-title">Nothing to show yet</h1>
+        <p className="text-2" style={{ margin: 0, fontSize: 16 }}>Answers, owners, decisions and disputes appear once the workspace has a source. Connect one, or load the demo company.</p>
+      </div>
+      <div><Link href="/start" className="composer-send" style={{ display: "inline-flex" }}>Bring your company&apos;s context</Link></div>
+    </div></div>
   );
 }
 

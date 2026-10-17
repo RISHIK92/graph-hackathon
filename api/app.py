@@ -23,7 +23,7 @@ from brain.config import MAX, settings
 from brain.db import Graph, GuardFailed, WriteMismatch
 from brain.tools import Ctx, chain_view, evidence, facts, run_tool, span_items
 
-from . import accounts, workspaces
+from . import accounts, jobs, workspaces
 from .agent import Agent, Session
 from brain.ids import now_ms
 
@@ -648,6 +648,76 @@ def workspace_status(c: Caller = Depends(caller)) -> dict:
                "OPTIONAL MATCH (e:Entity) WITH sources, count(e) AS entities "
                "OPTIONAL MATCH (a:Assertion) RETURN sources, entities, count(a) AS facts", template="workspace")[0]
     return {"workspace": name, "empty": row["sources"] == 0, "counts": row}
+
+
+def demo_template() -> Graph:
+    """The demo company as a template graph, built once from the seed with cached extractions; "Load the
+    demo company" copies it into a workspace (item 24 step 3)."""
+    g = Graph(name=os.environ.get("NODUS_DEMO_TEMPLATE", "nodus_demo_template"))
+    try:
+        ready = g.ro("MATCH (s:Source) RETURN count(s) AS n", template="workspace")[0]["n"] > 0
+    except Exception:  # noqa: BLE001 - not built yet
+        ready = False
+    if not ready:
+        from brain.cli import reset_seed
+        reset_seed(g, STATE["seed_dir"] or None)
+    return g
+
+
+def _progress(job: dict, ing: Any) -> None:
+    def on(done: int, total: int) -> None:
+        rows = ing.report.rows
+        job.update(docs=done, total=total, facts=sum(1 for r in rows if r.get("chain")),
+                   disputes=sum(1 for r in rows if r.get("outcome") == "disputed"))
+    ing.on_doc = on
+
+
+@app.post("/workspace/ingest")
+async def workspace_ingest(filename: str, request: Request, c: Caller = Depends(caller)) -> dict:
+    """Ingest one uploaded file into the workspace as a job; poll /workspace/jobs/{id} for its progress."""
+    name = _need_workspace(c)
+    data = await request.body()
+    if len(data) > UPLOAD_MAX:
+        raise HTTPException(413, "upload over 20 MB")
+    _workspace_room()
+    from ingest.pipeline import Ingestor
+    g, agent = G._target(), AGENT._target()
+
+    def run(job: dict) -> None:
+        ing = Ingestor(g)
+        _progress(job, ing)
+        try:
+            ing.ingest_upload(filename, data)
+        except (ValueError, UnicodeDecodeError, KeyError, zipfile.BadZipFile) as e:
+            raise ValueError(f"can't read {filename}: {e}") from e
+        agent._index = None
+    return {"job_id": jobs.start(name, "ingest", run)["id"]}
+
+
+@app.post("/workspace/demo")
+def workspace_demo(c: Caller = Depends(caller)) -> dict:
+    """Load the demo company into this workspace (a copy of the template graph), as a job."""
+    name = _need_workspace(c)
+
+    def run(job: dict) -> None:
+        src = demo_template()
+        job.update(total=1)
+        workspaces.copy_into(src, name)
+        w = workspaces.get(name)
+        n = w.g.ro("MATCH (s:Source) WITH count(s) AS docs OPTIONAL MATCH (a:Assertion) WITH docs, count(a) AS facts "
+                   "OPTIONAL MATCH (d:Assertion {status:'disputed'}) RETURN docs, facts, count(d) AS disputes",
+                   template="workspace")[0]
+        job.update(docs=n["docs"], total=n["docs"], facts=n["facts"], disputes=n["disputes"])
+    return {"job_id": jobs.start(name, "demo", run)["id"]}
+
+
+@app.get("/workspace/jobs/{job_id}")
+def workspace_job(job_id: str, c: Caller = Depends(caller)) -> dict:
+    """An ingest job's state and progress: documents done of total, facts and disputes found."""
+    j = jobs.get(job_id, _need_workspace(c))
+    if not j:
+        raise HTTPException(404, "no such job")
+    return j
 
 
 @app.post("/workspace/reset")

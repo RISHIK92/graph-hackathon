@@ -80,6 +80,8 @@ interface Store {
   /** null: logged out; undefined: still checking (or accounts are off). */
   account: Account | null | undefined;
   login: (mode: "login" | "signup" | "demo", email?: string, password?: string) => Promise<void>;
+  /** The logged-in workspace's status (item 24 step 3): empty until a source or the demo company is loaded. */
+  workspace: { empty: boolean; counts: { sources: number; entities: number; facts: number } } | null;
   logout: () => Promise<void>;
   token: string;
   setToken: (t: string) => void;
@@ -186,11 +188,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!ACCOUNTS) { setReady(true); return; }
     get<{ account: Account | null; csrf?: string }>("/auth/me").then(takeMe).catch(() => setAccount(null)).finally(() => setReady(true));
   }, [takeMe]);
-  // people come from the account's workspace, so they reload when the account changes
+  const [workspace, setWorkspace] = useState<Store["workspace"]>(null);
+  // people come from the account's workspace, so they reload when the account or its contents change
   useEffect(() => {
     if (!ready) return;
     get<Person[]>("/people").then(setPeople).catch(() => setPeople([]));
-  }, [ready, account?.workspace]);
+    if (ACCOUNTS && account) get<NonNullable<Store["workspace"]>>("/workspace").then(setWorkspace).catch(() => setWorkspace(null));
+    else setWorkspace(null);
+  }, [ready, account, version]);
   const login = useCallback(async (mode: "login" | "signup" | "demo", email = "", password = "") => {
     const m = await send<{ account: Account | null; csrf?: string }>("POST", `/auth/${mode}`, mode === "demo" ? {} : { email, password });
     setThread([]);
@@ -297,7 +302,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(
     () => ({
-      ready, account, login, logout, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
+      ready, account, login, logout, workspace, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
       people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, pendingCount, debug,
       nextResetAt, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
@@ -306,7 +311,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       openEvidence: (t, mode = "replace") => (t ? openInspector({ kind: "evidence", target: t }, mode) : closeInspector()),
       toasts, toast, dismissToast, holdToasts: (on: boolean) => { toastHover.current = on; }, names, resolveNames,
     }),
-    [ready, account, login, logout, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
+    [ready, account, login, logout, workspace, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
       lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],

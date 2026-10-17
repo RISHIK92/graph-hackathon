@@ -59,6 +59,7 @@ class Ingestor:
         self.fail_after_stage8 = fail_after_stage8   # test hook: crash one Source before its marker
         self.live = False             # an upload: the extractor model reads it (item 20 step 0)
         self.screened: set[str] = set()   # Source ids the ingest screen flagged: spans only, no facts
+        self.on_doc = None   # progress hook (item 24 ingest jobs): called with (done, total) after each Source
 
     def ingest_render(self, render_dir: Path, seed: int | None = None) -> Report:
         docs = read_render(Path(render_dir))
@@ -110,8 +111,11 @@ class Ingestor:
         for d in todo1:
             self._ingest(d, stage="structured")
         # Phase 2: text, including the prose parts of phase-1 sources.
-        for d in todo1 + [d for d in phase2 if not self._done(d)]:
+        todo = todo1 + [d for d in phase2 if not self._done(d)]
+        for i, d in enumerate(todo, 1):
             self._ingest(d, stage="prose")
+            if self.on_doc:
+                self.on_doc(i, len(todo))
         self._retract_unsupported()
         return self.report
 

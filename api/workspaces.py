@@ -60,6 +60,12 @@ def drop(name: str) -> None:
     g.delete()
 
 
+def copy_into(src: Graph, name: str) -> None:
+    """Replace a workspace's graph with a copy of src (GRAPH.COPY, on both 6.0.1 and 4.22.0: finding F29)."""
+    drop(name)
+    src.raw("GRAPH.COPY", src.name, name)
+
+
 def current() -> Workspace | None:
     return _CURRENT.get()
 

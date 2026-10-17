@@ -14,7 +14,7 @@ function Login() {
   const s = useStore();
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/ask";
+  const next = params.get("next") || "/start";
   const [mode, setMode] = useState<"login" | "signup">(params.get("mode") === "signup" ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

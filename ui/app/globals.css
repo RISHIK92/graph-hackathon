@@ -624,3 +624,10 @@ svg.flag { color: var(--error-700); width: 12px; height: 12px; vertical-align: -
 .acct-menu { width: 280px; padding: 6px; }
 .acct-menu .who { padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
 .demo-banner { background: var(--then-bg); border-bottom: 1px solid var(--then-border); color: var(--then); font-size: 13px; padding: 8px 24px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.job { border: 1px solid var(--border-strong); background: var(--surface); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.job b { color: var(--text); font-weight: 500; }
+.job b.disp { color: var(--dispute-text); }
+.job-bar { height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; }
+.job-bar i { display: block; height: 100%; background: var(--primary); transition: width .4s var(--ease); }
+.start-card .text svg { vertical-align: -2px; color: var(--text-3); }
+a.start-card { text-decoration: none; }
