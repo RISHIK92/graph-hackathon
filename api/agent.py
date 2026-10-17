@@ -458,9 +458,11 @@ class Agent:
         names_nothing = not any(m.get("entity_id") for m in plan.get("mentions") or []) and \
             not any(m.get("text") for m in plan.get("mentions") or []) and \
             not re.search(r"\s[A-Z][a-z0-9]+", text)   # "Who leads Nimbus Vault?" names something unknown
+        ents = {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
+        if names_nothing and _ABOUT_WS.search(text) and _ABOUT_ASK.search(text):
+            return self._overview(ents) + self._help({**plan, "intent": "help", "reply": None}, "")[1:]
         if plan["intent"] != "help" and not (plan["intent"] == "other" and names_nothing):
             return []
-        ents = {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
         # examples spread over several real systems, not one (user feedback: "Ledger" was in every example)
         systems = [ents[i] for i in ("system:reporting", "system:aurora", "system:checkout", "system:ledger") if i in ents] \
             or sorted(n for i, n in ents.items() if i.startswith("system:")) or ["a system"]
@@ -475,6 +477,20 @@ class Agent:
             "With the access token I can also act: route a ticket to its owner, record a fact you tell me "
             "(“Infra owns Ledger now”), draft an ADR change or flag outdated docs. A change waits for the right "
             "person to confirm it."]
+
+    @staticmethod
+    def _overview(ents: dict[str, str]) -> list[str]:
+        """What the workspace graph holds, by kind, with the team names (the people a question starts from)."""
+        n = {k: sum(1 for i in ents if i.startswith(k + ":")) for k, _, _ in _KINDS}
+        if not any(n.values()):
+            return ["This workspace is empty: it holds no teams, systems or people yet."]
+        parts = [f"{n[k]} {one if n[k] == 1 else many}" for k, one, many in _KINDS if n[k]]
+        if n["team"]:
+            teams = ", ".join(sorted(v for i, v in ents.items() if i.startswith("team:")))
+            parts[0] += f" ({teams})"
+        listed = ", ".join(parts[:-1]) + f" and {parts[-1]}" if len(parts) > 1 else parts[0]
+        return [f"This workspace holds {listed}. Each fact is dated and cited to the document, roster, ticket or "
+                "chat message it came from."]
 
     def _reply_lines(self, kind: str, action: str | None, s: Session | None) -> list[str]:
         ents = {r["id"]: r["name"] for r in self.g.q("all_entities") if r["name"]}
@@ -897,6 +913,11 @@ REPLY_ACTIONS = {
     "draft_adr": "draft an ADR that supersedes another", "flag_stale_docs": "flag outdated documents",
     "none": "none of these"}
 _CAN_YOU = re.compile(r"^\s*(can|could|will|would) (you|u|nodus)\b|\b(are you able|is it possible) to\b", re.I)
+# "what is this workspace about?" (deployed-site feedback): the workspace as a whole, answered with what it holds
+_ABOUT_WS = re.compile(r"\b(workspace|company|demo|graph|organi[sz]ation|org)\b", re.I)
+_ABOUT_ASK = re.compile(r"\b(about|contains?|includes?|in (it|here|this|the)|cover|overview|what'?s in)\b", re.I)
+_KINDS = (("team", "team", "teams"), ("system", "system", "systems"), ("person", "person", "people"),
+          ("project", "project", "projects"), ("decision", "decision", "decisions"), ("ticket", "ticket", "tickets"))
 REPEAT_LINE = "Ask me about who owns what, why it was decided, or what breaks if it fails."
 ROUTER_QUESTION = {
     "intent": {"type": "choice", "instructions": "If this is a question about the company, what is it asking for?",

@@ -125,3 +125,19 @@ def test_a_question_that_names_nothing_and_fits_no_intent_quotes_nothing(fx):  #
     assert unknown["abstained"] and not unknown.get("help")
     recall = answer_of(run(agent, s, "What was my last question about?"))
     assert not recall.get("help")
+
+
+def test_a_question_about_the_workspace_gets_an_overview_of_what_it_holds(fx):  # noqa: F811
+    """User feedback (deployed site): "what is this demo workspace about?" got "No verified answer". A question
+    about the workspace as a whole says what the graph holds, by kind with the team names, then how to ask."""
+    agent = Agent(fx.g, Clock(fx.now + 10))
+    s = agent.create_session("judge", "person:eve")
+    teams = sorted(r["name"] for r in fx.g.q("all_entities") if r["id"].startswith("team:"))
+    for q in ("what is this demo workspace about?", "What's in this workspace?", "what does the graph contain",
+              "Tell me about this company"):
+        ans = answer_of(run(agent, s, q))
+        assert ans.get("help") and not ans["claims"], q
+        text = " ".join(ans["missing"])
+        assert text.startswith(f"This workspace holds {len(teams)} teams ({', '.join(teams)})"), (q, text)
+        assert "Who owns" in text, (q, text)
+    assert not answer_of(run(agent, s, "Tell me about Ledger")).get("help")   # an entity summary stays one
