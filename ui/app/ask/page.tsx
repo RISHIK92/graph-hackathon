@@ -527,13 +527,16 @@ function timelineKeyOf(f: Fact) {
 const TOOL_LABEL: Record<string, string> = {
   link_entities: "Linking entities", get_owner: "Reading owners", find_experts: "Finding experts", find_paths: "Tracing dependencies",
   trace_decision: "Tracing decisions", get_history: "Reading history", query_graph: "Querying the graph", get_pending: "Checking pending items",
+  search_spans: "Searching documents", count_related: "Counting", rank_by_count: "Ranking", critical_systems: "Ranking critical systems",
+  connection_between: "Finding connections", key_people: "Finding key people", knowledge_gaps: "Looking for gaps",
+  explain_action: "Reading the action", recall_session: "Reading this chat",
 };
 
 /** Replaces the raw trace: a human status while streaming, a summary line with a Trace button when done. */
 function StatusLine({ t, plan, toolCalls, verification, onProof }: { t: Turn; plan?: StreamEvent; toolCalls: StreamEvent[]; verification?: StreamEvent; onProof: () => void }) {
   if (!t.done) {
     const last = toolCalls[toolCalls.length - 1];
-    const phase = verification ? "Assembling the answer…" : last ? `${TOOL_LABEL[String(last.name)] || String(last.name)}…` : plan ? "Reading the graph…" : "Planning…";
+    const phase = verification ? "Assembling the answer…" : last ? `${TOOL_LABEL[String(last.name)] || "Reading the graph"}…` : plan ? "Reading the graph…" : "Planning…";
     return (
       <div className="stack" style={{ gap: 6 }}>
         <div className="statusline"><span>{phase}</span>{toolCalls.length > 0 && <><span className="sep">·</span><span>{plural(toolCalls.length, "tool")}</span></>}</div>
