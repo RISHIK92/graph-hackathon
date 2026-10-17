@@ -8,11 +8,11 @@ import { ActionChip, EligibilityBadge, FactRow, PackContext } from "@/components
 import { ConfirmControl, RefusalCard, WhoCan } from "@/components/ConfirmControl";
 import { collectDisputes, DisputeLine } from "@/components/Dispute";
 import { nodeTone } from "@/components/TraceView";
-import { Button, Chip, Notice, Placeholder } from "@/components/ui";
+import { Button, Chip, Notice, Placeholder, Skeleton } from "@/components/ui";
 import { qs, streamTurn, type StreamEvent } from "@/lib/api";
 import { fmtDate, fmtDateTime, plural } from "@/lib/format";
 import { actionKindLabel, displayText, intentLabel, predicateLabel } from "@/lib/labels";
-import { type Turn, useApi, useStore } from "@/lib/store";
+import { foldEvent, type Turn, useApi, useStore } from "@/lib/store";
 import type { Claim, Directory, Fact, Pack, Path, Refusal, SpanItem } from "@/lib/types";
 
 
@@ -51,19 +51,29 @@ function Ask() {
 
   useEffect(() => {
     const q = params.get("q");
-    if (q && params.get("send") === "1") queued.current = q;   // Overview examples and "Ask about it" send at once (M9)
+    if (q && params.get("send") === "1") {   // Overview examples and "Ask about it" send at once (M9)
+      queued.current = q;
+      window.history.replaceState(null, "", "/ask");   // the chat is kept now, so a reload mustn't ask it again
+    }
     else if (q) { setText(q); taRef.current?.focus(); }
   }, [params]);
 
-  // m22: a new question scrolls to its own header, not to the bottom of a long answer
+  // m22: a new question scrolls to its own header, not to the bottom of a long answer; a restored chat opens
+  // at its end, as after an answer
+  const restored = useRef(false);
   useEffect(() => {
     const last = logRef.current?.querySelectorAll(".turn");
+    if (!restored.current && s.chatReady) {
+      restored.current = true;
+      last?.[last.length - 1]?.scrollIntoView({ block: "end" });
+      return;
+    }
     last?.[last.length - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [turns.length]);
+  }, [turns.length, s.chatReady]);
 
   // A question sent while the session is still connecting waits for it instead of being dropped (M22)
   useEffect(() => {
-    if (s.session && queued.current && !busy) {
+    if (s.session && s.chatReady && queued.current && !busy) {
       const q = queued.current;
       queued.current = null;
       void sendQ(q);
@@ -72,23 +82,17 @@ function Ask() {
 
   const sendQ = async (q: string, then?: { asOf: number; of: number }) => {
     if (!q.trim() || busy) return;
-    if (!s.session) { queued.current = q; setText(""); return; }
+    if (!s.session || !s.chatReady) { queued.current = q; setText(""); return; }
     setBusy(true);
     setText("");
-    const idx = turns.length;
+    let idx = turns.length;
     const asOf = then ? then.asOf : s.asOf;
-    setTurns((t) => [...t, { text: q, at: Date.now(), asOf, stages: [], actions: [], actor: s.actingAs, writeSeq: s.lastWrite?.seq || 0, done: false, thenOf: then?.of }]);
+    setTurns((t) => { idx = t.length; return [...t, { text: q, at: Date.now(), asOf, stages: [], actions: [], actor: s.actingAs, writeSeq: s.lastWrite?.seq || 0, done: false, thenOf: then?.of }]; });
     const upd = (f: (t: Turn) => Turn) => setTurns((all) => all.map((t, i) => (i === idx ? f(t) : t)));
     const ac = new AbortController();
     abortRef.current = ac;
     try {
-      await streamTurn(s.session.id, { text: q, as_of: asOf }, (e) => {
-        if (e.event === "answer") upd((t) => ({ ...t, answer: e as unknown as Turn["answer"], turnId: String(e.turn_id) }));
-        else if (e.event === "action" || e.event === "refusal") upd((t) => ({ ...t, actions: [...t.actions, e] }));
-        else if (e.event === "error") upd((t) => ({ ...t, error: String(e.message) }));
-        else if (e.event === "done") upd((t) => ({ ...t, done: true }));
-        else upd((t) => ({ ...t, stages: [...t.stages, e], turnId: t.turnId || (e.turn_id as string | undefined) }));
-      }, ac.signal);
+      await streamTurn(s.session.id, { text: q, as_of: asOf }, (e) => upd((t) => foldEvent(t, e)), ac.signal);
       upd((t) => ({ ...t, done: true }));
       s.bump();
     } catch (err) {
@@ -107,7 +111,7 @@ function Ask() {
   // 1-6 ask the empty state's questions, unless the person is typing
   const empty = !turns.length;
   useEffect(() => {
-    if (!empty) return;
+    if (!empty || !s.chatReady) return;
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (e.metaKey || e.ctrlKey || e.altKey || ["INPUT", "TEXTAREA", "SELECT"].includes(el?.tagName) || el?.isContentEditable) return;
@@ -154,6 +158,13 @@ function Ask() {
     </form>
   );
 
+  if (empty && !s.chatReady) {
+    return (
+      <div className="ask"><div className="conv"><div className="conv-inner stack-3" aria-busy="true" aria-label="Loading your chat">
+        <Skeleton w="40%" h={18} className="right" /><Skeleton w="85%" /><Skeleton w="70%" /><Skeleton w="55%" />
+      </div></div></div>
+    );
+  }
   if (empty) return <AskStart composer={composer} onAsk={(q) => sendQ(q)} onFill={fill} />;
   return (
     <div className="ask">

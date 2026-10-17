@@ -31,6 +31,8 @@ INTENTS = ["ownership", "expertise", "decision_trace", "history", "path", "impac
            "summary", "dependency", "stale_docs", "critical", "key_people", "gaps", "help", "action", "other"]
 # Questions about the whole organisation (item 17's graph algorithms): no entity has to be named.
 GLOBAL_INTENTS = ("critical", "key_people", "gaps")
+# Chat history (Oct 18): a turn's kept JSON is capped; over it the trace's queries go, then the trace, then the events
+CHAT_MAX = 200_000
 _INTERNAL_ID = re.compile(r"\b(?:as|sp|ac|pa|pk|turn)_[0-9a-f]{6,}|\b(?:system|person|team|project|decision|ticket):[a-z0-9-]+")
 
 
@@ -67,6 +69,47 @@ class Agent:
         r = self.g.q("session", {"id": sid})
         return Session(sid, r[0]["u"], r[0]["a"] or "") if r else None
 
+    def account_session(self, user_id: str) -> str | None:
+        """The account's running chat (chat history, Oct 18): its newest session in this workspace."""
+        r = self.g.q("account_session", {"user": user_id})
+        return r[0]["id"] if r else None
+
+    def chat(self, sid: str) -> list[dict]:
+        """A session's user turns in order, each with the events and trace kept when it finished."""
+        out = []
+        for r in self.g.q("chat_turns", {"s": sid}):
+            kept = json.loads(r["chat"]) if r["chat"] else {}
+            out.append({"text": r["text"], "at": r["ts"], "actor": r["actor"], "turn_id": kept.get("turn_id"),
+                        "as_of": kept.get("as_of"), "events": kept.get("events", []), "trace": kept.get("trace")})
+        return out
+
+    def stored_trace(self, sid: str, turn_id: str) -> dict | None:
+        """A finished turn's trace from the graph, when turn_log no longer has it (a restart or deploy)."""
+        for t in self.chat(sid):
+            if t["turn_id"] == turn_id and t["trace"]:
+                ans = next((e for e in t["events"] if e["event"] == "answer"), {})
+                return {**t["trace"], "packs": ans.get("packs", {})}
+        return None
+
+    def _keep_turn(self, s: Session, events: list[dict], as_of: int | None) -> None:
+        tid = next((e["turn_id"] for e in events if e.get("turn_id")), "")
+        trace = self.turn_log.get(tid) or {}
+        if not trace.get("turn_span"):
+            return
+        # the trace's packs are the answer's packs; stored_trace puts them back
+        kept = {"turn_id": tid, "as_of": as_of, "events": events,
+                "trace": {k: v for k, v in trace.items() if k not in ("packs", "turn_span")}}
+        blob = json.dumps(kept, default=str)
+        for drop in ("queries", "trace", "events"):
+            if len(blob) <= CHAT_MAX:
+                break
+            if drop == "queries":
+                kept["trace"].pop("queries", None)
+            else:
+                kept[drop] = None if drop == "trace" else []
+            blob = json.dumps(kept, default=str)
+        store.set_turn_chat(self.g, trace["turn_span"], blob)
+
     def set_acting_as(self, s: Session, person_id: str) -> None:
         s.acting_as = person_id
         if not s.anonymous:
@@ -98,6 +141,15 @@ class Agent:
     # the turn
     def turn(self, s: Session, text: str, as_of: int | None = None, belief_at: int | None = None,
              confirm_card: dict | None = None) -> Iterator[dict]:
+        events: list[dict] = []
+        for ev in self._turn(s, text, as_of, belief_at, confirm_card):
+            events.append(ev)
+            yield ev
+        if not s.anonymous:
+            self._keep_turn(s, events, as_of)
+
+    def _turn(self, s: Session, text: str, as_of: int | None, belief_at: int | None,
+              confirm_card: dict | None) -> Iterator[dict]:
         turn_id = "turn_" + uuid.uuid4().hex[:12]
         now = self.clock()
         ctx = Ctx(self.g, now=now, as_of=as_of, belief_at=belief_at, user_id=s.user_id, session_id=s.id,
@@ -106,7 +158,7 @@ class Agent:
         self.turn_log[turn_id] = trace
         turn_span = ""
         if not s.anonymous:
-            turn_span = self._store_turn(s, text, "user")
+            turn_span = trace["turn_span"] = self._store_turn(s, text, "user")
         else:
             s.transcript.append({"role": "user", "text": text})
 

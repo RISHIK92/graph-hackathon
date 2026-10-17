@@ -1,0 +1,6 @@
+Sort
+    Project
+        Filter
+            Conditional Traverse | (src)-[h:HAS_SPAN]->(x:Span)
+                Filter
+                    Node By Index Scan | (src:Source)

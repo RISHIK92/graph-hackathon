@@ -169,8 +169,33 @@ def create_session(body: NewSession, c: Caller = Depends(caller)) -> dict:
         s = AGENT.create_session("anonymous", acting, anonymous=True)
         ANON[s.id] = s
         return {"session_id": s.id, "anonymous": True, "acting_as": acting}
+    sid = AGENT.account_session(c.user_id) if c.account_id else None
+    if sid:   # an account has one running chat (chat history, Oct 18): a reload resumes it
+        AGENT.set_acting_as(Session(sid, c.user_id, acting), acting)
+        return {"session_id": sid, "anonymous": False, "acting_as": acting}
     s = AGENT.create_session(c.user_id, acting)
     return {"session_id": s.id, "anonymous": False, "acting_as": acting}
+
+
+@app.get("/chat")
+def chat(c: Caller = Depends(caller)) -> dict:
+    """The logged-in account's running chat: its session id and every turn in order, each with the events its
+    answer streamed (answer, actions) as kept in the workspace graph. 404 without accounts or a log-in."""
+    if not c.account_id:
+        raise HTTPException(404)
+    sid = AGENT.account_session(c.user_id)
+    turns = AGENT.chat(sid) if sid else []
+    return {"session_id": sid, "turns": [{k: v for k, v in t.items() if k != "trace"} for t in turns]}
+
+
+def _kept_traces(c: Caller) -> list[dict]:
+    """In-memory traces, then the account's traces kept in the graph (they outlive a restart)."""
+    out = list(AGENT.turn_log.values())
+    sid = AGENT.account_session(c.user_id) if c.account_id else None
+    if sid:
+        out += [{**t["trace"], "packs": next((e.get("packs", {}) for e in t["events"] if e["event"] == "answer"), {})}
+                for t in AGENT.chat(sid) if t["trace"]]
+    return out
 
 
 def _default_identity() -> str:
@@ -229,8 +254,10 @@ def acting_as(sid: str, body: ActingAs, c: Caller = Depends(caller)) -> dict:
 
 
 @app.get("/turns/{turn_id}/trace")
-def turn_trace(turn_id: str) -> dict:
+def turn_trace(turn_id: str, c: Caller = Depends(caller)) -> dict:
     t = AGENT.turn_log.get(turn_id)
+    sid = AGENT.account_session(c.user_id) if not t and c.account_id else None
+    t = t or (AGENT.stored_trace(sid, turn_id) if sid else None)
     if not t:
         raise HTTPException(404, "unknown turn")
     return t
@@ -266,9 +293,9 @@ def get_source(source_id: str) -> dict:
 
 
 @app.get("/paths/{path_id}")
-def get_path(path_id: str, pack: str | None = None) -> dict:
+def get_path(path_id: str, pack: str | None = None, c: Caller = Depends(caller)) -> dict:
     """Path steps with per-edge evidence, resolved from the per-turn pack cache (03 §1.1)."""
-    for t in AGENT.turn_log.values():
+    for t in _kept_traces(c):
         for p in t.get("packs", {}).values():
             if pack and p["pack_id"] != pack:
                 continue

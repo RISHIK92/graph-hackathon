@@ -41,6 +41,11 @@ def set_source(g: Graph, sid: str, props: dict) -> None:
     g.write("MATCH (s:Source {id:$id}) SET s += $p", {"id": sid, "p": props}, template="set_source")
 
 
+def set_turn_chat(g: Graph, span_id: str, chat: str) -> None:
+    """A user turn's kept events and trace, as JSON (chat history, Oct 18)."""
+    g.write("MATCH (s:Span {id:$id}) SET s.chat = $c", {"id": span_id, "c": chat}, template="set_turn_chat")
+
+
 def revisions(g: Graph, doc_key: str) -> list[dict]:
     return g.q("revisions", {"k": doc_key})
 

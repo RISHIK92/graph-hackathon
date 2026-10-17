@@ -306,6 +306,8 @@ PARAMS = {
     "strongest_member": lambda f: {"r": f.ids["own"]},
     "ticket_about": lambda f: {"t": "ticket:rds-42", "m": MAX},
     "turn_count": lambda f: {"s": "sess1"},
+    "account_session": lambda f: {"user": "u1"},
+    "chat_turns": lambda f: {"s": "sess1"},
     "turn_span": lambda f: {"id": "turn1", "src": "sess1"},
     "unsupported": lambda f: (f.g.write("MATCH (a:Assertion {id:$id})-[e:EVIDENCED_BY]->() SET e.removed_at = 1",
                                         {"id": f.ids["dep2"]}), {"max": MAX})[1],
@@ -985,6 +987,14 @@ def g_ticket_about(f, rows):
 
 def g_turn_count(f, rows):
     assert rows == [{"n": 2}]
+
+
+def g_account_session(f, rows):
+    assert rows == [{"id": "sess1"}]
+
+
+def g_chat_turns(f, rows):
+    assert [(r["text"], r["ts"], r["chat"]) for r in rows] == [("who owns ledger?", 7, None)]   # agent turns left out
 
 
 def g_group_counts(f, rows):

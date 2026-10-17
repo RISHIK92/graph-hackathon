@@ -57,6 +57,23 @@ export interface Turn {
   thenOf?: number;
 }
 
+/** One streamed event folded into its turn: live on Ask, and replayed from the kept chat after a reload. */
+export function foldEvent(t: Turn, e: StreamEvent): Turn {
+  if (e.event === "answer") return { ...t, answer: e as unknown as Turn["answer"], turnId: String(e.turn_id) };
+  if (e.event === "action" || e.event === "refusal") return { ...t, actions: [...t.actions, e] };
+  if (e.event === "error") return { ...t, error: String(e.message) };
+  if (e.event === "done") return { ...t, done: true };
+  return { ...t, stages: [...t.stages, e], turnId: t.turnId || (e.turn_id as string | undefined) };
+}
+
+interface KeptTurn { text: string; at: number; actor: string; turn_id: string | null; as_of: number | null; events: StreamEvent[] }
+
+function keptTurn(k: KeptTurn): Turn {
+  const t = k.events.reduce(foldEvent, { text: k.text, at: k.at, asOf: k.as_of, stages: [], actions: [], actor: k.actor,
+    writeSeq: 0, done: true, turnId: k.turn_id || undefined });
+  return t.answer || t.error ? t : { ...t, error: "This answer wasn't kept." };
+}
+
 export interface Toast {
   id: number;
   tone: "success" | "info" | "warning" | "error";
@@ -106,6 +123,8 @@ interface Store {
   lastWrite: { seq: number; text: string } | null;
   thread: Turn[];
   setThread: React.Dispatch<React.SetStateAction<Turn[]>>;
+  /** False while a logged-in account's chat loads from GET /chat, so Ask doesn't flash its empty state. */
+  chatReady: boolean;
   noteWrite: (text: string) => void;
   pendingCount: number;
   debug: boolean;
@@ -174,6 +193,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const bump = useCallback(() => setVersion((v) => v + 1), []);
   const [lastWrite, setLastWrite] = useState<{ seq: number; text: string } | null>(null);
   const [thread, setThread] = useState<Turn[]>([]);
+  const [chatReady, setChatReady] = useState(!ACCOUNTS);
   const noteWrite = useCallback((text: string) => {
     setLastWrite((w) => ({ seq: (w?.seq || 0) + 1, text }));
     bump();
@@ -236,8 +256,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         sessionRef.current = sess;
         setSession(sess);
         setActing(s.acting_as);
+        if (!ACCOUNTS || !account?.id) return setChatReady(true);
+        // an account has one running chat, kept in its workspace graph: a reload shows the same thread
+        setChatReady(false);
+        get<{ turns: KeptTurn[] }>("/chat").then((c) => setThread(c.turns.map(keptTurn)))
+          .catch(() => undefined).finally(() => setChatReady(true));
       })
-      .catch((e) => setSessionError(String(e.message || e)));
+      .catch((e) => { setSessionError(String(e.message || e)); setChatReady(true); });
   }, [ready, token, sessionTry, account?.id]);
 
   const refreshPending = useCallback(() => {
@@ -316,7 +341,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(
     () => ({
       ready, theme, setTheme, account, login, logout, workspace, token, setToken, session, sessionError, retrySession: () => setSessionTry((t) => t + 1),
-      people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, pendingCount, debug,
+      people, personName, actingAs, setActingAs, asOf, setAsOf, version, bump, lastWrite, noteWrite, thread, setThread, chatReady, pendingCount, debug,
       nextResetAt, sessionSheetOpen, setSessionSheetOpen, paletteOpen, setPaletteOpen,
       inspector, inspectorPinned, setInspectorPinned, openInspector, popInspector, closeInspector,
       openEntity: (id, name, mode = "replace") => openInspector({ kind: "entity", id, name }, mode),
@@ -325,7 +350,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toasts, toast, dismissToast, holdToasts: (on: boolean) => { toastHover.current = on; }, names, resolveNames,
     }),
     [ready, theme, setTheme, account, login, logout, workspace, token, setToken, session, sessionError, people, personName, actingAs, setActingAs, asOf, version, bump,
-      lastWrite, noteWrite, thread, pendingCount, debug, nextResetAt, sessionSheetOpen,
+      lastWrite, noteWrite, thread, chatReady, pendingCount, debug, nextResetAt, sessionSheetOpen,
       paletteOpen, inspector, inspectorPinned, openInspector, popInspector, closeInspector, toasts, toast, dismissToast,
       names, resolveNames],
   );
