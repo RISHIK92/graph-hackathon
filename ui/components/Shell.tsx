@@ -1,12 +1,12 @@
 "use client";
 
-import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, LogOut, Search, Settings2, UserRound, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, LogOut, Search, Settings2, Trash2, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dateInputValue, fmtDate, fmtDateTime, fromDateInput, initials } from "@/lib/format";
 import { useStore } from "@/lib/store";
-import { ACCOUNTS, API_URL } from "@/lib/api";
+import { ACCOUNTS, API_URL, send } from "@/lib/api";
 import { CodingAgentHelp } from "./CodingAgentHelp";
 import { CommandPalette } from "./CommandPalette";
 import Inspector from "./Inspector";
@@ -33,6 +33,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const s = useStore();
   const hasInspector = s.inspector.length > 0;
   const [helpOpen, setHelpOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const { inspectorPinned, closeInspector, pendingCount } = s;
   const pinned = useRef(inspectorPinned);
   useEffect(() => { pinned.current = inspectorPinned; }, [inspectorPinned]);
@@ -98,14 +99,17 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <LiveStatus />
           <AsOfPill />
           <ActingMenu />
-          {ACCOUNTS ? <AccountMenu /> : <AccessBadge />}
+          {ACCOUNTS ? <AccountMenu onReset={() => setResetOpen(true)} /> : <AccessBadge />}
           <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
         </div>
       </header>
 
       <div className="main">
         {ACCOUNTS && s.account?.demo && (
-          <div className="demo-banner" role="status">Shared demo workspace: anyone with the demo login sees this data. It&apos;s emptied every night.</div>
+          <div className="demo-banner" role="status">
+            <span>Shared demo workspace: anyone with the demo login sees this data. It&apos;s emptied every night.</span>
+            <button type="button" className="composer-chip then" onClick={() => setResetOpen(true)}>Reset workspace</button>
+          </div>
         )}
         <div className={`content ${past ? "past" : ""}`}>
           {s.sessionError ? <ApiDown /> : children}
@@ -116,6 +120,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {s.sessionSheetOpen && <SessionSheet onHelp={() => { s.setSessionSheetOpen(false); setHelpOpen(true); }} />}
       {helpOpen && <CodingAgentHelp onClose={() => setHelpOpen(false)} />}
       {s.paletteOpen && <CommandPalette />}
+      {resetOpen && <ResetWorkspace onClose={() => setResetOpen(false)} />}
       <Toasts />
     </div>
   );
@@ -132,8 +137,33 @@ function LiveStatus() {
   );
 }
 
+/** Empty the workspace: drops its graph (item 24 step 2). Confirmed first, since it can't be undone. */
+function ResetWorkspace({ onClose }: { onClose: () => void }) {
+  const s = useStore();
+  const [busy, setBusy] = useState(false);
+  return (
+    <Modal title="Empty this workspace?" onClose={onClose} busy={busy} footer={<>
+      <Button onClick={onClose} disabled={busy}>Cancel</Button>
+      <Button variant="primary" busy={busy} onClick={async () => {
+        setBusy(true);
+        try {
+          await send("POST", "/workspace/reset", {});
+          s.setThread([]);
+          s.bump();
+          s.toast({ tone: "info", title: "Workspace emptied" });
+          onClose();
+        } catch (e) {
+          s.toast({ tone: "error", title: "Couldn't empty it", body: String((e as Error).message || e) });
+        } finally { setBusy(false); }
+      }}>Empty workspace</Button>
+    </>}>
+      <div className="t-small text-2">Every source, fact and answer in {s.account?.demo ? "the shared demo workspace" : "your workspace"} is deleted. This can&apos;t be undone.</div>
+    </Modal>
+  );
+}
+
 /** The account menu (item 24): who is logged in, their workspace, log out. Logged out: a Log in link. */
-function AccountMenu() {
+function AccountMenu({ onReset }: { onReset: () => void }) {
   const s = useStore();
   const router = useRouter();
   if (s.account === undefined) return null;
@@ -156,6 +186,7 @@ function AccountMenu() {
             <span className="t-small text-3">Workspace {a.workspace}{a.demo ? " · shared demo" : ""}</span>
           </div>
           <div className="divider" />
+          <button className="menu-item" role="menuitem" onClick={() => { close(); onReset(); }}><Trash2 className="icon-sm" />Empty this workspace</button>
           <button className="menu-item" role="menuitem" onClick={async () => { close(); await s.logout(); router.push("/"); }}><LogOut className="icon-sm" />Log out</button>
         </div>
       )}

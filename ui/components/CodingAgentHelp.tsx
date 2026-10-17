@@ -1,6 +1,8 @@
 "use client";
 
-import { Copy } from "lucide-react";
+import { Copy, KeyRound } from "lucide-react";
+import { useState } from "react";
+import { ACCOUNTS, send } from "@/lib/api";
 import tools from "@/lib/mcp-tools.json";
 import { useStore } from "@/lib/store";
 import { Button, Chip, Modal } from "./ui";
@@ -22,7 +24,10 @@ const KIND = { read: "Read", write: "Write (recorded as the actor)", risky: "Con
 
 /** "Use from your coding agent" (M16): the MCP command, a client config, the registered tools and a prompt. */
 export function CodingAgentHelp({ onClose }: { onClose: () => void }) {
-  const { toast } = useStore();
+  const { toast, account } = useStore();
+  const [key, setKey] = useState("");
+  // item 24: with accounts on, a per-workspace key points the server at this workspace's graph
+  const withKey = (cmd: string) => (key ? cmd.replace("-e BRAIN_MCP_ACTOR", `-e NODUS_API_KEY=${key} -e BRAIN_MCP_ACTOR`) : cmd);
   const copy = (text: string) => navigator.clipboard.writeText(text).then(
     () => toast({ tone: "success", title: "Copied" }), () => toast({ tone: "error", title: "Couldn't copy" }));
   return (
@@ -30,9 +35,19 @@ export function CodingAgentHelp({ onClose }: { onClose: () => void }) {
       <div className="stack-4">
         <div className="t-small text-2">The same graph tools, over MCP. Every result is an evidence pack with its citations, exactly as this app shows it. Run this from the repository folder:</div>
         <div className="stack">
-          <pre className="code">{COMMAND}</pre>
-          <Button size="sm" icon={Copy} onClick={() => copy(COMMAND)}>Copy command</Button>
+          <pre className="code">{withKey(COMMAND)}</pre>
+          <Button size="sm" icon={Copy} onClick={() => copy(withKey(COMMAND))}>Copy command</Button>
         </div>
+        {ACCOUNTS && account && (
+          <div className="stack">
+            <span className="t-label">This workspace&apos;s key</span>
+            <div className="t-small text-2">{key ? "Shown once. It's in the command above; creating a new key revokes this one." : "Create a key so the server reads your workspace instead of the shared demo company."}</div>
+            <div><Button size="sm" icon={KeyRound} onClick={async () => {
+              try { setKey((await send<{ key: string }>("POST", "/auth/keys", {})).key); }
+              catch (e) { toast({ tone: "error", title: "Couldn't create a key", body: String((e as Error).message || e) }); }
+            }}>{key ? "Create a new key" : "Create an API key"}</Button></div>
+          </div>
+        )}
         <details className="details">
           <summary>Other MCP clients (JSON config)</summary>
           <div className="details-body stack"><pre className="code">{CONFIG}</pre><Button size="sm" icon={Copy} onClick={() => copy(CONFIG)}>Copy config</Button></div>

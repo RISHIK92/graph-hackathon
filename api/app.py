@@ -23,7 +23,7 @@ from brain.config import MAX, settings
 from brain.db import Graph, GuardFailed, WriteMismatch
 from brain.tools import Ctx, chain_view, evidence, facts, run_tool, span_items
 
-from . import accounts
+from . import accounts, workspaces
 from .agent import Agent, Session
 from brain.ids import now_ms
 
@@ -35,8 +35,54 @@ else:
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.include_router(accounts.router)
 
-G = Graph()
-AGENT = Agent(G)
+
+class _Current:
+    """The request's workspace graph or agent, or the shared demo company's when no one is logged in (item 24
+    step 2). Every route reads G and AGENT, so one lookup per request moves them all to the workspace."""
+
+    def __init__(self, attr: str, default: Any):
+        object.__setattr__(self, "_attr", attr)
+        object.__setattr__(self, "_default", default)
+
+    def _target(self) -> Any:
+        w = workspaces.current()
+        return getattr(w, self._attr) if w else self._default
+
+    def __getattr__(self, k: str) -> Any:
+        return getattr(self._target(), k)
+
+    def __setattr__(self, k: str, v: Any) -> None:
+        setattr(self._target(), k, v)
+
+
+_DEFAULT_G = Graph()
+_DEFAULT_AGENT = Agent(_DEFAULT_G)
+G: Any = _Current("g", _DEFAULT_G)
+AGENT: Any = _Current("agent", _DEFAULT_AGENT)
+
+
+class _WorkspaceMiddleware:
+    """Sets the request's workspace from the session cookie, for the whole request, streaming included (a pure
+    ASGI middleware, so a server-sent turn runs inside it). Flag off or logged out: the shared graph."""
+
+    def __init__(self, inner: Any):
+        self.inner = inner
+
+    async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
+        if scope["type"] != "http" or not accounts.enabled():
+            return await self.inner(scope, receive, send)
+        acct = await run_in_threadpool(accounts.current, Request(scope))
+        if not acct:
+            return await self.inner(scope, receive, send)
+        w = await run_in_threadpool(workspaces.get, acct["workspace"])
+        tok = workspaces.enter(w)
+        try:
+            await self.inner(scope, receive, send)
+        finally:
+            workspaces.leave(tok)
+
+
+app.add_middleware(_WorkspaceMiddleware)
 ANON: dict[str, Session] = {}
 STATE = {"last_token_activity": 0, "next_reset_at": None, "seed_dir": os.environ.get("BRAIN_SEED_DIR", "")}
 RATE: dict[str, deque] = defaultdict(deque)
@@ -146,9 +192,11 @@ def post_turn(sid: str, body: TurnBody, c: Caller = Depends(caller)):
     if s.anonymous:
         _rate(f"anon:{c.ip}", 20, 600_000)
 
+    turn = AGENT.turn   # the request's workspace agent, bound now rather than when the stream starts
+
     def gen():
         try:
-            for ev in AGENT.turn(s, body.text, as_of=body.as_of, belief_at=body.belief_at):
+            for ev in turn(s, body.text, as_of=body.as_of, belief_at=body.belief_at):
                 yield {"event": ev["event"], "data": json.dumps(ev, default=str)}
         except Exception as e:  # noqa: BLE001
             yield {"event": "error", "data": json.dumps({"stage": "turn", "message": str(e)})}
@@ -563,10 +611,13 @@ UPLOAD_MAX = 20 * 1024 * 1024
 async def admin_upload(filename: str, request: Request, c: Caller = Depends(caller)) -> dict:
     """Ingest one uploaded file (the raw request body): Markdown or plain text as a wiki page, or a Slack
     export (a channel .json or the whole .zip) as chat messages, through the same connectors and pipeline."""
-    need_admin(c)
+    if not (c.admin or c.workspace):   # an account owner uploads into their own workspace (item 24)
+        need_admin(c)
     data = await request.body()
     if len(data) > UPLOAD_MAX:
         raise HTTPException(413, "upload over 20 MB")
+    if c.workspace:
+        _workspace_room()
     from ingest.pipeline import Ingestor
     try:
         rep = await run_in_threadpool(Ingestor(G).ingest_upload, filename, data)
@@ -574,6 +625,38 @@ async def admin_upload(filename: str, request: Request, c: Caller = Depends(call
         raise HTTPException(400, f"can't read {filename}: {e}")
     AGENT._index = None
     return {"counts": rep.counts(), "sources": rep.sources, "skipped": rep.skipped}
+
+
+def _workspace_room() -> None:
+    cap = int(os.environ.get("NODUS_WS_MAX_SOURCES", "500"))
+    n = G.ro("MATCH (s:Source) WHERE s.kind <> 'chat_session' RETURN count(s) AS n", template="workspace")[0]["n"]
+    if n >= cap:
+        raise HTTPException(413, f"this workspace is at its limit of {cap} sources")
+
+
+def _need_workspace(c: Caller) -> str:
+    if not c.workspace:
+        raise HTTPException(401, "log in to use a workspace")
+    return c.workspace
+
+
+@app.get("/workspace")
+def workspace_status(c: Caller = Depends(caller)) -> dict:
+    """The logged-in account's workspace: whether it is empty, and what it holds."""
+    name = _need_workspace(c)
+    row = G.ro("OPTIONAL MATCH (s:Source) WHERE s.kind <> 'chat_session' WITH count(s) AS sources "
+               "OPTIONAL MATCH (e:Entity) WITH sources, count(e) AS entities "
+               "OPTIONAL MATCH (a:Assertion) RETURN sources, entities, count(a) AS facts", template="workspace")[0]
+    return {"workspace": name, "empty": row["sources"] == 0, "counts": row}
+
+
+@app.post("/workspace/reset")
+def workspace_reset(c: Caller = Depends(caller)) -> dict:
+    """Empty the logged-in account's workspace: its graph is dropped and starts again with the schema only."""
+    name = _need_workspace(c)
+    workspaces.drop(name)
+    workspaces.get(name)
+    return {"workspace": name, "empty": True}
 
 
 @app.post("/admin/ingest")
@@ -639,5 +722,31 @@ def _scheduler() -> None:
                 STATE["next_reset_at"] = t + 10 * 60_000
 
 
+def empty_demo_workspace() -> str | None:
+    """Empty the shared demo account's workspace (user decision: it starts with nothing ingested, nightly)."""
+    email, pw = accounts.demo_credentials()
+    if not (accounts.enabled() and email and pw):
+        return None
+    name = accounts.store().ensure_demo(email, pw)["workspace"]
+    workspaces.drop(name)
+    workspaces.get(name)
+    return name
+
+
+def _demo_nightly() -> None:
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    while True:
+        time.sleep(600)
+        today = time.strftime("%Y-%m-%d", time.gmtime())
+        if today != day:
+            day = today
+            try:
+                empty_demo_workspace()
+            except Exception:  # noqa: BLE001 - try again the next night
+                pass
+
+
 if os.environ.get("BRAIN_SCHEDULED_RESET") == "on":
     threading.Thread(target=_scheduler, daemon=True).start()
+if accounts.enabled() and os.environ.get("NODUS_DEMO_NIGHTLY_RESET", "on") == "on":
+    threading.Thread(target=_demo_nightly, daemon=True).start()
