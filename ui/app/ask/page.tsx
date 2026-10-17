@@ -138,9 +138,11 @@ function Ask() {
         <button type="button" className={`composer-chip ${s.asOf ? "then" : ""}`} onClick={() => s.setSessionSheetOpen(true)} title="Change the date in Session settings">
           {s.asOf ? `As of ${fmtDate(s.asOf)}` : "As of today"}
         </button>
-        <button type="button" className="composer-chip" onClick={() => s.setSessionSheetOpen(true)} title="Demo identity, not authentication">
-          Acting as <span className="who">{s.personName(s.actingAs) || "…"}</span>
-        </button>
+        {s.people.length > 0 && (
+          <button type="button" className="composer-chip" onClick={() => s.setSessionSheetOpen(true)} title="Demo identity, not authentication">
+            Acting as <span className="who">{s.personName(s.actingAs) || "…"}</span>
+          </button>
+        )}
         <span className="hint"><kbd>Enter</kbd> send · <kbd>Shift</kbd> <kbd>Enter</kbd> new line{busy ? <> · <kbd>⌘</kbd> <kbd>.</kbd> stop</> : null}</span>
         <span className="grow" />
         {busy ? (

@@ -98,7 +98,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </button>
           <LiveStatus />
           <AsOfPill />
-          <ActingMenu />
+          {s.people.length > 0 && <ActingMenu />}
           {ACCOUNTS ? <AccountMenu onReset={() => setResetOpen(true)} /> : <AccessBadge />}
           <ThemeToggle />
           <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
