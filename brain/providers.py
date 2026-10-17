@@ -146,6 +146,16 @@ def _cached(kind: str, payload: Any, fn):
 
 
 TRANSPORT: httpx.BaseTransport | None = None   # tests swap in a MockTransport
+_CLIENTS: dict[int, httpx.Client] = {}
+
+
+def _client() -> httpx.Client:
+    """One pooled client per transport. A new client per call paid a TLS handshake every time, about half the
+    router's 1 s budget: live, "hlo" took 1.02 s and missed it (item 24 night)."""
+    c = _CLIENTS.get(id(TRANSPORT))
+    if c is None:
+        c = _CLIENTS[id(TRANSPORT)] = httpx.Client(transport=TRANSPORT)
+    return c
 
 
 def _send(url: str, body: dict, timeout: float) -> httpx.Response:
@@ -153,16 +163,16 @@ def _send(url: str, body: dict, timeout: float) -> httpx.Response:
     alive with keep-alive bytes, so a "10 s" call ran 170 s in the item 20 A/B; the body is streamed and the
     deadline checked as it arrives."""
     deadline = time.monotonic() + timeout
-    with httpx.Client(transport=TRANSPORT, timeout=timeout) as c:
-        with c.stream("POST", url, json=body, headers={"Authorization": f"Bearer {settings.openrouter_key}"}) as r:
-            buf = bytearray()
-            for chunk in r.iter_bytes():
-                buf += chunk
-                if time.monotonic() > deadline:
-                    raise httpx.ReadTimeout(f"no complete response within {timeout:g} s", request=r.request)
-            headers = {k: v for k, v in r.headers.items()
-                       if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")}
-            return httpx.Response(r.status_code, headers=headers, content=bytes(buf), request=r.request)
+    with _client().stream("POST", url, json=body, timeout=timeout,
+                          headers={"Authorization": f"Bearer {settings.openrouter_key}"}) as r:
+        buf = bytearray()
+        for chunk in r.iter_bytes():
+            buf += chunk
+            if time.monotonic() > deadline:
+                raise httpx.ReadTimeout(f"no complete response within {timeout:g} s", request=r.request)
+        headers = {k: v for k, v in r.headers.items()
+                   if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")}
+        return httpx.Response(r.status_code, headers=headers, content=bytes(buf), request=r.request)
 
 
 def _post_retry(url: str, body: dict, timeout: float = 120, attempts: int = 6) -> httpx.Response:
