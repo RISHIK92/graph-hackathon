@@ -61,7 +61,9 @@ const GraphCanvas = forwardRef<GraphHandle, {
   onDrift?: (drifted: boolean) => void;
   /** Pixels on the left that an overlay (the path card) covers: the path fits beside it. */
   focusInset?: number;
-}>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady, maxZoom = 3, focus = null, onDrift, focusInset = 0 }, ref) {
+  /** The relation of each step to the one before (OWNS, LEADS…): only that edge between a pair is the path's. */
+  focusRels?: string[];
+}>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady, maxZoom = 3, focus = null, onDrift, focusInset = 0, focusRels = [] }, ref) {
   const { theme } = useStore();   // colours come from theme tokens, so a theme switch redraws
   const el = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
@@ -72,6 +74,9 @@ const GraphCanvas = forwardRef<GraphHandle, {
   const focusZoom = useRef(0);
   const inset = useRef(focusInset);
   inset.current = focusInset;
+  const rels = useRef(focusRels);
+  rels.current = focusRels;
+  const moved = useRef(false);   // the user panned or zoomed since the last focus
   const positions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   useImperativeHandle(ref, () => ({
@@ -82,11 +87,11 @@ const GraphCanvas = forwardRef<GraphHandle, {
       const cy = cyRef.current;
       if (!cy) return;
       positions.current.clear();
-      cy.one("layoutstop", () => focusOn(cy, focusRef.current, focusZoom, inset.current));   // the layout first, then the focus
+      cy.one("layoutstop", () => focusOn(cy, focusRef.current, focusZoom, inset.current, rels.current, moved));   // the layout first, then the focus
       cy.layout(layoutOptions(layout)).run();
     },
     center: (id: string) => { const n = cyRef.current?.getElementById(id); if (n && n.length) cyRef.current?.animate({ center: { eles: n }, zoom: Math.max(cyRef.current.zoom(), 1.2), duration: 200 }); },
-    focusPath: () => { if (cyRef.current) focusOn(cyRef.current, focusRef.current, focusZoom, inset.current); },
+    focusPath: () => { if (cyRef.current) focusOn(cyRef.current, focusRef.current, focusZoom, inset.current, rels.current, moved); },
   }));
 
   // build or rebuild when the data changes; keep positions of nodes that stay (the time slider redraws in place)
@@ -183,6 +188,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
       cy.on("position", "node", (ev) => { positions.current.set(ev.target.id(), { ...ev.target.position() }); });
       cy.nodes().forEach((n) => { positions.current.set(n.id(), { ...n.position() }); });
       let drifted = false;
+      cy.on("scrollzoom tapstart", () => { moved.current = true; });
       cy.on("viewport", () => {
         const f = focusRef.current;
         if (!f?.length || !focusZoom.current) return;
@@ -194,7 +200,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
       });
       cyRef.current = cy;
       applySelection(cy, selected);
-      focusOn(cy, focusRef.current, focusZoom, inset.current);
+      focusOn(cy, focusRef.current, focusZoom, inset.current, rels.current, moved);
       handlers.current.onReady?.();
     })();
     return () => { cancelled = true; };
@@ -202,7 +208,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
   }, [nodes, edges, layout, theme, maxZoom]);
 
   useEffect(() => { if (cyRef.current) applySelection(cyRef.current, selected); }, [selected]);
-  useEffect(() => { if (cyRef.current) focusOn(cyRef.current, focus, focusZoom, inset.current); }, [focus]);
+  useEffect(() => { if (cyRef.current) focusOn(cyRef.current, focus, focusZoom, inset.current, rels.current, moved); }, [focus]);
   // the path's flowing dash (design system), off with reduced motion
   useEffect(() => {
     if (!focus?.length || reducedMotion()) return;
@@ -217,6 +223,19 @@ const GraphCanvas = forwardRef<GraphHandle, {
     return () => cancelAnimationFrame(raf);
   }, [focus]);
   useEffect(() => () => cyRef.current?.destroy(), []);
+  // the canvas changes size after the first fit (the rail collapses on entering the graph): refit the path
+  // unless the user has moved the view since
+  useEffect(() => {
+    if (!el.current) return;
+    const ro = new ResizeObserver(() => {
+      const cy = cyRef.current;
+      if (!cy) return;
+      cy.resize();
+      if (focusRef.current?.length && !moved.current) focusOn(cy, focusRef.current, focusZoom, inset.current, rels.current, moved);
+    });
+    ro.observe(el.current);
+    return () => ro.disconnect();
+  }, []);
 
   return <div ref={el} className="cy" />;
 });
@@ -230,14 +249,19 @@ function layoutOptions(layout: "cose" | "concentric" | "breadthfirst"): cytoscap
 
 /** Mark the path (its nodes, and the edges between consecutive steps) and dim the rest, then ease to fit the
  * path alone. No path clears the focus and leaves the view where it is. */
-function focusOn(cy: Core, path: string[] | null | undefined, zoomAt: { current: number }, insetLeft = 0) {
+function focusOn(cy: Core, path: string[] | null | undefined, zoomAt: { current: number }, insetLeft = 0,
+  rels: string[] = [], moved?: { current: boolean }) {
+  if (moved) moved.current = false;
   cy.batch(() => {
     cy.elements().removeClass("dim wide near path");
     if (!path?.length) return;
     const ids = new Set(path);
     const nodes = cy.nodes().filter((n) => ids.has(n.id()));
-    const pairs = new Set(path.slice(1).map((b, i) => [path[i], b].sort().join("|")));
-    const onPath = cy.edges().filter((e) => !e.hasClass("disputed") && !e.hasClass("stale") && pairs.has([e.source().id(), e.target().id()].sort().join("|")));
+    const pairs = new Map(path.slice(1).map((b, i) => [[path[i], b].sort().join("|"), rels[i] || ""]));
+    const onPath = cy.edges().filter((e) => {
+      const rel = pairs.get([e.source().id(), e.target().id()].sort().join("|"));
+      return rel !== undefined && !e.hasClass("disputed") && !e.hasClass("stale") && (!rel || (e.data("raw") as CanvasEdge).type === rel);
+    });
     cy.elements().not(nodes).not(onPath).addClass("dim");
     nodes.addClass("path");
     onPath.addClass("path");
@@ -255,6 +279,7 @@ function focusOn(cy: Core, path: string[] | null | undefined, zoomAt: { current:
   const zoom = Math.min(cy.maxZoom(), Math.max(cy.minZoom(), Math.min(w / Math.max(bb.w, 1), h / Math.max(bb.h, 1))));
   const pan = { x: left + FOCUS_PAD + w / 2 - zoom * (bb.x1 + bb.w / 2), y: FOCUS_PAD + h / 2 - zoom * (bb.y1 + bb.h / 2) };
   const done = () => { zoomAt.current = cy.zoom(); cy.emit("viewport"); };
+  cy.stop();   // a refit replaces a fit still running
   if (reducedMotion()) { cy.viewport({ zoom, pan }); done(); return; }
   cy.animate({ zoom, pan, duration: 500, easing: "ease-out-cubic", complete: done });
 }

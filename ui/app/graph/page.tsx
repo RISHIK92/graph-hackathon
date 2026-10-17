@@ -26,6 +26,7 @@ function GraphInner() {
   const [kinds, setKinds] = useState<string[]>([]);
   // "Open in Graph" from evidence passes the path in step order: the page opens focused on it
   const [pathIds, setPathIds] = useState<string[]>(() => (params.get("path") || "").split(",").filter(Boolean));
+  const [rels] = useState<string[]>(() => (params.get("rels") || "").split(","));
   const [focusing, setFocusing] = useState(() => !!params.get("path"));
   const [drifted, setDrifted] = useState(false);
   const [selected, setSelected] = useState<string[]>(() => (params.get("select") || params.get("path") || "").split(",").filter(Boolean));
@@ -222,6 +223,7 @@ function GraphInner() {
             focus={focus}
             onDrift={setDrifted}
             focusInset={440}
+            focusRels={rels}
             onReady={() => setLaying(false)}
             onNode={(id, additive) => {
               setSelected((cur) => (additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : [id]));
@@ -238,7 +240,7 @@ function GraphInner() {
           <div className="graph-overlay"><Empty icon={Filter} title="No nodes match these filters" action={<Button size="sm" onClick={() => { setLabels([]); setKinds([]); setHideTickets(true); }}>Clear filters</Button>} /></div>
         )}
         {focus && data && (
-          <PathCard ids={pathIds} names={names} edges={data.edges} onStep={(id) => canvas.current?.center(id)}
+          <PathCard ids={pathIds} rels={rels} names={names} edges={data.edges} onStep={(id) => canvas.current?.center(id)}
             onAsk={askAbout} onShowAll={() => { setFocusing(false); setDrifted(false); }} onClose={clearPath} />
         )}
         {!focus && selected.length > 0 && (
@@ -275,13 +277,14 @@ function GraphInner() {
 }
 
 /** The focused path (path focus mode): its steps joined by their relations, each step pans to its node. */
-function PathCard({ ids, names, edges, onStep, onAsk, onShowAll, onClose }: {
-  ids: string[]; names: Map<string, string>; edges: GraphData["edges"]; onStep: (id: string) => void;
+function PathCard({ ids, rels, names, edges, onStep, onAsk, onShowAll, onClose }: {
+  ids: string[]; rels: string[]; names: Map<string, string>; edges: GraphData["edges"]; onStep: (id: string) => void;
   onAsk: () => void; onShowAll: () => void; onClose: () => void;
 }) {
-  const rel = (a: string, b: string) => {
-    const fwd = edges.find((e) => e.source === a && e.target === b);
-    const back = fwd ? null : edges.find((e) => e.source === b && e.target === a);
+  const rel = (a: string, b: string, type: string) => {
+    const of = (e: GraphData["edges"][number]) => !type || e.type === type;
+    const fwd = edges.find((e) => e.source === a && e.target === b && of(e));
+    const back = fwd ? null : edges.find((e) => e.source === b && e.target === a && of(e));
     const e = fwd || back;
     return e ? { type: e.type, back: !fwd } : null;
   };
@@ -293,7 +296,7 @@ function PathCard({ ids, names, edges, onStep, onAsk, onShowAll, onClose }: {
       </div>
       <div className="path-steps">
         {ids.map((id, i) => {
-          const r = i ? rel(ids[i - 1], id) : null;
+          const r = i ? rel(ids[i - 1], id, rels[i - 1] || "") : null;
           return (
             <span key={id} className="path-step">
               {i > 0 && <span className="path-rel">{r ? (r.back ? `← ${r.type} ←` : `→ ${r.type} →`) : "·"}</span>}

@@ -198,6 +198,8 @@ function PathTab({ target, packs }: { target: EvidenceTarget; packs: Pack[] }) {
   if (!path) return <Empty icon={GitBranch} title="No path for this citation">Text-only evidence has no graph path.</Empty>;
   const steps = remote.data?.steps || path.steps;
   const ids = Array.from(new Set(path.steps.map((s) => s.node.id).filter((x) => x.includes(":"))));
+  // each step's relation to the one before, so Graph lights only that edge between a pair of steps
+  const rels = ids.slice(1).map((id) => path.steps.find((st) => st.node.id === id)?.edge?.type || "");
   return (
     <div className="stack-4">
       <PathSteps steps={steps} facts={facts} spans={spans} />
@@ -205,7 +207,7 @@ function PathTab({ target, packs }: { target: EvidenceTarget; packs: Pack[] }) {
         <Button size="sm" onClick={() => setExpand((v) => !v)} disabled={!ids.length && !impact.length}>
           {expand ? (impact.length > 1 ? "Hide affected paths" : "Hide neighbourhood") : impact.length > 1 ? `Show all ${impact.length} affected paths` : "Show neighbourhood"}
         </Button>
-        <Button size="sm" icon={GitBranch} disabled={!ids.length} onClick={() => { closeInspector(); router.push(`/graph?path=${encodeURIComponent(ids.join(","))}`); }}>
+        <Button size="sm" icon={GitBranch} disabled={!ids.length} onClick={() => { closeInspector(); router.push(`/graph${qs({ path: ids.join(","), rels: rels.join(",") })}`); }}>
           Open in Graph
         </Button>
       </div>
