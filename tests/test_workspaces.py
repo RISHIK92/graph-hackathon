@@ -106,3 +106,10 @@ def test_the_nightly_job_empties_the_shared_demo_workspace(accounts_on, monkeypa
     assert not c.get("/workspace").json()["empty"]
     assert api_app.empty_demo_workspace() == me["account"]["workspace"]
     assert c.get("/workspace").json()["empty"]
+
+
+def test_a_remembered_person_from_another_workspace_falls_back_to_this_ones(accounts_on):
+    a, name = _user(accounts_on, "a@example.com")
+    a.post("/admin/upload", params={"filename": "billing.md"}, content=DOC)
+    r = a.post("/sessions", json={"acting_as": "person:not-in-this-workspace"}).json()
+    assert r["acting_as"] != "person:not-in-this-workspace"

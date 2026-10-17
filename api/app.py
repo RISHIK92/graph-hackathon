@@ -163,7 +163,8 @@ class NewSession(BaseModel):
 
 @app.post("/sessions")
 def create_session(body: NewSession, c: Caller = Depends(caller)) -> dict:
-    acting = body.acting_as or _default_identity()
+    # a person remembered from another workspace (item 24) isn't in this graph: use this graph's default
+    acting = body.acting_as if body.acting_as and G.q("entity", {"id": body.acting_as}) else _default_identity()
     if not c.token:
         s = AGENT.create_session("anonymous", acting, anonymous=True)
         ANON[s.id] = s
