@@ -20,7 +20,12 @@ export interface GraphHandle {
   zoomOut: () => void;
   relayout: () => void;
   center: (id: string) => void;
+  /** Ease back to the focused path (the recenter button). */
+  focusPath: () => void;
 }
+
+const FOCUS_PAD = 120;
+const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** Node encoding (DESIGN.md §3.2): shape by type, a restrained neutral/accent ramp, one legend. */
 // Phosphor entity colours, as theme tokens: systems and projects teal, teams and people violet, records grey
@@ -50,20 +55,38 @@ const GraphCanvas = forwardRef<GraphHandle, {
   onReady?: () => void;
   /** a small neighbourhood (Explore) shouldn't zoom in until labels fill the canvas */
   maxZoom?: number;
-}>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady, maxZoom = 3 }, ref) {
+  /** Path focus ("Open in Graph" from evidence): the path's node ids in step order. The rest dims. */
+  focus?: string[] | null;
+  /** The path left the view or the zoom drifted from the focus zoom (shows the recenter button). */
+  onDrift?: (drifted: boolean) => void;
+  /** Pixels on the left that an overlay (the path card) covers: the path fits beside it. */
+  focusInset?: number;
+}>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady, maxZoom = 3, focus = null, onDrift, focusInset = 0 }, ref) {
   const { theme } = useStore();   // colours come from theme tokens, so a theme switch redraws
   const el = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
-  const handlers = useRef({ onNode, onEdge, onBackground, onReady });
-  handlers.current = { onNode, onEdge, onBackground, onReady };
+  const handlers = useRef({ onNode, onEdge, onBackground, onReady, onDrift });
+  handlers.current = { onNode, onEdge, onBackground, onReady, onDrift };
+  const focusRef = useRef(focus);
+  focusRef.current = focus;
+  const focusZoom = useRef(0);
+  const inset = useRef(focusInset);
+  inset.current = focusInset;
   const positions = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   useImperativeHandle(ref, () => ({
     fit: () => cyRef.current?.animate({ fit: { eles: cyRef.current.elements(), padding: 40 }, duration: 200 }),
     zoomIn: () => cyRef.current?.zoom({ level: cyRef.current.zoom() * 1.25, renderedPosition: { x: (el.current?.clientWidth || 0) / 2, y: (el.current?.clientHeight || 0) / 2 } }),
     zoomOut: () => cyRef.current?.zoom({ level: cyRef.current.zoom() / 1.25, renderedPosition: { x: (el.current?.clientWidth || 0) / 2, y: (el.current?.clientHeight || 0) / 2 } }),
-    relayout: () => { positions.current.clear(); cyRef.current?.layout(layoutOptions(layout)).run(); },
+    relayout: () => {
+      const cy = cyRef.current;
+      if (!cy) return;
+      positions.current.clear();
+      cy.one("layoutstop", () => focusOn(cy, focusRef.current, focusZoom, inset.current));   // the layout first, then the focus
+      cy.layout(layoutOptions(layout)).run();
+    },
     center: (id: string) => { const n = cyRef.current?.getElementById(id); if (n && n.length) cyRef.current?.animate({ center: { eles: n }, zoom: Math.max(cyRef.current.zoom(), 1.2), duration: 200 }); },
+    focusPath: () => { if (cyRef.current) focusOn(cyRef.current, focusRef.current, focusZoom, inset.current); },
   }));
 
   // build or rebuild when the data changes; keep positions of nodes that stay (the time slider redraws in place)
@@ -98,6 +121,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
       const stale = cssVar("--warning-600", "#d97706");
       const added = cssVar("--success-600", "#16a34a");
       const accent = cssVar("--accent-600", "#4f46e5");
+      const lime = cssVar("--primary-text", "#C4F25A");
       cyRef.current?.destroy();
       const allPositioned = nodes.length > 0 && nodes.every((n) => positions.current.has(n.id));
       const cy = cytoscape({
@@ -136,6 +160,13 @@ const GraphCanvas = forwardRef<GraphHandle, {
           { selector: "edge.removed", style: { "line-style": "dashed", opacity: 0.35, width: 1.6 } },
           { selector: "edge:selected", style: { width: 3, "line-color": accent, "target-arrow-color": accent } },
           { selector: "node:selected", style: { "border-width": 3, "border-color": accent } },
+          // path focus: the path at full strength, everything else faint and unlabelled until hovered or zoomed out
+          { selector: ".dim", style: { opacity: 0.15, "text-opacity": 0 } },
+          { selector: ".dim.wide", style: { opacity: 0.45 } },
+          { selector: "edge.dim.near", style: { opacity: 0.6 } },
+          { selector: "node.dim.hov", style: { "text-opacity": 1, opacity: 0.8 } },
+          { selector: "node.path", style: { "border-width": 2, "border-color": lime, "z-index": 30, "font-size": 12, "min-zoomed-font-size": 0 } },
+          { selector: "edge.path", style: { width: 2.5, "line-color": lime, "target-arrow-color": lime, "line-style": "dashed", "line-dash-pattern": [7, 4], color: lime, "text-opacity": 1, "font-size": 9, "z-index": 30 } },
         ],
         layout: allPositioned ? { name: "preset" } : layoutOptions(layout),
       });
@@ -151,8 +182,19 @@ const GraphCanvas = forwardRef<GraphHandle, {
       cy.on("mouseout", "edge", (ev) => ev.target.removeClass("hl"));
       cy.on("position", "node", (ev) => { positions.current.set(ev.target.id(), { ...ev.target.position() }); });
       cy.nodes().forEach((n) => { positions.current.set(n.id(), { ...n.position() }); });
+      let drifted = false;
+      cy.on("viewport", () => {
+        const f = focusRef.current;
+        if (!f?.length || !focusZoom.current) return;
+        const ratio = cy.zoom() / focusZoom.current;
+        cy.batch(() => cy.elements(".dim").toggleClass("wide", ratio < 0.6));
+        const box = cy.nodes(".path").renderedBoundingBox();
+        const off = box.x1 < 0 || box.y1 < 0 || box.x2 > cy.width() || box.y2 > cy.height() || ratio < 0.6 || ratio > 1.6;
+        if (off !== drifted) { drifted = off; handlers.current.onDrift?.(off); }
+      });
       cyRef.current = cy;
       applySelection(cy, selected);
+      focusOn(cy, focusRef.current, focusZoom, inset.current);
       handlers.current.onReady?.();
     })();
     return () => { cancelled = true; };
@@ -160,6 +202,20 @@ const GraphCanvas = forwardRef<GraphHandle, {
   }, [nodes, edges, layout, theme, maxZoom]);
 
   useEffect(() => { if (cyRef.current) applySelection(cyRef.current, selected); }, [selected]);
+  useEffect(() => { if (cyRef.current) focusOn(cyRef.current, focus, focusZoom, inset.current); }, [focus]);
+  // the path's flowing dash (design system), off with reduced motion
+  useEffect(() => {
+    if (!focus?.length || reducedMotion()) return;
+    let raf = 0;
+    let off = 0;
+    const tick = () => {
+      off = (off + 0.4) % 11;
+      cyRef.current?.edges(".path").style("line-dash-offset", -off);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [focus]);
   useEffect(() => () => cyRef.current?.destroy(), []);
 
   return <div ref={el} className="cy" />;
@@ -170,6 +226,36 @@ export default GraphCanvas;
 function layoutOptions(layout: "cose" | "concentric" | "breadthfirst"): cytoscape.LayoutOptions {
   if (layout === "cose") return { name: "cose", animate: false, nodeRepulsion: () => 12000, idealEdgeLength: () => 80, randomize: false, padding: 40 } as cytoscape.LayoutOptions;
   return { name: layout, padding: 40 } as cytoscape.LayoutOptions;
+}
+
+/** Mark the path (its nodes, and the edges between consecutive steps) and dim the rest, then ease to fit the
+ * path alone. No path clears the focus and leaves the view where it is. */
+function focusOn(cy: Core, path: string[] | null | undefined, zoomAt: { current: number }, insetLeft = 0) {
+  cy.batch(() => {
+    cy.elements().removeClass("dim wide near path");
+    if (!path?.length) return;
+    const ids = new Set(path);
+    const nodes = cy.nodes().filter((n) => ids.has(n.id()));
+    const pairs = new Set(path.slice(1).map((b, i) => [path[i], b].sort().join("|")));
+    const onPath = cy.edges().filter((e) => !e.hasClass("disputed") && !e.hasClass("stale") && pairs.has([e.source().id(), e.target().id()].sort().join("|")));
+    cy.elements().not(nodes).not(onPath).addClass("dim");
+    nodes.addClass("path");
+    onPath.addClass("path");
+    nodes.connectedEdges(".disputed, .stale").addClass("near");
+  });
+  if (!path?.length) { zoomAt.current = 0; return; }
+  const eles = cy.nodes(".path");
+  if (!eles.length) return;
+  // fit the path into the area beside the overlay (at most 40% of the width is given up to it)
+  const left = Math.min(insetLeft, cy.width() * 0.4);
+  const bb = eles.boundingBox();
+  const w = Math.max(cy.width() - left - 2 * FOCUS_PAD, 80);
+  const h = Math.max(cy.height() - 2 * FOCUS_PAD, 80);
+  const zoom = Math.min(cy.maxZoom(), Math.max(cy.minZoom(), Math.min(w / Math.max(bb.w, 1), h / Math.max(bb.h, 1))));
+  const pan = { x: left + FOCUS_PAD + w / 2 - zoom * (bb.x1 + bb.w / 2), y: FOCUS_PAD + h / 2 - zoom * (bb.y1 + bb.h / 2) };
+  const done = () => { zoomAt.current = cy.zoom(); cy.emit("viewport"); };
+  if (reducedMotion()) { cy.viewport({ zoom, pan }); done(); return; }
+  cy.animate({ zoom, pan, duration: 500, easing: "ease-out-cubic", complete: done });
 }
 
 function applySelection(cy: Core, selected: string[]) {

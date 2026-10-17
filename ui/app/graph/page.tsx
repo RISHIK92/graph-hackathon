@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Filter, Flag, Loader2, Maximize2, MessageSquare, Minus, Plus, RefreshCw, Search, X } from "lucide-react";
+import { ChevronDown, Filter, Flag, Loader2, LocateFixed, Maximize2, MessageSquare, Minus, Plus, RefreshCw, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import GraphCanvas, { NODE_STYLE, type CanvasEdge, type GraphHandle } from "@/components/GraphCanvas";
@@ -24,7 +24,11 @@ function GraphInner() {
   const params = useSearchParams();
   const [labels, setLabels] = useState<string[]>([]);
   const [kinds, setKinds] = useState<string[]>([]);
-  const [selected, setSelected] = useState<string[]>(() => (params.get("select") || "").split(",").filter(Boolean));
+  // "Open in Graph" from evidence passes the path in step order: the page opens focused on it
+  const [pathIds, setPathIds] = useState<string[]>(() => (params.get("path") || "").split(",").filter(Boolean));
+  const [focusing, setFocusing] = useState(() => !!params.get("path"));
+  const [drifted, setDrifted] = useState(false);
+  const [selected, setSelected] = useState<string[]>(() => (params.get("select") || params.get("path") || "").split(",").filter(Boolean));
   const [showDisputed, setShowDisputed] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
   // The clock is read after mount: Date.now() during render differs between server and client (B4).
@@ -39,7 +43,19 @@ function GraphInner() {
   const canvas = useRef<GraphHandle>(null);
   const { data, error, loading, reload } = useApi<GraphData>(`/graph${qs({ as_of: s.asOf, labels: labels.join(","), source_kinds: kinds.join(",") })}`);
 
-  const nodes = useMemo(() => (data?.nodes || []).filter((n) => !hideTickets || !n.labels.includes("Ticket")), [data, hideTickets]);
+  const nodes = useMemo(() => (data?.nodes || []).filter((n) => !hideTickets || !n.labels.includes("Ticket") || pathIds.includes(n.id)), [data, hideTickets, pathIds]);
+  const focus = useMemo(() => (focusing && pathIds.length ? pathIds : null), [focusing, pathIds]);
+  useEffect(() => {
+    if (!focus) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.key !== "c" || e.metaKey || e.ctrlKey || e.altKey || ["INPUT", "TEXTAREA", "SELECT"].includes(el?.tagName) || el?.isContentEditable) return;
+      e.preventDefault();
+      canvas.current?.focusPath();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [focus]);
   // M10: after the date moves, edges that appeared flash green and edges that went away linger faded briefly
   const prevEdges = useRef<Map<string, CanvasEdge> | null>(null);
   const prevAsOf = useRef(s.asOf);
@@ -92,8 +108,9 @@ function GraphInner() {
   const applied = labels.length + kinds.length + (hideTickets ? 0 : 1) + (showDisputed ? 0 : 1) + (showStale ? 0 : 1);
   const matches = q.trim() ? nodes.filter((n) => n.name.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 8) : [];
 
+  const clearPath = () => { setPathIds([]); setFocusing(false); setSelected([]); setDrifted(false); router.replace("/graph"); };
   const askAbout = () => {
-    const ns = selected.map((id) => names.get(id) || id);
+    const ns = (focus ? [pathIds[0], pathIds[pathIds.length - 1]] : selected).map((id) => names.get(id) || id);
     const qq = ns.length >= 2 ? `How are ${ns[0]} and ${ns[1]} connected?` : `Tell me about ${ns[0]}`;
     router.push(`/ask${qs({ q: qq, send: "1" })}`);
   };
@@ -202,6 +219,9 @@ function GraphInner() {
             edges={edges}
             selected={selected}
             layout={layout}
+            focus={focus}
+            onDrift={setDrifted}
+            focusInset={440}
             onReady={() => setLaying(false)}
             onNode={(id, additive) => {
               setSelected((cur) => (additive ? (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]) : [id]));
@@ -217,7 +237,11 @@ function GraphInner() {
         {data && nodes.length === 0 && !loading && (
           <div className="graph-overlay"><Empty icon={Filter} title="No nodes match these filters" action={<Button size="sm" onClick={() => { setLabels([]); setKinds([]); setHideTickets(true); }}>Clear filters</Button>} /></div>
         )}
-        {selected.length > 0 && (
+        {focus && data && (
+          <PathCard ids={pathIds} names={names} edges={data.edges} onStep={(id) => canvas.current?.center(id)}
+            onAsk={askAbout} onShowAll={() => { setFocusing(false); setDrifted(false); }} onClose={clearPath} />
+        )}
+        {!focus && selected.length > 0 && (
           <div className="selbar">
             <span className="t-small">{plural(selected.length, "node")} selected</span>
             <Button size="sm" variant="primary" icon={MessageSquare} onClick={askAbout}>Ask about {selected.length > 1 ? "the selection" : "it"}</Button>
@@ -238,11 +262,49 @@ function GraphInner() {
             <span className="item"><i className="ln" style={{ borderColor: "var(--warning-600)", borderTopStyle: "dashed" }} />Stale document</span>
           </>}
         </div>
+        <button className={`recenter ${focus && drifted ? "on" : ""}`} onClick={() => canvas.current?.focusPath()} aria-label="Recenter on the path"
+          title="Back to the path  c" tabIndex={focus && drifted ? 0 : -1} aria-hidden={!(focus && drifted)}><LocateFixed className="icon-sm" /></button>
         <div className="zoomctl">
           <button onClick={() => canvas.current?.zoomIn()} aria-label="Zoom in"><Plus className="icon-sm" /></button>
           <button onClick={() => canvas.current?.zoomOut()} aria-label="Zoom out"><Minus className="icon-sm" /></button>
           <button onClick={() => canvas.current?.fit()} aria-label="Fit to screen"><Maximize2 className="icon-sm" /></button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** The focused path (path focus mode): its steps joined by their relations, each step pans to its node. */
+function PathCard({ ids, names, edges, onStep, onAsk, onShowAll, onClose }: {
+  ids: string[]; names: Map<string, string>; edges: GraphData["edges"]; onStep: (id: string) => void;
+  onAsk: () => void; onShowAll: () => void; onClose: () => void;
+}) {
+  const rel = (a: string, b: string) => {
+    const fwd = edges.find((e) => e.source === a && e.target === b);
+    const back = fwd ? null : edges.find((e) => e.source === b && e.target === a);
+    const e = fwd || back;
+    return e ? { type: e.type, back: !fwd } : null;
+  };
+  return (
+    <div className="path-card" role="region" aria-label="Focused path">
+      <div className="row">
+        <span className="eyebrow">PATH · {plural(Math.max(ids.length - 1, 1), "step")}</span>
+        <Button size="sm" variant="ghost" icon={X} className="right" aria-label="Clear the path" onClick={onClose} />
+      </div>
+      <div className="path-steps">
+        {ids.map((id, i) => {
+          const r = i ? rel(ids[i - 1], id) : null;
+          return (
+            <span key={id} className="path-step">
+              {i > 0 && <span className="path-rel">{r ? (r.back ? `← ${r.type} ←` : `→ ${r.type} →`) : "·"}</span>}
+              <button type="button" className="path-chip" onClick={() => onStep(id)}>{names.get(id) || id}</button>
+            </span>
+          );
+        })}
+      </div>
+      <div className="row-wrap">
+        <Button size="sm" variant="primary" icon={MessageSquare} onClick={onAsk}>Ask about this path</Button>
+        <Button size="sm" onClick={onShowAll}>Show everything</Button>
       </div>
     </div>
   );

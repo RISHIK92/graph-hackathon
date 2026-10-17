@@ -205,7 +205,7 @@ function PathTab({ target, packs }: { target: EvidenceTarget; packs: Pack[] }) {
         <Button size="sm" onClick={() => setExpand((v) => !v)} disabled={!ids.length && !impact.length}>
           {expand ? (impact.length > 1 ? "Hide affected paths" : "Hide neighbourhood") : impact.length > 1 ? `Show all ${impact.length} affected paths` : "Show neighbourhood"}
         </Button>
-        <Button size="sm" icon={GitBranch} disabled={!ids.length} onClick={() => { closeInspector(); router.push(`/graph?select=${encodeURIComponent(ids.join(","))}`); }}>
+        <Button size="sm" icon={GitBranch} disabled={!ids.length} onClick={() => { closeInspector(); router.push(`/graph?path=${encodeURIComponent(ids.join(","))}`); }}>
           Open in Graph
         </Button>
       </div>

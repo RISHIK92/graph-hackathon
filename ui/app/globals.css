@@ -828,3 +828,14 @@ a.start-card { text-decoration: none; }
 @media (max-width: 1100px) {
   .app.has-rail.has-inspector { grid-template-columns: auto minmax(0, 1fr); }
 }
+
+/* ---- path focus ("Open in Graph" from evidence): the path card and the recenter button ------- */
+.path-card { position: absolute; top: var(--s-4); left: var(--s-4); z-index: 3; width: min(420px, calc(100% - 32px)); display: flex; flex-direction: column; gap: var(--s-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-3); box-shadow: var(--shadow-2); padding: var(--s-3); }
+.path-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.path-step { display: inline-flex; align-items: center; gap: 6px; }
+.path-rel { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--primary-text); }
+.path-chip { font-size: 13px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-soft); background: var(--surface-2); color: var(--text); }
+.path-chip:hover { border-color: var(--line-hover); }
+.recenter { position: absolute; right: var(--s-4); bottom: calc(var(--s-4) + 3 * 32px + 12px); z-index: 2; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-1); color: var(--primary-text); opacity: 0; transform: scale(.9); pointer-events: none; transition: opacity var(--t-fast), transform var(--t-fast); }
+.recenter.on { opacity: 1; transform: none; pointer-events: auto; }
+.recenter:hover { background: var(--surface-2); }
