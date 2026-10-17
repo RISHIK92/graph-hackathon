@@ -168,7 +168,8 @@ def _ticket(it: Item, person, thing) -> SourceDoc:
         add(f"{it.external_id} is about {name}", it.ts, heading="history", prose=False, phase=1,
             structured=[StructuredFact("ABOUT", tid, thing(name, kind), valid_from=it.ts)])
     for c in it.comments:
-        add(f"{c['author']} commented: {c['text']}", c["ts"], heading="comments", author_id=person(c["author"]))
+        add(f"{c['author']} commented: {c['text']}", c["ts"], heading="comments", author_id=person(c["author"]),
+            url=c.get("url", ""))
     d = _meta_doc(it, "ticket", text, person(it.author))
     d.ticket_id = tid
     d.units = units

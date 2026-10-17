@@ -21,7 +21,7 @@ from brain import integrity, schema
 from brain.actions import Actions, Actor, Refused
 from brain.config import MAX, settings
 from brain.db import Graph, GuardFailed, WriteMismatch
-from brain.tools import Ctx, chain_view, evidence, facts, run_tool, span_items
+from brain.tools import Ctx, chain_view, evidence, facts, link, run_tool, span_items
 
 from . import accounts, jobs, workspaces
 from .agent import Agent, Session
@@ -256,7 +256,8 @@ def get_source(source_id: str) -> dict:
         raise HTTPException(404)
     src = r[0]["source"]
     spans = sorted([x for x in r[0]["spans"] if x["span"]], key=lambda x: x["ord"] or 0)
-    out = {"source": src, "spans": spans, "text": "\n\n".join(x["text"] for x in spans)}
+    out = {"source": src, "spans": spans, "text": "\n\n".join(x["text"] for x in spans),
+           "link": link(src.get("uri") or "")}   # item 24: a real link, or demo data shown in Nodus
     if src.get("kind") == "draft":
         undone = G.q("draft_status", {"id": source_id})
         out["banner"] = "agent draft: not evidence" + (" · withdrawn" if undone and undone[0]["s"] == "undone" else "")

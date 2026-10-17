@@ -59,6 +59,7 @@ class Unit:
     prose: bool = True          # eligible for extraction
     section: str = ""           # ADR body section (context / decision / consequences)
     phase: int = 2
+    url: str = ""               # where this unit itself was written, if not its Source's URL (item 24)
 
 
 @dataclass

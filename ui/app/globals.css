@@ -634,3 +634,20 @@ a.start-card { text-decoration: none; }
 .source-card { border: 1px solid #1E2A26; background: #0F1513; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .source-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 760px) { .source-fields { grid-template-columns: 1fr; } }
+.source-links { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12.5px; }
+.source-links a { display: inline-flex; gap: 5px; align-items: center; color: var(--text-label); text-decoration: underline; text-underline-offset: 3px; }
+.source-links a:hover { color: var(--text); }
+.demo-tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--then); border: 1px solid var(--then-border); background: var(--then-bg); border-radius: 999px; padding: 1px 8px; }
+.origin { border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface); padding: 20px; }
+.origin .hl { background: var(--then-bg); box-shadow: inset 3px 0 0 var(--then); border-radius: 6px; padding: 4px 8px; margin-left: -8px; }
+.origin-chat { display: flex; gap: 12px; }
+.origin-chat p { margin: 0; font-size: 15px; line-height: 1.55; }
+.origin-issue { display: flex; flex-direction: column; gap: 12px; }
+.origin-issue h1, .origin-doc h1 { margin: 0; font-size: 22px; line-height: 1.3; font-weight: 600; }
+.origin-issue .issue-row { border-top: 1px solid var(--border); padding-top: 10px; font-size: 14.5px; white-space: pre-wrap; }
+.origin-doc { display: flex; flex-direction: column; gap: 12px; }
+.origin-doc p { margin: 0; font-size: 15px; line-height: 1.65; white-space: pre-wrap; }
+.origin-code { display: flex; flex-direction: column; gap: 6px; }
+.origin-code pre { margin: 0; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; color: #C9D6D0; }
+.origin.slack { border-left: 3px solid #BBA6FF; }
+.origin.jira, .origin.linear, .origin.github { border-left: 3px solid #74D9C3; }

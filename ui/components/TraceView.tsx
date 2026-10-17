@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { fmtDate } from "@/lib/format";
 import { KIND_LABEL } from "@/lib/labels";
 import type { Path, SpanItem, Trace } from "@/lib/types";
+import { SourceLinks } from "./SourceLinks";
 import { Chip, Details, ErrorState, Skeleton } from "./ui";
 
 const ROLE: Record<string, string> = { planner: "Understood the question", drafter: "Wrote the answer", checker: "Checked the answer",
@@ -71,11 +72,14 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
         {tab === "sources" && (cited.length ? (
           <div className="stack-3">
             {cited.map((sp, i) => (
-              <button key={sp.span_id} type="button" className="proof-quote" onClick={() => openSpan(sp)}>
-                <span className="n">[{i + 1}]</span>
-                <span className="q">“{sp.text.trim()}”</span>
-                <span className="meta">{KIND_LABEL[sp.kind || ""] || sp.kind || "Source"}{sp.title ? ` · ${sp.title}` : ""}{sp.ts ? ` · ${fmtDate(sp.ts)}` : ""}{sp.live ? "" : " · not in the latest revision"}</span>
-              </button>
+              <div key={sp.span_id} className="proof-quote">
+                <button type="button" className="stack" style={{ gap: 6, textAlign: "left" }} onClick={() => openSpan(sp)}>
+                  <span className="n">[{i + 1}]</span>
+                  <span className="q">“{sp.text.trim()}”</span>
+                  <span className="meta">{KIND_LABEL[sp.kind || ""] || sp.kind || "Source"}{sp.title ? ` · ${sp.title}` : ""}{sp.ts ? ` · ${fmtDate(sp.ts)}` : ""}{sp.live ? "" : " · not in the latest revision"}</span>
+                </button>
+                <SourceLinks sourceId={sp.source_id} spanId={sp.span_id} url={sp.url} system={sp.system} demo={sp.demo} />
+              </div>
             ))}
           </div>
         ) : <span className="t-small text-2">No source is cited in the answer&apos;s first sentence.</span>)}

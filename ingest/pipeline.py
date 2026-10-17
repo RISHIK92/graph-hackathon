@@ -175,6 +175,7 @@ class Ingestor:
             if not ex:
                 store.create_source(g, {"id": sid, "doc_key": d.doc_key, "kind": d.kind, "system": d.system,
                                         "external_id": d.external_id, "title": d.title, "uri": d.uri,
+                                        "author_id": d.author_id,
                                         "created_at": d.created_at, "updated_at": d.updated_at,
                                         "ingested_at": MAX, "is_latest": False, "status": "active",
                                         "user_id": ""})
@@ -225,7 +226,8 @@ class Ingestor:
                         "keys": ids.identifier_keys(u.text, slugs), "ts": u.ts,
                         "author_id": u.author_id or "", "author_role": role, "kind": d.kind,
                         "embed_model": providers.embed_model_name(), "char_start": u.char_start,
-                        "char_end": u.char_end, "ordinal": i, "heading_path": u.heading_path})
+                        "char_end": u.char_end, "ordinal": i, "heading_path": u.heading_path,
+                        "url": u.url or d.uri})
         return out
 
     def _spans(self, d: SourceDoc, latest: bool, prev_latest: str | None) -> None:

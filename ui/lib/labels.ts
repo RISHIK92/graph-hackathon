@@ -18,6 +18,12 @@ export const KIND_LABEL: Record<string, string> = {
   chat: "Chat", chat_session: "Chat", session: "Chat", draft: "Agent draft", confirmation: "Confirmed",
 };
 
+/** Where a source was written (item 24): the product name for "Open in …" and the in-app source view. */
+export const SYSTEM_LABEL: Record<string, string> = {
+  slack: "Slack", linear: "Linear", github: "GitHub", jira: "Jira", confluence: "Confluence", backstage: "Backstage",
+  repo: "the repository", hr: "the HR roster", notes: "meeting notes", upload: "the uploaded file",
+};
+
 /** "history of ch_DEPENDS_ON:system:checkout>system:ledger" → "Checkout depends on Ledger". */
 export function chainLabel(note: string): string {
   const m = note.match(/ch_([A-Z_]+):([^>]+)>(.+)$/);

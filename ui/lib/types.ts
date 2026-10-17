@@ -41,6 +41,11 @@ export interface SpanItem {
   authority?: number;
   quote_start?: number | null;
   quote_end?: number | null;
+  /** Item 24: where it was written ("" for none or demo data), its system, its author's id, and whether it's demo data. */
+  url?: string;
+  system?: string;
+  author?: string;
+  demo?: boolean;
 }
 
 export interface PathNode {
@@ -276,10 +281,11 @@ export interface SpanView {
 }
 
 export interface SourceView {
-  source: Record<string, unknown> & { id: string; kind?: string; title?: string; uri?: string; is_latest?: boolean };
+  source: Record<string, unknown> & { id: string; kind?: string; title?: string; uri?: string; is_latest?: boolean; system?: string; author_id?: string };
   spans: { span: string; text: string; cs: number; ce: number; ord: number }[];
   text: string;
   banner?: string;
+  link?: { url: string; demo: boolean };
 }
 
 // Directory (GET /directory)

@@ -561,7 +561,8 @@ def g_span_details(f, rows):
     assert (r["sp_own"]["text"], r["sp_own"]["ts"], r["sp_own"]["kind"], r["sp_own"]["role"]) == (
         TEXTS["sp_own"], 1, "wiki", "human")
     assert r["sp_own"]["revs"] == [{"src": "src:test", "title": "src:test", "uri": "", "kind": "wiki",
-                                    "doc_key": "src:test", "cs": 0, "ce": len(TEXTS["sp_own"]), "live": True}]
+                                    "doc_key": "src:test", "system": None, "cs": 0, "ce": len(TEXTS["sp_own"]), "live": True}]
+    assert (r["sp_own"]["url"], r["sp_own"]["author"]) == (None, "")   # item 24: no span link of its own
     assert r["turn1"]["role"] == "user"
     assert [(x["src"], x["kind"], x["live"]) for x in r["turn1"]["revs"]] == [("sess1", "chat_session", True)]
 
@@ -736,8 +737,9 @@ def g_source_view(f, rows):
 
 
 def g_span_view(f, rows):
-    assert rows == [{"text": "Payments owns Ledger", "kind": "wiki", "ts": 1, "author": "", "role": "human", "revisions": [
-        {"source": "src:test", "title": "src:test", "uri": "", "cs": 0, "ce": 20, "latest": True, "live": True}]}]
+    assert rows == [{"text": "Payments owns Ledger", "kind": "wiki", "ts": 1, "author": "", "role": "human", "url": None,
+                     "revisions": [{"source": "src:test", "title": "src:test", "uri": "", "system": None, "kind": "wiki",
+                                    "cs": 0, "ce": 20, "latest": True, "live": True}]}]
 
 
 def g_statement(f, rows):

@@ -62,7 +62,7 @@ def upsert_spans(g: Graph, source_id: str, spans: list[dict], latest: bool, now:
     rows = []
     for s in spans:
         node = {k: s[k] for k in ("id", "doc_key", "text", "keys", "ts", "author_id", "author_role",
-                                  "kind", "embed_model") if k in s}
+                                  "kind", "embed_model", "url") if k in s}
         rows.append({"node": node, "id": s["id"], "ts": s["ts"], "cs": s["char_start"], "ce": s["char_end"],
                      "ord": s["ordinal"], "hp": s.get("heading_path", ""), "emb": s.get("embedding")})
     rm = MAX if latest else 0  # a late older revision's HAS_SPAN edges are written closed (01 §5)

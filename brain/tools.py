@@ -78,6 +78,14 @@ class PackBuilder:
         return pack
 
 
+def link(url: str) -> dict:
+    """A real link, or none for the demo company: its sources carry made-up `.example` addresses (a reserved
+    domain), so they open in Nodus's own source view, tagged as demo data, never as a fake external page."""
+    host = re.sub(r"^[a-z]+://", "", url).split("/", 1)[0]
+    demo = host.endswith(".example")
+    return {"url": "" if demo else url, "demo": demo}
+
+
 def evidence(ctx: Ctx, aids: list[str]) -> dict[str, list[dict]]:
     """The shared evidence fragment (03 §1.1): the only way any tool reaches EVIDENCED_BY."""
     if not aids:
@@ -94,7 +102,10 @@ def evidence(ctx: Ctx, aids: list[str]) -> dict[str, list[dict]]:
             e.update({"text": d.get("text", ""), "ts": d.get("ts"), "kind": d.get("kind"),
                       "source_id": src.get("src", e["src"]), "doc_key": src.get("doc_key"),
                       "uri": src.get("uri"), "title": src.get("title"), "char_start": src.get("cs"),
-                      "char_end": src.get("ce"), "live": any(r["live"] for r in revs)})
+                      "char_end": src.get("ce"), "live": any(r["live"] for r in revs),
+                      # where it was written, for "Open in Slack / Linear / GitHub / Jira" (item 24 step 5)
+                      **link(d.get("url") or src.get("uri") or ""), "system": src.get("system") or "",
+                      "author": d.get("author") or ""})
     return out
 
 
@@ -106,7 +117,9 @@ def span_items(ev: dict[str, list[dict]]) -> list[dict]:
                 "span_id": e["span"], "text": e["text"], "source_id": e["source_id"], "doc_key": e["doc_key"],
                 "uri": e["uri"], "title": e["title"], "kind": e["kind"], "ts": e["ts"],
                 "char_start": e["char_start"], "char_end": e["char_end"], "live": e["live"], "cites": [],
-                "form": e["form"], "authority": e["authority"], "quote_start": e["qs"], "quote_end": e["qe"]})
+                "form": e["form"], "authority": e["authority"], "quote_start": e["qs"], "quote_end": e["qe"],
+                "url": e.get("url", ""), "demo": e.get("demo", False), "system": e.get("system", ""),
+                "author": e.get("author", "")})
             if aid not in s["cites"]:
                 s["cites"].append(aid)
     return list(spans.values())

@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, FileText, Flag, GitBranch, History, Quote } from "lucide-react";
+import { FileText, Flag, GitBranch, History, Quote } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { qs } from "@/lib/api";
@@ -10,6 +10,7 @@ import { edgeVerb, KIND_LABEL, predicateLabel } from "@/lib/labels";
 import type { Fact, Pack, Path, PathStep, SourceView, SpanItem, SpanView } from "@/lib/types";
 import { CitationChip } from "./Chips";
 import GraphCanvas from "./GraphCanvas";
+import { SourceLinks } from "./SourceLinks";
 import { HistoryTimeline } from "./Timeline";
 import { Button, Chip, Details, Empty, ErrorState, Notice, Placeholder, Skeleton, Tabs } from "./ui";
 
@@ -69,11 +70,7 @@ function SourceTab({ spanId, sourceId, quote }: { spanId: string; sourceId?: str
         <span className="t-small text-2">{fmtDate(span.data.ts)}</span>
         <span className="t-small text-2">·</span>
         <span className="t-small t-strong truncate">{rev?.title}</span>
-        {rev?.uri && (
-          <a className="btn ghost sm right" href={rev.uri} target="_blank" rel="noreferrer">
-            <ExternalLink className="icon-sm" /> Open original
-          </a>
-        )}
+        {rev && <span className="right"><SourceLinks sourceId={rev.source} spanId={spanId} url={src.data?.link?.url} system={String(src.data?.source.system || "")} demo={src.data?.link?.demo} /></span>}
       </div>
       {!latestLive && (
         <Notice
@@ -143,11 +140,7 @@ function WholeSource({ sourceId }: { sourceId: string }) {
       <div className="row-wrap">
         <Chip icon={Quote}>{KIND_LABEL[kind] || kind}</Chip>
         <span className="t-small t-strong truncate">{String(src.data.source.title || sourceId)}</span>
-        {src.data.source.uri && (
-          <a className="btn ghost sm right" href={String(src.data.source.uri)} target="_blank" rel="noreferrer">
-            <ExternalLink className="icon-sm" /> Open original
-          </a>
-        )}
+        <span className="right"><SourceLinks sourceId={sourceId} url={src.data.link?.url} system={String(src.data.source.system || "")} demo={src.data.link?.demo} /></span>
       </div>
       {kind === "draft" && <Notice tone="warning" title="Agent draft">Display only. Drafts are never evidence.</Notice>}
       {src.data.banner && <Notice tone="warning">{src.data.banner}</Notice>}

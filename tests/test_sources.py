@@ -91,3 +91,37 @@ def test_an_ingested_workspace_answers_from_its_own_sources(g):
     ev = list(agent.turn(s, "Who owns Ledger Service?"))
     ans = next(e for e in ev if e["event"] == "answer")
     assert ans["assembled"]["lead"].startswith("Payments owns ledger-service"), ans["assembled"]
+
+
+def test_every_cited_span_carries_its_link_system_and_author(g):
+    """Item 24 step 5: the URL, kind and author on every Source and Span. A comment's span links to the comment
+    itself; other spans link to their Source."""
+    _ingest(g, "jira")
+    pack = run_tool(Ctx(g), "get_history", {"entity_id": "ticket:ing-3", "predicate": "ASSIGNED_TO"})
+    spans = [sp for it in pack["items"] for sp in it["spans"]]
+    assert spans and all(sp["url"] == "https://acme.atlassian.net/browse/ING-3" and sp["system"] == "jira" for sp in spans)
+    row = g.ro("MATCH (s:Span) WHERE s.text CONTAINS 'earlier cut-off' RETURN s.url AS u, s.author_id AS a")[0]
+    assert row == {"u": "https://acme.atlassian.net/browse/ING-3?focusedCommentId=101", "a": "person:maya-chen"}
+    assert g.ro("MATCH (s:Source {doc_key:'ticket:jira:ING-3'}) RETURN s.author_id AS a")[0]["a"] == "person:maya-chen"
+
+
+def test_a_seeded_span_without_its_own_url_falls_back_to_its_source(g):
+    """Graphs from before the schema addition need no migration: the reads use the Source's uri."""
+    from brain.tools import evidence
+    from tests.conftest import make_span
+    from tests.test_actions import _fact
+    from brain.write_path import WritePath
+    make_span(g, "sp_old", "Payments owns Ledger.", 1)
+    g.write("MATCH (s:Source {id:'src:test'}) SET s.uri = 'https://wiki.example.com/ledger'")
+    for i, n in (("team:payments", "Payments"), ("system:ledger", "Ledger")):
+        g.write("MERGE (e:Entity {id:$i}) SET e.name = $n", {"i": i, "n": n})
+    aid = _fact(WritePath(g), "OWNS", "team:payments", "system:ledger", 1, "sp_old")
+    e = evidence(Ctx(g), [aid])[aid][0]
+    assert e["url"] == "https://wiki.example.com/ledger" and e["system"] == ""
+
+
+def test_demo_company_links_are_not_shown_as_external_pages():
+    from brain.tools import link
+    assert link("https://chat.example/eng/17") == {"url": "", "demo": True}
+    assert link("https://acme.slack.com/archives/C1/p1") == {"url": "https://acme.slack.com/archives/C1/p1", "demo": False}
+    assert link("") == {"url": "", "demo": False}

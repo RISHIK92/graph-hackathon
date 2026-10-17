@@ -7,6 +7,7 @@
 // with no Span.id index scan; the IN form uses the index on both versions.
 MATCH (s:Span)<-[h:HAS_SPAN]-(src:Source) WHERE s.id IN $sids
 WITH s, src, h ORDER BY src.updated_at DESC
-WITH s, collect({src:src.id, title:src.title, uri:src.uri, kind:src.kind, doc_key:src.doc_key,
+WITH s, collect({src:src.id, title:src.title, uri:src.uri, kind:src.kind, doc_key:src.doc_key, system:src.system,
                  cs:h.char_start, ce:h.char_end, live:(h.recorded_at <= $T AND h.removed_at > $T)}) AS revs
-RETURN s.id AS id, s.text AS text, s.ts AS ts, s.kind AS kind, s.author_role AS role, revs
+RETURN s.id AS id, s.text AS text, s.ts AS ts, s.kind AS kind, s.author_role AS role, s.url AS url,
+       s.author_id AS author, revs
