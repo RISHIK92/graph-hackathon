@@ -46,7 +46,7 @@ function EntityInner() {
   return (
     <div className="page">
       <div className="entity-head">
-        <nav aria-label="Breadcrumb" className="t-small text-3"><Link href="/directory">Explore</Link> / {labelOf(data?.labels, id)}{name ? ` / ${name}` : ""}</nav>
+        <nav aria-label="Breadcrumb" className="t-small text-3"><Link href={`/explore${qs({ id })}`}>Explore</Link> / {labelOf(data?.labels, id)}{name ? ` / ${name}` : ""}</nav>
         <div className="row-wrap" style={{ justifyContent: "space-between", alignItems: "flex-end", gap: 20 }}>
           <div className="stack" style={{ gap: 8 }}>
             <span className={`entity-kind ${kind === "system" || kind === "project" ? "sys" : kind === "team" || kind === "person" ? "per" : "rec"}`}>{labelOf(data?.labels, id).toUpperCase()}</span>

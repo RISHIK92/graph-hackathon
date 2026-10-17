@@ -12,10 +12,11 @@ import { CommandPalette } from "./CommandPalette";
 import Inspector from "./Inspector";
 import { Button, Chip, Field, Modal, Notice, Popover, Toasts } from "./ui";
 
-// g+key jumps; Explore merges Directory and Graph (design brief step 6), so both stay reachable by key and ⌘K
+// g+key jumps; Explore merges Directory and Graph (design brief step 6); both stay reachable by key and ⌘K
 const JUMPS = [
   { href: "/", label: "Home", key: "o" },
   { href: "/ask", label: "Ask", key: "a" },
+  { href: "/explore", label: "Explore", key: "x" },
   { href: "/directory", label: "Directory", key: "d" },
   { href: "/graph", label: "Graph", key: "g" },
   { href: "/inbox", label: "Inbox", key: "i" },
@@ -23,7 +24,7 @@ const JUMPS = [
 const NAV = [
   { href: "/", label: "Home", key: "o", match: (p: string) => p === "/" },
   { href: "/ask", label: "Ask", key: "a", match: (p: string) => p.startsWith("/ask") },
-  { href: "/directory", label: "Explore", key: "d", match: (p: string) => /^\/(directory|graph|e\/)/.test(p) },
+  { href: "/explore", label: "Explore", key: "x", match: (p: string) => /^\/(explore|directory|graph|e\/)/.test(p) },
   { href: "/inbox", label: "Inbox", key: "i", match: (p: string) => p.startsWith("/inbox") },
 ];
 

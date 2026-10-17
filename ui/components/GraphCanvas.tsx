@@ -48,7 +48,9 @@ const GraphCanvas = forwardRef<GraphHandle, {
   onBackground?: () => void;
   layout?: "cose" | "concentric" | "breadthfirst";
   onReady?: () => void;
-}>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady }, ref) {
+  /** a small neighbourhood (Explore) shouldn't zoom in until labels fill the canvas */
+  maxZoom?: number;
+}>(function GraphCanvas({ nodes, edges, selected = [], onNode, onEdge, onBackground, layout = "cose", onReady, maxZoom = 3 }, ref) {
   const { theme } = useStore();   // colours come from theme tokens, so a theme switch redraws
   const el = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
@@ -103,7 +105,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
         elements: els,
         wheelSensitivity: 0.25,
         minZoom: 0.15,
-        maxZoom: 3,
+        maxZoom,
         style: [
           {
             selector: "node",
@@ -155,7 +157,7 @@ const GraphCanvas = forwardRef<GraphHandle, {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes, edges, layout, theme]);
+  }, [nodes, edges, layout, theme, maxZoom]);
 
   useEffect(() => { if (cyRef.current) applySelection(cyRef.current, selected); }, [selected]);
   useEffect(() => () => cyRef.current?.destroy(), []);

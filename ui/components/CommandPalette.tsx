@@ -32,6 +32,7 @@ export function CommandPalette() {
     const t = q.trim().toLowerCase();
     const pages: Item[] = [
       { id: "p-ask", kind: "Page", title: "Ask", icon: MessageSquare, run: () => router.push("/ask") },
+      { id: "p-explore", kind: "Page", title: "Explore", icon: GitBranch, run: () => router.push("/explore") },
       { id: "p-dir", kind: "Page", title: "Directory", icon: BookOpen, run: () => router.push("/directory") },
       { id: "p-graph", kind: "Page", title: "Graph", icon: GitBranch, run: () => router.push("/graph") },
       { id: "p-inbox", kind: "Page", title: "Inbox", icon: Inbox, run: () => router.push("/inbox") },

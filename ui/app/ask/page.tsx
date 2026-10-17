@@ -227,7 +227,7 @@ function AskStart({ composer, onAsk, onFill }: { composer: React.ReactNode; onAs
           <span><b>{d?.decisions.length ?? "–"}</b> decisions</span>
           <span><b className="disp">{d ? d.systems.filter((x) => x.disputed).length : "–"}</b> open disputes</span>
           <span className="grow" />
-          <Link href="/directory" className="home-link">Browse everything</Link>
+          <Link href="/explore" className="home-link">Browse everything</Link>
         </div>
       </div>
     </div>
