@@ -113,3 +113,11 @@ def test_a_remembered_person_from_another_workspace_falls_back_to_this_ones(acco
     a.post("/admin/upload", params={"filename": "billing.md"}, content=DOC)
     r = a.post("/sessions", json={"acting_as": "person:not-in-this-workspace"}).json()
     assert r["acting_as"] != "person:not-in-this-workspace"
+
+
+def test_a_workspace_with_the_demo_company_still_takes_uploads(accounts_on):
+    """The demo company has 519 sources; the old default cap of 500 refused every upload after loading it."""
+    a, name = _user(accounts_on, "a@example.com")
+    Graph(name=name).write("UNWIND range(1, 600) AS i CREATE (:Source {id: 'demo_' + toString(i), kind: 'doc'})")
+    r = a.post("/admin/upload", params={"filename": "billing.md"}, content=DOC)
+    assert r.status_code == 200, r.text

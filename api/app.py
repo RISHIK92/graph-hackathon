@@ -659,7 +659,7 @@ async def admin_upload(filename: str, request: Request, c: Caller = Depends(call
 
 
 def _workspace_room() -> None:
-    cap = int(os.environ.get("NODUS_WS_MAX_SOURCES", "500"))
+    cap = int(os.environ.get("NODUS_WS_MAX_SOURCES", "2000"))
     n = G.ro("MATCH (s:Source) WHERE s.kind <> 'chat_session' RETURN count(s) AS n", template="workspace")[0]["n"]
     if n >= cap:
         raise HTTPException(413, f"this workspace is at its limit of {cap} sources")
