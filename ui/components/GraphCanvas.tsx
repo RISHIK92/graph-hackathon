@@ -244,6 +244,7 @@ function focusOn(cy: Core, path: string[] | null | undefined, zoomAt: { current:
     nodes.connectedEdges(".disputed, .stale").addClass("near");
   });
   if (!path?.length) { zoomAt.current = 0; return; }
+  spreadPath(cy, path);
   const eles = cy.nodes(".path");
   if (!eles.length) return;
   // fit the path into the area beside the overlay (at most 40% of the width is given up to it)
@@ -256,6 +257,23 @@ function focusOn(cy: Core, path: string[] | null | undefined, zoomAt: { current:
   const done = () => { zoomAt.current = cy.zoom(); cy.emit("viewport"); };
   if (reducedMotion()) { cy.viewport({ zoom, pan }); done(); return; }
   cy.animate({ zoom, pan, duration: 500, easing: "ease-out-cubic", complete: done });
+}
+
+/** Path nodes the layout left on top of each other move apart (later from earlier along their line), so every
+ * step and its label reads; nothing off the path moves. */
+function spreadPath(cy: Core, path: string[]) {
+  const MIN = 70;
+  const nodes = path.map((id) => cy.getElementById(id)).filter((n) => n.length);
+  nodes.forEach((n, i) => nodes.slice(0, i).forEach((m) => {
+    const a = m.position();
+    const b = n.position();
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const d = Math.hypot(dx, dy);
+    if (d >= MIN) return;
+    const [ux, uy] = d ? [dx / d, dy / d] : [1, 0];
+    n.position({ x: a.x + ux * MIN, y: a.y + uy * MIN });
+  }));
 }
 
 function applySelection(cy: Core, selected: string[]) {

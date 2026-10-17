@@ -34,10 +34,10 @@ const RAIL_ICONS: Record<string, LucideIcon> = { "/ask": MessageSquare, "/explor
 const RAIL_KEY = "nodus.rail";
 const SHARED_NOTE = "Anyone with the demo login sees this data. Emptied every night.";
 
-/** The rail's collapsed state: the saved preference, except on Explore, which starts collapsed and keeps an
+/** The rail's collapsed state: the saved preference, except on Explore (and Graph and Directory), which start collapsed and keep an
  * expand only until the user leaves it. */
 function useRail(path: string): [boolean, () => void] {
-  const onExplore = path.startsWith("/explore");
+  const onExplore = /^\/(explore|graph|directory)/.test(path);   // the pages the rail lights as Explore
   const [saved, setSaved] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   useEffect(() => {
