@@ -319,18 +319,20 @@ export function KV({ rows, narrow }: { rows: [ReactNode, ReactNode][]; narrow?: 
 
 export function Popover({ trigger, children, align = "left", open, onOpenChange }: {
   trigger: (p: { open: boolean; toggle: () => void }) => ReactNode; children: ReactNode | ((close: () => void) => ReactNode);
-  align?: "left" | "right"; open?: boolean; onOpenChange?: (v: boolean) => void;
+  align?: "left" | "right" | "side"; open?: boolean; onOpenChange?: (v: boolean) => void;
 }) {
   const [inner, setInner] = useState(false);
   const isOpen = open ?? inner;
   const set = (v: boolean) => { setInner(v); onOpenChange?.(v); };
   const ref = useRef<HTMLDivElement>(null);
   const pop = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left?: number; right?: number } | null>(null);
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number } | null>(null);
   useLayoutEffect(() => {
     // m1: positioned in a portal from the anchor's box, so a card's overflow can't clip the menu
     const r = isOpen ? ref.current?.getBoundingClientRect() : undefined;
-    setPos(r ? (align === "right" ? { top: r.bottom + 4, right: window.innerWidth - r.right } : { top: r.bottom + 4, left: r.left }) : null);
+    // "side" opens to the right of the app rail, upwards for anchors in the rail's lower half
+    const side = (b: DOMRect) => (b.top > window.innerHeight / 2 ? { bottom: window.innerHeight - b.bottom, left: b.right + 8 } : { top: b.top, left: b.right + 8 });
+    setPos(r ? (align === "side" ? side(r) : align === "right" ? { top: r.bottom + 4, right: window.innerWidth - r.right } : { top: r.bottom + 4, left: r.left }) : null);
   }, [isOpen, align]);
   useEffect(() => {
     if (!isOpen) return;

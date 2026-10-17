@@ -1,9 +1,9 @@
 "use client";
 
-import { BookOpen, Calendar, GitBranch, Inbox, MessageSquare, Moon, Search, Sun, UserRound } from "lucide-react";
+import { BookOpen, Calendar, GitBranch, Inbox, MessageSquare, Moon, PanelLeft, Plug, Search, Sun, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { get, qs } from "@/lib/api";
+import { ACCOUNTS, get, qs } from "@/lib/api";
 import { labelOf } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { GraphData } from "@/lib/types";
@@ -36,6 +36,10 @@ export function CommandPalette() {
       { id: "p-dir", kind: "Page", title: "Directory", icon: BookOpen, run: () => router.push("/directory") },
       { id: "p-graph", kind: "Page", title: "Graph", icon: GitBranch, run: () => router.push("/graph") },
       { id: "p-inbox", kind: "Page", title: "Inbox", icon: Inbox, run: () => router.push("/inbox") },
+      ...(ACCOUNTS && s.account ? [
+        { id: "p-sources", kind: "Page", title: "Sources", icon: Plug, run: () => router.push("/sources") },
+        { id: "p-rail", kind: "View", title: "Toggle sidebar", sub: "[", icon: PanelLeft, run: () => window.dispatchEvent(new Event("nodus:toggle-rail")) },
+      ] : []),
       { id: "p-today", kind: "Time", title: "View today", icon: Calendar, run: () => s.setAsOf(null) },
       { id: "p-theme", kind: "Theme", title: "Switch theme", sub: s.theme === "dark" ? "to light" : "to dark", icon: s.theme === "dark" ? Sun : Moon,
         run: () => s.setTheme(s.theme === "dark" ? "light" : "dark") },

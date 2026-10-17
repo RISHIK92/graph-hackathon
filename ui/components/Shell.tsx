@@ -1,9 +1,9 @@
 "use client";
 
-import { AlertCircle, Calendar, ChevronDown, HelpCircle, KeyRound, LogOut, Moon, Search, Settings2, Sun, Trash2, UserRound, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, ChevronUp, Compass, HelpCircle, Inbox, KeyRound, LogOut, MessageSquare, Moon, PanelLeftClose, PanelLeftOpen, Plug, Search, Settings2, Sun, Terminal, Trash2, UserRound, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dateInputValue, fmtDate, fmtDateTime, fromDateInput, initials } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { ACCOUNTS, API_URL, send } from "@/lib/api";
@@ -20,6 +20,7 @@ const JUMPS = [
   { href: "/directory", label: "Directory", key: "d" },
   { href: "/graph", label: "Graph", key: "g" },
   { href: "/inbox", label: "Inbox", key: "i" },
+  { href: "/sources", label: "Sources", key: "s" },
 ];
 const NAV = [
   { href: "/", label: "Home", key: "o", match: (p: string) => p === "/" },
@@ -27,6 +28,33 @@ const NAV = [
   { href: "/explore", label: "Explore", key: "x", match: (p: string) => /^\/(explore|directory|graph|e\/)/.test(p) },
   { href: "/inbox", label: "Inbox", key: "i", match: (p: string) => p.startsWith("/inbox") },
 ];
+// The signed-in app rail (navbar brief, direction C): the header's pages plus Sources
+const RAIL = [...NAV.slice(1), { href: "/sources", label: "Sources", key: "s", match: (p: string) => p.startsWith("/sources") }];
+const RAIL_ICONS: Record<string, LucideIcon> = { "/ask": MessageSquare, "/explore": Compass, "/inbox": Inbox, "/sources": Plug };
+const RAIL_KEY = "nodus.rail";
+const SHARED_NOTE = "Anyone with the demo login sees this data. Emptied every night.";
+
+/** The rail's collapsed state: the saved preference, except on Explore, which starts collapsed and keeps an
+ * expand only until the user leaves it. */
+function useRail(path: string): [boolean, () => void] {
+  const onExplore = path.startsWith("/explore");
+  const [saved, setSaved] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
+  useEffect(() => {
+    let v: string | null = null;
+    try { v = localStorage.getItem(RAIL_KEY); } catch { v = null; }
+    setSaved(v ? v === "collapsed" : window.innerWidth < 1100);
+  }, []);
+  useEffect(() => { if (!onExplore) setExploreOpen(false); }, [onExplore]);
+  const toggle = useCallback(() => {
+    if (onExplore) { setExploreOpen((o) => !o); return; }
+    setSaved((c) => {
+      try { localStorage.setItem(RAIL_KEY, c ? "expanded" : "collapsed"); } catch { /* a blocked store keeps it per visit */ }
+      return !c;
+    });
+  }, [onExplore]);
+  return [onExplore ? !exploreOpen : saved, toggle];
+}
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -36,6 +64,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const { inspectorPinned, closeInspector, pendingCount } = s;
+  const [collapsed, toggleRail] = useRail(path);
   const pinned = useRef(inspectorPinned);
   useEffect(() => { pinned.current = inspectorPinned; }, [inspectorPinned]);
   // n5: an unpinned side panel belongs to the page it was opened on
@@ -55,6 +84,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       const typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target as HTMLElement)?.isContentEditable;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); s.setPaletteOpen(true); return; }
       if (typing) return;
+      if (e.key === "[" && ACCOUNTS && s.account) { e.preventDefault(); toggleRail(); return; }
       if (e.key === "/") { e.preventDefault(); s.setPaletteOpen(true); return; }
       if (e.key === "g") { pendingG = Date.now(); return; }
       if (pendingG && Date.now() - pendingG < 800) {
@@ -64,8 +94,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       }
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [s, router]);
+    window.addEventListener("nodus:toggle-rail", toggleRail);
+    return () => { document.removeEventListener("keydown", onKey); window.removeEventListener("nodus:toggle-rail", toggleRail); };
+  }, [s, router, toggleRail]);
 
   // item 24: with accounts on, the app pages need a log-in; the homepage and the log-in page don't. Once
   // logged in, Ask is home (user decision): the marketing homepage is for visitors only.
@@ -76,15 +107,20 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     if (signedIn && path === "/") router.replace("/ask");
   }, [s.ready, s.account, open, signedIn, path, router]);
   const past = !!s.asOf;
+  const ws = s.account?.demo ? "Demo workspace" : "Your workspace";
+  const page = RAIL.find((n) => n.match(path))?.label || JUMPS.find((n) => n.href !== "/" && path.startsWith(n.href))?.label || (path.startsWith("/start") ? "Get started" : "");
   return (
-    <div className={`app ${hasInspector ? "has-inspector" : ""}`}>
+    <div className={`app ${signedIn ? "has-rail" : ""} ${hasInspector ? "has-inspector" : ""}`}>
+      {signedIn ? (
+        <Rail collapsed={collapsed} onToggle={toggleRail} workspace={ws} onHelp={() => setHelpOpen(true)} onReset={() => setResetOpen(true)} />
+      ) : (
       <header className="topbar">
-        <Link href={signedIn ? "/ask" : "/"} className="brand" aria-label="Nodus home">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-text)" strokeWidth="1.8" aria-hidden><circle cx="5" cy="6" r="2.4" /><circle cx="19" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7 7.2l3.8 8.6M17 7.2l-3.8 8.6M7.4 6h9.2" /></svg>
+        <Link href="/" className="brand" aria-label="Nodus home">
+          <Mark />
           Nodus
         </Link>
         <nav className="topnav" aria-label="Main">
-          {NAV.filter((n) => !(signedIn && n.href === "/")).map((n) => {
+          {NAV.map((n) => {
             const active = n.match(path);
             return (
               <Link key={n.href} href={n.href} className={`nav-item ${active ? "active" : ""}`} title={`${n.label}  g ${n.key}`} aria-current={active ? "page" : undefined}>
@@ -103,22 +139,22 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <LiveStatus />
           <AsOfPill />
           {s.people.length > 0 && (!ACCOUNTS || s.account) && <ActingMenu />}
-          {ACCOUNTS ? <AccountMenu onReset={() => setResetOpen(true)} /> : <AccessBadge />}
-          {signedIn && (
-            <button className="pill" onClick={() => logOut(s.logout)} title="Log out">
-              <LogOut className="icon-sm" />Log out
-            </button>
-          )}
+          {ACCOUNTS ? s.account === null && <Link href="/login" className="pill">Log in</Link> : <AccessBadge />}
           <ThemeToggle />
           <button className="icon-btn" onClick={() => setHelpOpen(true)} title="Use from your coding agent (MCP)" aria-label="Use from your coding agent (MCP)"><HelpCircle className="icon-sm" /></button>
         </div>
       </header>
+      )}
 
       <div className="main">
-        {ACCOUNTS && s.account?.demo && s.workspace && !s.workspace.empty && (
-          <div className="demo-banner" role="status">
-            <span>Shared demo workspace: anyone with the demo login sees this data. It&apos;s emptied every night.</span>
-            <button type="button" className="composer-chip then" onClick={() => setResetOpen(true)}>Reset workspace</button>
+        {signedIn && (
+          <div className="railbar">
+            <span className="crumb">{ws}{page && <> / <b>{page}</b></>}</span>
+            <button className="search-btn" onClick={() => s.setPaletteOpen(true)} aria-label="Search and commands">
+              <Search className="icon-sm" />
+              <span>Search or jump to…</span>
+              <kbd>⌘K</kbd>
+            </button>
           </div>
         )}
         <div className={`content ${past ? "past" : ""}`}>
@@ -133,6 +169,67 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       {resetOpen && <ResetWorkspace onClose={() => setResetOpen(false)} />}
       <Toasts />
     </div>
+  );
+}
+
+function Mark() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-text)" strokeWidth="1.8" aria-hidden><circle cx="5" cy="6" r="2.4" /><circle cx="19" cy="6" r="2.4" /><circle cx="12" cy="18" r="2.4" /><path d="M7 7.2l3.8 8.6M17 7.2l-3.8 8.6M7.4 6h9.2" /></svg>;
+}
+
+/** The signed-in app rail (navbar brief, direction C): workspace, pages, the lens (as-of and acting person),
+ * the coding-agent hint and the account. Collapsed, it shows icons with tooltips. */
+function Rail({ collapsed, onToggle, workspace, onHelp, onReset }: { collapsed: boolean; onToggle: () => void; workspace: string; onHelp: () => void; onReset: () => void }) {
+  const path = usePathname();
+  const s = useStore();
+  const shared = !!s.account?.demo && !!s.workspace && !s.workspace.empty;
+  const tip = (t: string) => (collapsed ? t : undefined);
+  return (
+    <aside className={`rail ${collapsed ? "collapsed" : ""}`}>
+      <div className="rail-ws" title={shared ? SHARED_NOTE : undefined}>
+        <Link href="/ask" className="rail-ws-name" aria-label={`${workspace}, Ask`} title={tip(workspace)}>
+          <Mark />
+          <span className="rail-label truncate">{workspace}</span>
+        </Link>
+        <div className="rail-ws-status">
+          <LiveStatus />
+          {shared && <span className="rail-shared" title={SHARED_NOTE}>SHARED</span>}
+        </div>
+      </div>
+      <nav className="rail-nav" aria-label="Main">
+        {RAIL.map((n) => {
+          const active = n.match(path);
+          const Icon = RAIL_ICONS[n.href];
+          const count = n.href === "/inbox" ? s.pendingCount : 0;
+          return (
+            <Link key={n.href} href={n.href} className={`rail-item ${active ? "active" : ""}`} aria-current={active ? "page" : undefined}
+              aria-label={count ? `${n.label}, ${count} awaiting you` : n.label} title={collapsed ? `${n.label}  g ${n.key}` : undefined}>
+              <Icon />
+              <span className="rail-label">{n.label}</span>
+              {count > 0 ? <span className="rail-count r">{count}</span> : <kbd className="rail-label r">g {n.key}</kbd>}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="rail-section">
+        <span className="rail-heading">LENS</span>
+        <AsOfPill rail={collapsed ? "collapsed" : "open"} />
+        {s.people.length > 0 && <ActingMenu rail={collapsed ? "collapsed" : "open"} />}
+      </div>
+      <span className="rail-spacer" />
+      <div className="rail-section">
+        <button className="rail-item" onClick={onHelp} aria-label="Connect your coding agent (MCP)" title={tip("Connect your coding agent (MCP)")}>
+          <Terminal />
+          <span className="rail-label">Connect your coding agent</span>
+          <span className="rail-mcp rail-label r">MCP</span>
+        </button>
+        <button className="rail-item" onClick={onToggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} title={collapsed ? "Expand sidebar  [" : undefined}>
+          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+          <span className="rail-label">Collapse sidebar</span>
+          <kbd className="rail-label r">[</kbd>
+        </button>
+      </div>
+      <AccountMenu onReset={onReset} collapsed={collapsed} />
+    </aside>
   );
 }
 
@@ -184,7 +281,6 @@ function ResetWorkspace({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** The account menu (item 24): who is logged in, their workspace, log out. Logged out: a Log in link. */
 /** A full load of the homepage: the log-in guard can't race it to /login, and no workspace state (people,
  * Inbox count, thread) outlives the account. */
 async function logOut(logout: () => Promise<void>) {
@@ -192,18 +288,24 @@ async function logOut(logout: () => Promise<void>) {
   window.location.assign("/");
 }
 
-function AccountMenu({ onReset }: { onReset: () => void }) {
+function AccountMenu({ onReset, collapsed }: { onReset: () => void; collapsed: boolean }) {
   const s = useStore();
-  if (s.account === undefined) return null;
-  if (!s.account) return <Link href="/login" className="pill">Log in</Link>;
+  if (!s.account) return null;
   const a = s.account;
+  const name = a.demo ? "Demo account" : a.email;
+  // the account menu (item 24): who is logged in, their workspace, the theme, log out
   return (
+    <div className="rail-foot">
     <Popover
-      align="right"
+      align="side"
       trigger={({ toggle, open }) => (
-        <button className="pill" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title={a.email}>
-          <span className="truncate" style={{ maxWidth: 160 }}>{a.demo ? "Demo account" : a.email}</span>
-          <ChevronDown className="icon-sm" />
+        <button className="rail-acct" onClick={toggle} aria-haspopup="menu" aria-expanded={open} aria-label={`${name}: account menu`} title={collapsed ? name : a.email}>
+          <span className="avatar">{a.demo ? "DA" : initials(a.email.split("@")[0].replace(/[._-]+/g, " "))}</span>
+          <span className="rail-acct-text rail-label">
+            <span className="truncate">{name}</span>
+            <span className="t-small text-3">Theme, workspace, log out</span>
+          </span>
+          <ChevronUp className="icon-sm rail-label r" />
         </button>
       )}
     >
@@ -215,11 +317,12 @@ function AccountMenu({ onReset }: { onReset: () => void }) {
           </div>
           <div className="divider" />
           <button className="menu-item" role="menuitem" onClick={() => s.setTheme(s.theme === "dark" ? "light" : "dark")}>{s.theme === "dark" ? <Sun className="icon-sm" /> : <Moon className="icon-sm" />}{s.theme === "dark" ? "Light theme" : "Dark theme"}</button>
-          <button className="menu-item" role="menuitem" onClick={() => { close(); onReset(); }}><Trash2 className="icon-sm" />Empty this workspace</button>
+          {s.workspace && !s.workspace.empty && <button className="menu-item danger" role="menuitem" onClick={() => { close(); onReset(); }}><Trash2 className="icon-sm" />Empty this workspace</button>}
           <button className="menu-item" role="menuitem" onClick={() => { close(); void logOut(s.logout); }}><LogOut className="icon-sm" />Log out</button>
         </div>
       )}
     </Popover>
+    </div>
   );
 }
 
@@ -234,15 +337,23 @@ function AccessBadge() {
 }
 
 /** As-of pill: "Today" or "As of 12 Mar 2026 · ×"; the past is never silent (DESIGN.md §4.1). */
-function AsOfPill() {
+function AsOfPill({ rail }: { rail?: "open" | "collapsed" }) {
   const s = useStore();
   const [open, setOpen] = useState(false);
+  const label = s.asOf ? `As of ${fmtDate(s.asOf)}` : "Today";
   return (
     <Popover
-      align="right"
+      align={rail ? "side" : "right"}
       open={open}
       onOpenChange={setOpen}
-      trigger={({ toggle }) => (
+      trigger={({ toggle }) => rail ? (
+        <button className={`rail-item lens ${s.asOf ? "warn" : ""}`} onClick={toggle} aria-haspopup="dialog" aria-expanded={open}
+          aria-label={`${label}: show the organisation as it was on a date`} title={rail === "collapsed" ? label : "Show the organisation as it was on a date"}>
+          <Calendar />
+          <span className="rail-label">{label}</span>
+          {s.asOf && <span className="x rail-label r" role="button" aria-label="Back to today" onClick={(e) => { e.stopPropagation(); s.setAsOf(null); s.toast({ tone: "info", title: "Viewing today" }); }}><X className="icon-sm" /></span>}
+        </button>
+      ) : (
         <button className={`pill ${s.asOf ? "warn" : ""}`} onClick={toggle} aria-haspopup="dialog" aria-expanded={open} title="Show the organisation as it was on a date">
           <Calendar className="icon-sm" />
           {s.asOf ? `As of ${fmtDate(s.asOf)}` : "Today"}
@@ -267,15 +378,21 @@ function AsOfPill() {
   );
 }
 
-function ActingMenu() {
+function ActingMenu({ rail }: { rail?: "open" | "collapsed" }) {
   const s = useStore();
   const me = s.people.find((p) => p.id === s.actingAs);
   const [q, setQ] = useState("");
   const list = useMemo(() => s.people.filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()) || p.leads.some((l) => l.toLowerCase().includes(q.toLowerCase()))), [s.people, q]);
   return (
     <Popover
-      align="right"
-      trigger={({ toggle, open }) => (
+      align={rail ? "side" : "right"}
+      trigger={({ toggle, open }) => rail ? (
+        <button className="rail-item lens" onClick={toggle} aria-haspopup="menu" aria-expanded={open} aria-label={`Acting as ${me?.name || "…"}`}
+          title={rail === "collapsed" ? `Acting as ${me?.name || "…"}` : "Acting as (demo identity, not authentication)"}>
+          <span className="avatar">{me ? initials(me.name) : "…"}</span>
+          <span className="rail-label truncate">Acting as <span className="who">{me?.name || "…"}</span></span>
+        </button>
+      ) : (
         <button className="pill" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title="Acting as (demo identity, not authentication)">
           <span className="acting-label">Acting as</span>
           <span className="who truncate" style={{ maxWidth: 160 }}>{me?.name || "…"}</span>
