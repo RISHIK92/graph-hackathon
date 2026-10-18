@@ -17,6 +17,7 @@ BEAT="${BEAT#beats/}"
 # Default checkpoint mapping per beat if omitted
 default_checkpoint_for() {
   case "$1" in
+    00-*)      echo "empty" ;;
     01-*|02-*) echo "clean" ;;
     03-*)      echo "ticket-routed" ;;
     04-*|05-*|06-*|07-*) echo "post-reorg" ;;
@@ -137,13 +138,18 @@ PY
 
 echo "[record.sh] beat=${BEAT} checkpoint=${CHECKPOINT} workspace=${WORKSPACE} ui=${UI_BASE} api=${API_BASE} mode=${MODE}"
 
+PROFILE_ARGS=(--profile "$PROFILE_NAME")
+if [[ "$BEAT" == 00-* ]]; then
+  PROFILE_ARGS=()
+fi
+
 if [[ "$MODE" == "--check" ]]; then
-  npx cursorcam check "$STEPS_FILE" --profile "$PROFILE_NAME"
+  npx cursorcam check "$STEPS_FILE" ${PROFILE_ARGS[@]+"${PROFILE_ARGS[@]}"}
   exit 0
 fi
 
 # 2. Record and render MP4
-OUT_JSON="$(npx cursorcam run "$STEPS_FILE" --profile "$PROFILE_NAME" --style demo/style.json --for youtube --json)"
+OUT_JSON="$(npx cursorcam run "$STEPS_FILE" ${PROFILE_ARGS[@]+"${PROFILE_ARGS[@]}"} --style demo/style.json --for youtube --json)"
 echo "$OUT_JSON"
 
 RUN_DIR="$(

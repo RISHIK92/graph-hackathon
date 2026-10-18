@@ -1,0 +1,21 @@
+{
+  "name": "00-onboarding",
+  "url": "http://localhost:3000/",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 900 },
+    { "waitFor": "role=link[name='Log in']", "pauseAfter": 600 },
+    { "click": "role=link[name='Log in']", "pauseAfter": 700 },
+    { "waitFor": "testid=demo-login" },
+    { "click": "testid=demo-login", "pauseAfter": 800 },
+    { "waitFor": "testid=bring-context" },
+    { "click": "testid=bring-context", "pauseAfter": 700 },
+    { "waitFor": "testid=load-demo-company" },
+    { "click": "text=View what's included", "pauseAfter": 1400 },
+    { "click": { "find": "role=button[name='Load the demo company']", "nth": -1 }, "pauseAfter": 1000 },
+    { "waitFor": "testid=ask-input", "pauseAfter": 1400 }
+  ]
+}

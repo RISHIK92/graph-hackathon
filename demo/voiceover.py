@@ -24,6 +24,16 @@ SARVAM_CONFIG = {
 
 BEATS = [
     {
+        "beat": "00-onboarding",
+        "run": "00-onboarding-20261018-205330-fb97",
+        "duration": 22.00,
+        "cues": [
+            (0.30, "Meet Nodus: company memory on a FalkorDB graph. Let's log into the live demo workspace."),
+            (7.00, "Each workspace starts as an isolated graph where you can connect Slack, Linear, GitHub, or docs."),
+            (14.80, "Or load the demo company: five hundred nineteen documents and five hundred sixty-nine dated, cited facts."),
+        ],
+    },
+    {
         "beat": "01-hook",
         "run": "01-hook-20261018-185129-8d68",
         "duration": 15.30,
@@ -219,7 +229,7 @@ def main() -> None:
     print(f"{'Cue':<10} {'Start':>6} {'Window':>7} {'RawDur':>7} {'FitDur':>7} {'Tempo':>6}  Text")
     print("-" * 105)
 
-    for b_idx, beat in enumerate(BEATS, start=1):
+    for b_idx, beat in enumerate(BEATS, start=0):
         run_dir = OUT_DIR / beat["run"]
         video_in = run_dir / "video-youtube.mp4"
         beat_dur = probe_duration(video_in)
