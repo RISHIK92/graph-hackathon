@@ -1,0 +1,27 @@
+{
+  "name": "04-time-travel",
+  "url": "http://localhost:3000/ask",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 600 },
+    { "waitFor": "testid=as-of-button" },
+    { "click": "testid=as-of-button", "pauseAfter": 500 },
+    { "type": "31032026", "into": "testid=as-of-input" },
+    { "click": "testid=as-of-done", "pauseAfter": 800 },
+    { "type": "Who owns Ledger?", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=Platform", "pauseAfter": 400 },
+    { "hover": { "find": "text=Platform", "nth": -1 }, "pauseAfter": 1200 },
+    { "type": "Which systems are most critical?", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=most depended-on", "pauseAfter": 400 },
+    { "hover": { "find": "text=most depended-on", "nth": -1 }, "pauseAfter": 1000 },
+    { "click": { "find": "testid=how-i-answered", "nth": -1 }, "pauseAfter": 800 },
+    { "click": "testid=proof-tab-cypher", "pauseAfter": 500 },
+    { "click": { "find": "text=Show quer", "nth": -1 }, "zoom": 1.8, "pauseAfter": 2000 },
+    { "click": "testid=as-of-clear", "zoom": false, "pauseAfter": 1800 }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "03-dispute-confirm",
+  "url": "http://localhost:3000/ask",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 600 },
+    { "waitFor": "testid=ask-input" },
+    { "type": "Infra owns Ledger now", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=disputed", "pauseAfter": 1200 },
+    { "type": "Who owns Ledger?", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=Priya Raman can settle it.", "pauseAfter": 1200 },
+    { "click": { "find": "testid=how-i-answered", "nth": -1 }, "pauseAfter": 800 },
+    { "click": "testid=proof-tab-cypher", "pauseAfter": 500 },
+    { "click": { "find": "text=Show quer", "nth": -1 }, "zoom": 1.8, "pauseAfter": 2000 },
+    { "click": "testid=acting-as-button", "zoom": false, "pauseAfter": 400 },
+    { "click": "testid=acting-as-option-bob-lindqvist", "pauseAfter": 1000 },
+    { "click": { "find": "testid=view-and-settle", "nth": -1 }, "pauseAfter": 1400 },
+    { "click": { "find": "testid=switch-to-priya-raman", "nth": -1 }, "pauseAfter": 1000 },
+    { "waitFor": { "find": "testid=confirm-button", "nth": -1 } },
+    { "click": { "find": "testid=confirm-button", "nth": -1 }, "pauseAfter": 600 },
+    { "waitFor": "testid=confirm-modal-submit" },
+    { "click": "testid=confirm-modal-submit", "pauseAfter": 1200 },
+    { "type": "Who owns Ledger?", "into": "testid=ask-input", "paste": true, "zoom": false },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=Infra owns Ledger." },
+    { "hover": { "find": "text=Bob Lindqvist", "nth": -1 }, "zoom": false, "pauseAfter": 1800 }
+  ]
+}

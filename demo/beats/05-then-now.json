@@ -1,0 +1,24 @@
+{
+  "name": "05-then-now",
+  "url": "http://localhost:3000/ask",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 600 },
+    { "waitFor": "testid=ask-input" },
+    { "type": "Why did you route RDS-42 to Priya?", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=checked 6 facts", "pauseAfter": 400 },
+    { "hover": { "find": "text=Bob Lindqvist", "nth": -1 }, "pauseAfter": 1400 },
+    { "click": { "find": "testid=how-i-answered", "nth": -1 }, "pauseAfter": 800 },
+    { "click": "testid=proof-tab-cypher", "pauseAfter": 500 },
+    { "click": { "find": "text=Show quer", "nth": -1 }, "zoom": 1.8, "pauseAfter": 1800 },
+    { "click": { "find": "testid=action-chip", "nth": 0 }, "zoom": false, "pauseAfter": 1400 },
+    { "waitFor": "testid=segmented-now" },
+    { "click": "testid=segmented-now", "pauseAfter": 1800 },
+    { "click": "testid=segmented-then", "pauseAfter": 1000 },
+    { "click": "testid=segmented-now", "pauseAfter": 1600 }
+  ]
+}

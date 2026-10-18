@@ -12,3 +12,5 @@ scratch/
 *.egg-info/
 tsconfig.tsbuildinfo
 CLAUDE.md
+cursorcam-output/
+

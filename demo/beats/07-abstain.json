@@ -1,0 +1,19 @@
+{
+  "name": "07-abstain",
+  "url": "http://localhost:3000/ask",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 600 },
+    { "waitFor": "testid=ask-input" },
+    { "type": "What is Ledger's SLA?", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=No verified answer", "pauseAfter": 300 },
+    { "scroll": { "to": "text=No verified answer" }, "pauseAfter": 1200 },
+    { "click": { "find": "testid=how-i-answered", "nth": -1 }, "pauseAfter": 500 },
+    { "scroll": { "to": "text=No verified answer" }, "pauseAfter": 400 },
+    { "click": "testid=proof-tab-checks", "pauseAfter": 2000 }
+  ]
+}

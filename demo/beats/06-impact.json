@@ -1,0 +1,21 @@
+{
+  "name": "06-impact",
+  "url": "http://localhost:3000/ask",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 600 },
+    { "waitFor": "testid=ask-input" },
+    { "type": "What breaks if Ledger goes down, and who do I tell?", "into": "testid=ask-input", "paste": true },
+    { "click": "testid=ask-button" },
+    { "waitFor": "text=would be affected", "pauseAfter": 400 },
+    { "hover": { "find": "text=would be affected", "nth": -1 }, "pauseAfter": 1200 },
+    { "click": { "find": "testid=evidence-line", "nth": -1 }, "pauseAfter": 1000 },
+    { "click": { "find": "testid=how-i-answered", "nth": -1 }, "pauseAfter": 800 },
+    { "click": "testid=proof-tab-cypher", "pauseAfter": 500 },
+    { "click": { "find": "text=Show quer", "nth": 1 }, "zoom": 1.8, "pauseAfter": 2000 },
+    { "click": "testid=proof-tab-path", "zoom": false, "pauseAfter": 1800 }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "01-hook",
+  "url": "http://localhost:3000/explore",
+  "viewport": "desktop",
+  "colorScheme": "dark",
+  "reducedMotion": "no-preference",
+  "timeout": 30000,
+  "steps": [
+    { "pause": 600 },
+    { "waitFor": "testid=explore-row-system:ledger" },
+    { "click": "testid=explore-row-system:ledger", "pauseAfter": 1000 },
+    { "click": "role=link[name='Open full page']", "pauseAfter": 1000 },
+    { "waitFor": "testid=tab-sources" },
+    { "click": "testid=tab-sources", "pauseAfter": 1200 },
+    { "click": "text=Ledger overview", "pauseAfter": 1800 }
+  ]
+}
