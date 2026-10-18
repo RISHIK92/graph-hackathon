@@ -376,28 +376,49 @@ FOREACH (_ IN CASE WHEN ok THEN [] ELSE [1] END | CREATE (:GuardFail {id:'sentin
 
 This guarantees that permission verification, assertion state transitions, materialized cache updates, and `Action` audit logging succeed or fail as one indivisible unit.
 
-## Tests
+## Tests & Benchmarks
 
+```bash
+FALKOR_PORT=6391 pytest -q
 ```
-pytest
 
-```
+* **Test suite:** **`1,035 passed`** (`151.8 s` full suite on FalkorDB `6.0.1` port `6391`; also verified against FalkorDB `4.22.0` port `6392`).
 
 The test suite validates:
 
-* Bi-temporal `SUPERSEDES` / `DISPUTES` state machines, including property-based tests proving state convergence is invariant to message arrival order
+* **Order-independent bi-temporal convergence (property-based & shuffled ingestion):**
+  * **`200` randomized Hypothesis assertion chains** (`tests/test_chain.py::test_order_independent`, `@settings(max_examples=200)`): generates random chains (up to 6 assertions across authority ranks `{1, 2, 4}` and valid times `1..6`), shuffles arrival order, and asserts identical `status`, `valid_to`, `supersedes`, `disputes`, and point-in-time `past_belief` across all `8` valid-time slices (`v = 0..7`, `1,600` temporal slice checks).
+  * **`40` randomized add / confirm / retract event streams × `8` valid-time slices** (`tests/test_parity.py::test_fx_pb_rand_engines_agree_and_i6`, `@settings(max_examples=40)`): runs random sequences of assertions, confirmations, and retractions against FalkorDB and verifies that the pure-Cypher and Python past-belief engines agree at every `(T, V)` pair and match the live read at `T = now`.
+  * **`3` full-corpus shuffled ingestion orderings** (`tests/test_pipeline.py::test_i4_shuffled_orders_give_identical_state`, seeds `7, 23, 99`): ingests all **519 documents** in 3 different shuffled orderings within each phase and verifies bit-for-bit identical graph state across all **519 sources, 569 assertions, and spans**.
+* **Single-query Cypher write guards and atomic rollbacks** (`:GuardFail {id:'sentinel'}` unique-constraint abort on unauthorized or stale mutations).
+* **Confirm, refuse, and undo transactional workflows** (`13/13` action-layer eval scenarios passing, `100%`).
+* **All parameterized read and `algo.*` snapshot templates** (`38` Cypher templates).
+* **Cypher and prompt-injection resilience** (planted instructions in source spans never trigger actions).
+* **The complete end-to-end multi-actor demo script** (`tests/test_demo_script.py`) and named workspace `GRAPH.COPY` checkpoints (`tests/test_checkpoints.py`).
 
-* Single-query Cypher write guards and atomic rollbacks
+### Query latencies on the demo graph (`519` sources · `569` assertions · `140` entities)
 
-* Confirm, refuse, and undo transactional workflows
+Measured over `30` runs after warmup against FalkorDB `6.0.1` (`nodus_demo_template`). **Single Cypher** measures raw `GRAPH.RO_QUERY` execution in FalkorDB; **Full Tool Pack** includes multi-query orchestration, dispute resolution, and span quote hydration:
 
-* All parameterized read and algorithm templates
+| Operation / FalkorDB Template | Single Cypher p50 | Single Cypher p95 | Full Tool Pack p50 | Full Tool Pack p95 |
+| ----- | -----: | -----: | -----: | -----: |
+| Direct ownership (`owner_at` / `get_owner`) | `0.25 ms` | `0.41 ms` | `4.14 ms` | `5.55 ms` |
+| Inherited ownership (`owner_inherited` via `PART_OF`) | `0.22 ms` | `0.66 ms` | `2.59 ms` | `2.83 ms` |
+| Temporal ownership (`get_owner` as of `31 Mar 2026`) | `0.25 ms` | `0.41 ms` | `3.79 ms` | `4.99 ms` |
+| Blast radius 1..3 hops (`impact_dependents` / `find_paths`) | `0.24 ms` | `0.32 ms` | `18.68 ms` | `25.12 ms` |
+| Decision lineage (`decision_trace` / `trace_decision`) | `0.35 ms` | `0.99 ms` | `15.44 ms` | `17.52 ms` |
+| Multi-signal expertise (`experts_signals` / `find_experts`) | `0.68 ms` | `0.97 ms` | `11.03 ms` | `13.57 ms` |
+| Stale doc detection (`stale_detection`) | `0.79 ms` | `1.47 ms` | — | — |
+| Transitive criticality (`algo.pageRank` / `critical_systems`) | `0.29 ms` | `0.35 ms` | `16.04 ms` | `18.32 ms` |
+| Shortest paths (`algo.SPpaths` / `connection_between`) | `0.46 ms` | `0.61 ms` | `16.49 ms` | `22.99 ms` |
+| Bridge / SPOF centrality (`algo.betweenness` / `key_people`) | `0.98 ms` | `1.39 ms` | `13.87 ms` | `15.47 ms` |
+| Knowledge gaps (`algo.WCC` / `knowledge_gaps`) | `0.89 ms` | `1.84 ms` | `24.52 ms` | `27.90 ms` |
 
-* Cypher/prompt injection resilience
+### Evaluation results (`evals/results/e5bbd8a` & `evals/results/working`, synthetic seeds `1–3`)
 
-* The complete end-to-end multi-actor demo script
-
-Verified against both FalkorDB `6.0.1` (port 6391) and `4.22.0` (port 6392).
+* **Retrieval vs. RAG baselines (seeds `1, 2`):** Nodus achieves **`1.000` `recall@5`** and **`1.000` `fact_accuracy`** on single-hop, ownership, decision-trace, stale-fact, and disputed-fact queries (`0.000` stale-fact leak rate vs. `0.891` on vector RAG and `1.000` on reranked RAG; `1.000` dispute surfacing).
+* **End-to-end answer verification (`n = 358` questions across seeds `1, 2, 3`):** **`90.2%`** entity match, **`92.1%`** citation recall, **`99.9%`** deterministic verifier pass rate (`v3_pass`), **`100.0%`** proposal labelling (`0%` unconfirmed proposals stated as current truth), **`100.0%`** aggregate/algorithm accuracy (`n = 58`), **`1.00`** abstention precision on unanswerable queries, and **`0`** unconfirmed draft citations leaked.
+* **Action & RBAC layer (`13/13` scenarios, `100.0%` pass):** Verified across guarded ticket routing, unauthorized confirm refusal, dispute resolution, transactional undo, prompt-injection resistance, and MCP parity.
 
 ## AI-assistance disclosure
 
@@ -406,3 +427,4 @@ I designed the system architecture, bi-temporal graph data model, and FalkorDB i
 ## Team
 
 Rishik - github.com/rishik92
+
