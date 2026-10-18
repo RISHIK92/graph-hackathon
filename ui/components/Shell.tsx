@@ -200,8 +200,9 @@ function Rail({ collapsed, onToggle, workspace, onHelp, onReset }: { collapsed: 
           const active = n.match(path);
           const Icon = RAIL_ICONS[n.href];
           const count = n.href === "/inbox" ? s.pendingCount : 0;
+          const tid = `rail-${n.href.slice(1)}`;
           return (
-            <Link key={n.href} href={n.href} className={`rail-item ${active ? "active" : ""}`} aria-current={active ? "page" : undefined}
+            <Link key={n.href} href={n.href} data-testid={tid} className={`rail-item ${active ? "active" : ""}`} aria-current={active ? "page" : undefined}
               aria-label={count ? `${n.label}, ${count} awaiting you` : n.label} title={collapsed ? `${n.label}  g ${n.key}` : undefined}>
               <Icon />
               <span className="rail-label">{n.label}</span>
@@ -217,12 +218,12 @@ function Rail({ collapsed, onToggle, workspace, onHelp, onReset }: { collapsed: 
       </div>
       <span className="rail-spacer" />
       <div className="rail-section">
-        <button className="rail-item" onClick={onHelp} aria-label="Connect your coding agent (MCP)" title={tip("Connect your coding agent (MCP)")}>
+        <button className="rail-item" data-testid="rail-mcp" onClick={onHelp} aria-label="Connect your coding agent (MCP)" title={tip("Connect your coding agent (MCP)")}>
           <Terminal />
           <span className="rail-label">Connect your coding agent</span>
           <span className="rail-mcp rail-label r">MCP</span>
         </button>
-        <button className="rail-item" onClick={onToggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} title={collapsed ? "Expand sidebar  [" : undefined}>
+        <button className="rail-item" data-testid="rail-toggle" onClick={onToggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} title={collapsed ? "Expand sidebar  [" : undefined}>
           {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
           <span className="rail-label">Collapse sidebar</span>
           <kbd className="rail-label r">[</kbd>
@@ -347,18 +348,18 @@ function AsOfPill({ rail }: { rail?: "open" | "collapsed" }) {
       open={open}
       onOpenChange={setOpen}
       trigger={({ toggle }) => rail ? (
-        <button className={`rail-item lens ${s.asOf ? "warn" : ""}`} onClick={toggle} aria-haspopup="dialog" aria-expanded={open}
+        <button className={`rail-item lens ${s.asOf ? "warn" : ""}`} data-testid="as-of-button" onClick={toggle} aria-haspopup="dialog" aria-expanded={open}
           aria-label={`${label}: show the organisation as it was on a date`} title={rail === "collapsed" ? label : "Show the organisation as it was on a date"}>
           <Calendar />
           <span className="rail-label">{label}</span>
-          {s.asOf && <span className="x rail-label r" role="button" aria-label="Back to today" onClick={(e) => { e.stopPropagation(); s.setAsOf(null); s.toast({ tone: "info", title: "Viewing today" }); }}><X className="icon-sm" /></span>}
+          {s.asOf && <span className="x rail-label r" role="button" data-testid="as-of-clear" aria-label="Back to today" onClick={(e) => { e.stopPropagation(); s.setAsOf(null); s.toast({ tone: "info", title: "Viewing today" }); }}><X className="icon-sm" /></span>}
         </button>
       ) : (
-        <button className={`pill ${s.asOf ? "warn" : ""}`} onClick={toggle} aria-haspopup="dialog" aria-expanded={open} title="Show the organisation as it was on a date">
+        <button className={`pill ${s.asOf ? "warn" : ""}`} data-testid="as-of-button" onClick={toggle} aria-haspopup="dialog" aria-expanded={open} title="Show the organisation as it was on a date">
           <Calendar className="icon-sm" />
           {s.asOf ? `As of ${fmtDate(s.asOf)}` : "Today"}
           {s.asOf ? (
-            <span className="x" role="button" aria-label="Back to today" onClick={(e) => { e.stopPropagation(); s.setAsOf(null); s.toast({ tone: "info", title: "Viewing today" }); }}><X className="icon-sm" /></span>
+            <span className="x" role="button" data-testid="as-of-clear" aria-label="Back to today" onClick={(e) => { e.stopPropagation(); s.setAsOf(null); s.toast({ tone: "info", title: "Viewing today" }); }}><X className="icon-sm" /></span>
           ) : <ChevronDown className="icon-sm" />}
         </button>
       )}
@@ -366,11 +367,11 @@ function AsOfPill({ rail }: { rail?: "open" | "collapsed" }) {
       {(close) => (
         <div className="stack-3" style={{ padding: 8, width: 280 }}>
           <Field label="View the organisation as of" help="Owners, leads and teams are shown as they were on this date.">
-            <input className="input" type="date" value={dateInputValue(s.asOf)} onChange={(e) => s.setAsOf(fromDateInput(e.target.value))} />
+            <input className="input" type="date" data-testid="as-of-input" value={dateInputValue(s.asOf)} onChange={(e) => s.setAsOf(fromDateInput(e.target.value))} />
           </Field>
           <div className="row">
-            <Button size="sm" onClick={() => { s.setAsOf(null); close(); }}>Today</Button>
-            <Button size="sm" variant="primary" className="right" onClick={close}>Done</Button>
+            <Button size="sm" data-testid="as-of-today" onClick={() => { s.setAsOf(null); close(); }}>Today</Button>
+            <Button size="sm" variant="primary" className="right" data-testid="as-of-done" onClick={close}>Done</Button>
           </div>
         </div>
       )}
@@ -387,13 +388,13 @@ function ActingMenu({ rail }: { rail?: "open" | "collapsed" }) {
     <Popover
       align={rail ? "side" : "right"}
       trigger={({ toggle, open }) => rail ? (
-        <button className="rail-item lens" onClick={toggle} aria-haspopup="menu" aria-expanded={open} aria-label={`Acting as ${me?.name || "…"}`}
+        <button className="rail-item lens" data-testid="acting-as-button" onClick={toggle} aria-haspopup="menu" aria-expanded={open} aria-label={`Acting as ${me?.name || "…"}`}
           title={rail === "collapsed" ? `Acting as ${me?.name || "…"}` : "Acting as (demo identity, not authentication)"}>
           <span className="avatar">{me ? initials(me.name) : "…"}</span>
           <span className="rail-label truncate">Acting as <span className="who">{me?.name || "…"}</span></span>
         </button>
       ) : (
-        <button className="pill" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title="Acting as (demo identity, not authentication)">
+        <button className="pill" data-testid="acting-as-button" onClick={toggle} aria-haspopup="menu" aria-expanded={open} title="Acting as (demo identity, not authentication)">
           <span className="acting-label">Acting as</span>
           <span className="who truncate" style={{ maxWidth: 160 }}>{me?.name || "…"}</span>
           <ChevronDown className="icon-sm" />
@@ -421,12 +422,12 @@ function ActingMenu({ rail }: { rail?: "open" | "collapsed" }) {
           )}
           <div className="divider" />
           <div style={{ padding: "4px 6px" }}>
-            <div className="input-wrap"><Search /><input className="input sm" placeholder="Switch person…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus
+            <div className="input-wrap"><Search /><input className="input sm" data-testid="acting-as-search" placeholder="Switch person…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus
               onKeyDown={async (e) => { if (e.key === "Enter" && list[0]) { e.preventDefault(); close(); await s.setActingAs(list[0].id); s.toast({ tone: "info", title: `Now acting as ${list[0].name}` }); } }} /></div>
           </div>
           <div style={{ maxHeight: 280, overflow: "auto" }} role="menu">
             {list.map((p) => (
-              <button key={p.id} className={`menu-item ${p.id === s.actingAs ? "active" : ""}`} role="menuitem" onClick={async () => { close(); await s.setActingAs(p.id); s.toast({ tone: "info", title: `Now acting as ${p.name}` }); }}>
+              <button key={p.id} data-testid={`acting-as-option-${p.id.replace(/^person:/, "")}`} className={`menu-item ${p.id === s.actingAs ? "active" : ""}`} role="menuitem" onClick={async () => { close(); await s.setActingAs(p.id); s.toast({ tone: "info", title: `Now acting as ${p.name}` }); }}>
                 <span className="avatar">{initials(p.name)}</span>
                 <span className="truncate">{p.name}</span>
                 <span className="meta truncate">{p.leads.length ? `Leads ${p.leads.join(", ")}` : p.decides.length ? `Decides ${p.decides.join(", ")}` : p.team.join(", ")}</span>
@@ -518,7 +519,7 @@ function EmptyWorkspace() {
         <h1 className="ask-start-title">Nothing to show yet</h1>
         <p className="text-2" style={{ margin: 0, fontSize: 16 }}>Answers, owners, decisions and disputes appear once the workspace has a source. Connect one, or load the demo company.</p>
       </div>
-      <div><Link href="/start" className="composer-send" style={{ display: "inline-flex" }}>Bring your company&apos;s context</Link></div>
+      <div><Link href="/start" data-testid="bring-context" className="composer-send" style={{ display: "inline-flex" }}>Bring your company&apos;s context</Link></div>
     </div></div>
   );
 }

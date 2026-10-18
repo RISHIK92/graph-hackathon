@@ -43,7 +43,7 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
     <div className="proof">
       <div className="proof-tabs" role="tablist" aria-label="Proof views">
         {TABS.map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} className={`proof-tab ${tab === id ? "on" : ""}`} onClick={() => setTab(id)}>{label}</button>
+          <button key={id} type="button" role="tab" data-testid={`proof-tab-${id}`} aria-selected={tab === id} className={`proof-tab ${tab === id ? "on" : ""}`} onClick={() => setTab(id)}>{label}</button>
         ))}
       </div>
       <div className="inspector-body proof-pane" key={tab}>
@@ -59,7 +59,7 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
                     <span className="name">{st.node.name}</span>
                     <span className="rel">{rel}</span>
                     {(st.evidence?.length ? st.evidence : cited.filter((sp) => !!e?.aid && (sp.cites || []).includes(e.aid))).slice(0, 2).map((sp) => (
-                      <button key={sp.span_id} type="button" className="proof-src" onClick={() => openSpan(sp)}>
+                      <button key={sp.span_id} type="button" className="proof-src" data-testid="proof-source" onClick={() => openSpan(sp)}>
                         Source: {sp.title || KIND_LABEL[sp.kind || ""] || "document"}{sp.ts ? ` · ${fmtDate(sp.ts)}` : ""}
                       </button>
                     ))}
@@ -73,7 +73,7 @@ export function TraceView({ turnId, path, spans, tab: first }: { turnId: string;
         {tab === "sources" && (cited.length ? (
           <div className="stack-3">
             {cited.map((sp, i) => (
-              <div key={sp.span_id} className="proof-quote">
+              <div key={sp.span_id} className="proof-quote" data-testid={`proof-quote-${i + 1}`}>
                 <button type="button" className="stack" style={{ gap: 6, textAlign: "left" }} onClick={() => openSpan(sp)}>
                   <span className="n">[{i + 1}]</span>
                   <span className="q"><EvidenceText text={sp.text} kind={sp.kind}>“{sp.text.trim()}”</EvidenceText></span>

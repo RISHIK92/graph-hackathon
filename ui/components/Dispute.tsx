@@ -115,7 +115,7 @@ export function DisputeBlock({ g }: { g: DisputeGroup }) {
 export function DisputeLine({ g, onOpen }: { g: DisputeGroup; onOpen: () => void }) {
   const f = g.recorded || g.challengers[0]?.fact;
   return (
-    <Notice tone="warning" title={`Needs review · ${disputeTitle(g)}`} actions={<button className="link-btn t-small" onClick={onOpen}>View and settle</button>}>
+    <Notice tone="warning" title={`Needs review · ${disputeTitle(g)}`} actions={<button className="link-btn t-small" data-testid="view-and-settle" onClick={onOpen}>View and settle</button>}>
       {f ? <span className="t-small">{g.recorded ? `On record: ${g.recorded.statement}.` : f.statement}{g.challengers[0] && g.recorded ? ` Another source says: ${g.challengers[0].fact.statement}.` : ""}</span> : null}
     </Notice>
   );

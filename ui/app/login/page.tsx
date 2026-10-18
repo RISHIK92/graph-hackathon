@@ -60,7 +60,7 @@ function Login() {
           <button type="submit" className="composer-send auth-submit" disabled={busy}>{mode === "login" ? "Log in" : "Create account"}</button>
         </form>
         <div className="auth-or"><span>or</span></div>
-        <button type="button" className="auth-demo" onClick={() => void go("demo")} disabled={busy}>
+        <button type="button" className="auth-demo" data-testid="demo-login" onClick={() => void go("demo")} disabled={busy}>
           Use the demo account
           <small>A shared workspace: anyone with the demo login sees its data.</small>
         </button>

@@ -127,6 +127,7 @@ function Ask() {
       <label htmlFor="ask-box" className="sr-only">Ask a question or describe an action</label>
       <textarea
         id="ask-box"
+        data-testid="ask-input"
         ref={taRef}
         rows={2}
         value={text}
@@ -152,7 +153,7 @@ function Ask() {
         {busy ? (
           <Button type="button" variant="secondary" icon={Square} onClick={stop} aria-label="Stop">Stop</Button>
         ) : (
-          <button type="submit" className="composer-send" disabled={!s.session || !text.trim()}>Ask <span aria-hidden>↵</span></button>
+          <button type="submit" data-testid="ask-button" className="composer-send" disabled={!s.session || !text.trim()}>Ask <span aria-hidden>↵</span></button>
         )}
       </div>
     </form>
@@ -406,21 +407,21 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
             ) : (
               <>
                 {t.thenOf !== undefined && nowTurn?.answer?.assembled.lead && t.asOf ? (
-                  <div className="thennow">
-                    <div className="then"><span className="tag">THEN · AS OF {fmtDate(t.asOf).toUpperCase()}</span><span>{displayText(lead || "Nothing in the graph for that date.")}</span></div>
-                    <div className="now"><span className="tag">NOW</span><span>{displayText(nowTurn.answer.assembled.lead)}</span></div>
+                  <div className="thennow" data-testid="then-now">
+                    <div className="then" data-testid="then-card"><span className="tag">THEN · AS OF {fmtDate(t.asOf).toUpperCase()}</span><span>{displayText(lead || "Nothing in the graph for that date.")}</span></div>
+                    <div className="now" data-testid="now-card"><span className="tag">NOW</span><span>{displayText(nowTurn.answer.assembled.lead)}</span></div>
                   </div>
                 ) : lead && (
                   <p className="answer-lead">
                     <Entities text={displayText(lead)} names={entities} />
                     {leadSpans.map((sp, i) => (
-                      <button key={sp.span_id} type="button" className="cite" title={`${sp.title || "Source"}. Open the source.`}
+                      <button key={sp.span_id} type="button" className="cite" data-testid={`citation-chip-${i + 1}`} title={`${sp.title || "Source"}. Open the source.`}
                         onClick={() => s.openEvidence({ tab: "source", spanId: sp.span_id, sourceId: sp.source_id, quote: { start: sp.quote_start, end: sp.quote_end }, title: sp.title, packs, fromTurn: true })}>[{i + 1}]</button>
                     ))}
                   </p>
                 )}
                 {t.done && t.turnId && (
-                  <button type="button" className="evidence-line" onClick={() => openProof()} aria-label="Show proof for this answer">
+                  <button type="button" className="evidence-line" data-testid="evidence-line" onClick={() => openProof()} aria-label="Show proof for this answer">
                     {proofPath ? proofPath.steps.map((st, i) => (
                       <span key={`${st.node.id}-${i}`} className="row" style={{ gap: 8 }}>
                         {st.edge && <span className="rel">{st.edge.dir === "backward" ? "←" : "→"} {st.edge.type.replace(/_/g, " ")} {st.edge.dir === "backward" ? "←" : "→"}</span>}
@@ -434,9 +435,9 @@ function TurnView({ t, idx, selected, onSelect, priorDisputes, onAskAgain, nowTu
                 )}
                 {t.done && (
                   <div className="row-wrap">
-                    {pastAt && <Button size="sm" onClick={() => onThen(pastAt)}>See it as of {fmtDate(pastAt)}</Button>}
+                    {pastAt && <Button size="sm" data-testid="see-as-of" onClick={() => onThen(pastAt)}>See it as of {fmtDate(pastAt)}</Button>}
                     {disputable && (
-                      <Button size="sm" disabled={!!s.session?.anonymous} title={s.session?.anonymous ? "Writes need a token" : "Write who it really is, then send"}
+                      <Button size="sm" data-testid="dispute-this" disabled={!!s.session?.anonymous} title={s.session?.anonymous ? "Writes need a token" : "Write who it really is, then send"}
                         onClick={() => onFill(` ${disputable[2]} ${disputable[3]} now`, 0)}>Dispute this</Button>
                     )}
                     <Button size="sm" onClick={() => { void navigator.clipboard?.writeText([lead, ...lines.map((l) => l.text)].filter(Boolean).join("\n")); s.toast({ tone: "info", title: "Copied" }); }}>Copy</Button>
@@ -553,7 +554,7 @@ function StatusLine({ t, plan, toolCalls, verification, onProof }: { t: Turn; pl
       {plan?.wants_action && plan.wants_action !== "none" ? <Chip tone="accent" icon={Zap}>{actionKindLabel(String(plan.wants_action))}</Chip> : null}
       {kept !== undefined && <><span className="sep">·</span><span>checked {plural(kept, "fact")} against {plural(sources, "source")}</span></>}
       {dropped !== undefined && dropped > 0 && <><span className="sep">·</span><span className="text-warning">{dropped} dropped</span></>}
-      {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" onClick={onProof}>How I answered</Button>}
+      {t.turnId && <Button size="sm" variant="ghost" icon={ListTree} className="right" data-testid="how-i-answered" onClick={onProof}>How I answered</Button>}
     </div>
   );
 }

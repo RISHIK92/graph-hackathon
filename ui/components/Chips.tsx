@@ -25,7 +25,7 @@ export function ActionChip({ actionId, label }: { actionId: string; label?: stri
   const { openAction } = useStore();
   const mode = useOpenMode();
   return (
-    <Chip icon={Zap} onClick={() => openAction(actionId, mode)} title="Open the action record">
+    <Chip icon={Zap} data-testid="action-chip" onClick={() => openAction(actionId, mode)} title="Open the action record">
       {label || "Action"}
     </Chip>
   );
@@ -46,6 +46,7 @@ export function CitationChip({ span, spanId, label = "graph", path, timeline }: 
   return (
     <Chip
       icon={Quote}
+      data-testid="citation-chip"
       dashed={label !== "graph" && label !== "text_only"}
       title={`${span?.title || id}${old ? " (not in the latest revision)" : ""}. Open the source.`}
       onClick={() =>

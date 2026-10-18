@@ -34,7 +34,7 @@ export function WhoCan({ people, verb, compact }: { people: Eligible[]; verb: st
             </Button>
           )}
           {p.person_id !== actingAs && (
-            <Button size="sm" variant="ghost" className="right" onClick={async () => { await setActingAs(p.person_id); toast({ tone: "info", title: `Now acting as ${p.name}` }); }}>
+            <Button size="sm" variant="ghost" className="right" data-testid={`switch-to-${p.person_id.replace(/^person:/, "")}`} onClick={async () => { await setActingAs(p.person_id); toast({ tone: "info", title: `Now acting as ${p.name}` }); }}>
               Switch to {p.name.split(" ")[0]}
             </Button>
           )}
@@ -118,8 +118,8 @@ function ResultCard({ res, verb, onUndo, onDismiss }: { res: WriteResult; verb: 
       actions={
         <>
           {ac?.eligibility && <EligibilityBadge e={ac.eligibility} />}
-          {res.action_id && <Button size="sm" variant="link" onClick={() => openAction(res.action_id as string)}>View action</Button>}
-          {onUndo && <Button size="sm" onClick={onUndo}>Undo</Button>}
+          {res.action_id && <Button size="sm" variant="link" data-testid="view-action" onClick={() => openAction(res.action_id as string)}>View action</Button>}
+          {onUndo && <Button size="sm" data-testid="undo-button" onClick={onUndo}>Undo</Button>}
           {onDismiss && <Button size="sm" variant="ghost" onClick={onDismiss}>Dismiss</Button>}
         </>
       }
@@ -208,11 +208,11 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
       <div className="row-wrap">
         {session.anonymous ? (
           <>
-            <Button size="sm" variant="primary" icon={Check} disabled title="Writes are off in demo mode">{label}</Button>
+            <Button size="sm" variant="primary" icon={Check} data-testid="confirm-button" disabled title="Writes are off in demo mode">{label}</Button>
             {!compact && <span className="t-small text-2">Writes are off in demo mode. <button className="link-btn" onClick={() => setSessionSheetOpen(true)}>Enable writes</button></span>}
           </>
         ) : (
-          <Button size="sm" variant="primary" icon={Check} onClick={() => setOpen(true)}>{label}</Button>
+          <Button size="sm" variant="primary" icon={Check} data-testid="confirm-button" onClick={() => setOpen(true)}>{label}</Button>
         )}
         {pv.fallback && !compact && <EligibilityBadge e="fallback" />}
         {open && (
@@ -223,7 +223,7 @@ export function ConfirmControl({ assertionId, actionId, label = "Confirm", what,
             footer={
               <>
                 <Button onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
-                <Button variant="primary" icon={Check} onClick={click} busy={busy}>{label}</Button>
+                <Button variant="primary" icon={Check} data-testid="confirm-modal-submit" onClick={click} busy={busy}>{label}</Button>
               </>
             }
           >
@@ -315,11 +315,11 @@ export function UndoControl({ actionId, preview, requestId, onDone, what }: {
     <div className="row-wrap">
       {session?.anonymous ? (
         <>
-          <Button size="sm" variant="danger" icon={Undo2} disabled>Undo</Button>
+          <Button size="sm" variant="danger" icon={Undo2} data-testid="undo-button" disabled>Undo</Button>
           <span className="t-small text-2">Writes are off in demo mode. <button className="link-btn" onClick={() => setSessionSheetOpen(true)}>Enable writes</button></span>
         </>
       ) : (
-        <Button size="sm" variant="danger" icon={Undo2} onClick={() => setOpen(true)}>Undo</Button>
+        <Button size="sm" variant="danger" icon={Undo2} data-testid="undo-button" onClick={() => setOpen(true)}>Undo</Button>
       )}
       {open && (
         <Modal
@@ -329,7 +329,7 @@ export function UndoControl({ actionId, preview, requestId, onDone, what }: {
           footer={
             <>
               <Button onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
-              <Button variant="danger-solid" icon={Undo2} onClick={click} busy={busy}>Undo</Button>
+              <Button variant="danger-solid" icon={Undo2} data-testid="undo-modal-submit" onClick={click} busy={busy}>Undo</Button>
             </>
           }
         >

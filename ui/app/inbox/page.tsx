@@ -63,8 +63,8 @@ function InboxInner() {
               <table className="table">
                 <thead><tr><th>Proposal</th><th>Kind</th><th style={{ width: 200 }}>Withdraw</th><th style={{ width: 32 }} /></tr></thead>
                 <tbody>
-                  {data.mine.map((m) => (
-                    <tr key={m.action_id} className={`clickable ${selKey === m.action_id ? "selected" : ""}`} onClick={() => s.openAction(m.action_id)}>
+                  {data.mine.map((m, k) => (
+                    <tr key={m.action_id} data-testid={`inbox-mine-${k + 1}`} className={`clickable ${selKey === m.action_id ? "selected" : ""}`} onClick={() => s.openAction(m.action_id)}>
                       <td className="wrap cell-primary">{m.summary}</td>
                       <td><Chip tone="neutral">{actionKindLabel(m.kind)}</Chip></td>
                       <td onClick={(e) => e.stopPropagation()}><MineUndo actionId={m.action_id} what={m.summary} /></td>
@@ -85,8 +85,8 @@ function InboxInner() {
               <table className="table">
                 <thead><tr><th>Disputed</th><th>Settle it from</th></tr></thead>
                 <tbody>
-                  {allDisputes.map((x) => (
-                    <tr key={x.id} className="clickable" onClick={() => s.openEntity(x.id, x.name)}>
+                  {allDisputes.map((x, k) => (
+                    <tr key={x.id} data-testid={`inbox-dispute-${k + 1}`} className="clickable" onClick={() => s.openEntity(x.id, x.name)}>
                       <td className="cell-primary"><span className="row" style={{ gap: 8 }}><Flag className="icon-sm text-warning" />{x.name}</span></td>
                       <td className="t-small text-2">Its panel shows both sides and who can settle it</td>
                     </tr>
@@ -102,8 +102,8 @@ function InboxInner() {
               <table className="table">
                 <thead><tr><th>Action</th><th>Kind</th><th>Status</th><th className="num">When</th><th style={{ width: 32 }} /></tr></thead>
                 <tbody>
-                  {data.log.map((l) => (
-                    <tr key={l.id} className={`clickable ${selKey === l.id ? "selected" : ""}`} onClick={() => s.openAction(l.id)}>
+                  {data.log.map((l, k) => (
+                    <tr key={l.id} data-testid={`inbox-activity-${k + 1}`} className={`clickable ${selKey === l.id ? "selected" : ""}`} onClick={() => s.openAction(l.id)}>
                       <td className="wrap cell-primary">{l.summary}</td>
                       <td><Chip tone="neutral">{actionKindLabel(l.kind)}</Chip></td>
                       <td><Status status={l.status === "undone" ? "withdrawn" : l.status === "refused" ? "refused" : "done"} /></td>
@@ -144,7 +144,7 @@ function Awaiting({ items }: { items: PendingItem[] }) {
       <div className="inbox-list" role="listbox" aria-label="Awaiting you">
         {items.map((a, k) => (
           <button key={a.action_id || a.assertion_id || a.summary} type="button" role="option" aria-selected={k === i}
-            className={`inbox-item ${k === i ? "sel" : ""}`} onClick={() => setSel(k)}>
+            data-testid={`inbox-row-${k + 1}`} className={`inbox-item ${k === i ? "sel" : ""}`} onClick={() => setSel(k)}>
             <span className={`inbox-tag ${a.type === "dispute" ? "disp" : ""}`}>{a.type === "dispute" ? "DISPUTE" : actionKindLabel(a.kind).toUpperCase()}</span>
             <span className="t-strong">{a.type === "dispute" && a.challenger ? `${a.challenger}?` : a.summary}</span>
             {a.fallback && a.missing_fact ? <span className="t-small text-3">{a.missing_fact}, so any team lead may settle it.</span> : null}

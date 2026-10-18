@@ -47,7 +47,7 @@ export default function StartPage() {
 
         {!job || job.state !== "running" ? (
           <div className="start-grid nx-rise nx-d1">
-            <div role="button" tabIndex={0} className="start-card" onClick={loadDemo}
+            <div role="button" tabIndex={0} className="start-card" data-testid="load-demo-company" onClick={loadDemo}
               onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); void loadDemo(); } }}>
               <span className="kind now"><i />LOAD THE DEMO COMPANY</span>
               <span className="text"><Building2 className="icon-sm" /> A fintech with 6 teams, 15 systems and a reorganisation</span>

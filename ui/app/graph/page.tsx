@@ -191,6 +191,7 @@ function GraphInner() {
         <div className="track">
           <input
             type="range" min={lo} max={hi} step={86400000} value={cur}
+            data-testid="as-of-slider"
             aria-label="As-of date" aria-valuetext={fmtDate(cur)}
             onChange={(e) => setPreview(Number(e.target.value))}
             onMouseUp={(e) => commitAsOf(Number((e.target as HTMLInputElement).value))}
@@ -264,12 +265,12 @@ function GraphInner() {
             <span className="item"><i className="ln" style={{ borderColor: "var(--warning-600)", borderTopStyle: "dashed" }} />Stale document</span>
           </>}
         </div>
-        <button className={`recenter ${focus && drifted ? "on" : ""}`} onClick={() => canvas.current?.focusPath()} aria-label="Recenter on the path"
+        <button className={`recenter ${focus && drifted ? "on" : ""}`} data-testid="recenter-path" onClick={() => canvas.current?.focusPath()} aria-label="Recenter on the path"
           title="Back to the path  c" tabIndex={focus && drifted ? 0 : -1} aria-hidden={!(focus && drifted)}><LocateFixed className="icon-sm" /></button>
         <div className="zoomctl">
-          <button onClick={() => canvas.current?.zoomIn()} aria-label="Zoom in"><Plus className="icon-sm" /></button>
-          <button onClick={() => canvas.current?.zoomOut()} aria-label="Zoom out"><Minus className="icon-sm" /></button>
-          <button onClick={() => canvas.current?.fit()} aria-label="Fit to screen"><Maximize2 className="icon-sm" /></button>
+          <button data-testid="graph-zoom-in" onClick={() => canvas.current?.zoomIn()} aria-label="Zoom in"><Plus className="icon-sm" /></button>
+          <button data-testid="graph-zoom-out" onClick={() => canvas.current?.zoomOut()} aria-label="Zoom out"><Minus className="icon-sm" /></button>
+          <button data-testid="graph-fit" onClick={() => canvas.current?.fit()} aria-label="Fit to screen"><Maximize2 className="icon-sm" /></button>
         </div>
       </div>
     </div>

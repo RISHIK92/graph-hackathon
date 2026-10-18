@@ -90,10 +90,10 @@ function Explore() {
       <section className="explore-find" aria-label="Find">
         <div className="explore-search">
           <label htmlFor="find" className="sr-only">Find anything</label>
-          <input id="find" type="search" placeholder="Find a system, team or person" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input id="find" data-testid="explore-search" type="search" placeholder="Find a system, team or person" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="row-wrap" style={{ gap: 6 }}>
             {PILLS.map(([k, label]) => (
-              <button key={k} type="button" className={`explore-pill ${kind === k ? "on" : ""}`} aria-pressed={kind === k} onClick={() => setKind(k)}>
+              <button key={k} type="button" data-testid={`explore-pill-${k}`} className={`explore-pill ${kind === k ? "on" : ""}`} aria-pressed={kind === k} onClick={() => setKind(k)}>
                 {label} <span className="n">{counts[k] ?? 0}</span>
               </button>
             ))}
@@ -101,7 +101,7 @@ function Explore() {
         </div>
         <div className="explore-rows" role="listbox" aria-label="Results">
           {!dir.data ? <div style={{ padding: 16 }}><SkeletonRows n={6} /></div> : shown.map((r) => (
-            <button key={r.id} type="button" role="option" aria-selected={r.id === sel} className={`explore-row ${r.id === sel ? "sel" : ""}`} onClick={() => pick(r.id)}>
+            <button key={r.id} type="button" role="option" data-testid={`explore-row-${r.id}`} aria-selected={r.id === sel} className={`explore-row ${r.id === sel ? "sel" : ""}`} onClick={() => pick(r.id)}>
               <i className={TONE[r.kind]} />
               <span className="stack" style={{ gap: 0, minWidth: 0, flex: "1 1 auto" }}><span className="t-strong truncate">{r.name}</span><span className="t-small text-3 truncate">{r.meta}</span></span>
               {r.disputed && <span className="explore-disp">disputed</span>}

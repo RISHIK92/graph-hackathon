@@ -29,21 +29,22 @@ export function Button({
 
 // chips
 
-export function Chip({ tone, icon: Icon, children, onClick, title, dashed, strike, className = "" }: {
+export function Chip({ tone, icon: Icon, children, onClick, title, dashed, strike, className = "", "data-testid": testId }: {
   tone?: "success" | "warning" | "error" | "accent" | "neutral";
   icon?: LucideIcon; children: ReactNode; onClick?: () => void; title?: string; dashed?: boolean; strike?: boolean; className?: string;
+  "data-testid"?: string;
 }) {
   const cls = ["chip", tone || "", dashed ? "dashed" : "", strike ? "strike" : "", onClick ? "clickable" : "", className].filter(Boolean).join(" ");
   if (onClick) {
     return (
-      <button type="button" className={cls} onClick={onClick} title={title}>
+      <button type="button" className={cls} onClick={onClick} title={title} data-testid={testId}>
         {Icon && <Icon />}
         {children}
       </button>
     );
   }
   return (
-    <span className={cls} title={title}>
+    <span className={cls} title={title} data-testid={testId}>
       {Icon && <Icon />}
       {children}
     </span>
@@ -114,7 +115,7 @@ export function Toasts() {
               {t.body && <div className="t-small text-2">{t.body}</div>}
               {t.action && (
                 <div className="actions">
-                  <button className="link-btn t-small" onClick={() => { t.action?.onClick(); dismissToast(t.id); }}>{t.action.label}</button>
+                  <button className="link-btn t-small" data-testid="toast-action" onClick={() => { t.action?.onClick(); dismissToast(t.id); }}>{t.action.label}</button>
                 </div>
               )}
             </div>
@@ -193,6 +194,7 @@ export function Tabs({ tabs, value, onChange, className = "" }: { tabs: TabDef[]
           key={t.id}
           role="tab"
           className="tab"
+          data-testid={`tab-${t.id}`}
           aria-selected={value === t.id}
           aria-disabled={t.disabled || undefined}
           title={t.disabled ? t.reason : undefined}
@@ -210,7 +212,7 @@ export function Segmented<T extends string>({ options, value, onChange }: { opti
   return (
     <div className="segmented" role="group">
       {options.map((o) => (
-        <button key={o.id} aria-pressed={value === o.id} onClick={() => onChange(o.id)}>{o.label}</button>
+        <button key={o.id} data-testid={`segmented-${o.id}`} aria-pressed={value === o.id} onClick={() => onChange(o.id)}>{o.label}</button>
       ))}
     </div>
   );

@@ -61,8 +61,8 @@ function EntityInner() {
           <div className="row-wrap" style={{ gap: 8 }}>
             {before && (
               <div className="seg" role="group" aria-label="View as of">
-                <button type="button" className={s.asOf ? "on" : ""} onClick={() => s.setAsOf(before)}>Before {fmtDate(changed)}</button>
-                <button type="button" className={!s.asOf ? "on" : ""} onClick={() => s.setAsOf(null)}>Today</button>
+                <button type="button" data-testid="entity-as-of-before" className={s.asOf ? "on" : ""} onClick={() => s.setAsOf(before)}>Before {fmtDate(changed)}</button>
+                <button type="button" data-testid="entity-as-of-today" className={!s.asOf ? "on" : ""} onClick={() => s.setAsOf(null)}>Today</button>
               </div>
             )}
             {data && <EntityActions data={data} id={id} inPage />}
