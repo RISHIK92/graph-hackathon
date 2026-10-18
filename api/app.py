@@ -11,7 +11,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
@@ -889,9 +889,68 @@ def admin_rebuild(c: Caller = Depends(caller)) -> dict:
     return {"chains": integrity.rebuild_projections(G)}
 
 
-@app.post("/admin/reset")
-def admin_reset(c: Caller = Depends(caller)) -> dict:
+class CheckpointBody(BaseModel):
+    name: str
+    workspace: str | None = None
+
+
+class ResetBody(BaseModel):
+    checkpoint: str | None = None
+    workspace: str | None = None
+
+
+def _allow_checkpoints() -> None:
+    if os.environ.get("NODUS_ENV") == "prod" and os.environ.get("NODUS_ALLOW_CHECKPOINTS") != "on":
+        raise HTTPException(403, "checkpoints are refused when NODUS_ENV=prod (set NODUS_ALLOW_CHECKPOINTS=on)")
+
+
+def _checkpoint_workspace(request: Request, explicit: str | None = None) -> str:
+    ws_name = explicit
+    if not ws_name:
+        cur = workspaces.current()
+        if cur:
+            ws_name = cur.g.name
+    if not ws_name and accounts.enabled():
+        acct = accounts.current(request)
+        if acct:
+            ws_name = acct["workspace"]
+        else:
+            email, pw = accounts.demo_credentials()
+            if email and pw:
+                ws_name = accounts.store().ensure_demo(email, pw)["workspace"]
+    if not ws_name or not ws_name.startswith("ws_"):
+        raise HTTPException(400, "checkpoints act on a workspace graph (ws_<id>)")
+    return ws_name
+
+
+@app.post("/admin/checkpoint")
+def admin_checkpoint(body: CheckpointBody, request: Request, c: Caller = Depends(caller)) -> dict:
     need_admin(c)
+    _allow_checkpoints()
+    ws_name = _checkpoint_workspace(request, body.workspace)
+    try:
+        graph = workspaces.save_checkpoint(ws_name, body.name)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except KeyError as e:
+        raise HTTPException(404, str(e)) from e
+    return {"workspace": ws_name, "checkpoint": body.name, "graph": graph}
+
+
+@app.post("/admin/reset")
+def admin_reset(request: Request, body: ResetBody | None = Body(default=None), c: Caller = Depends(caller)) -> dict:
+    need_admin(c)
+    if body and body.checkpoint:
+        _allow_checkpoints()
+        ws_name = _checkpoint_workspace(request, body.workspace)
+        try:
+            graph = workspaces.restore_checkpoint(ws_name, body.checkpoint)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        except KeyError as e:
+            raise HTTPException(404, str(e)) from e
+        ANON.clear()
+        return {"workspace": ws_name, "checkpoint": body.checkpoint, "graph": graph}
     return reset_to_seed()
 
 
