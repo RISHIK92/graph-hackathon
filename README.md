@@ -4,7 +4,7 @@
 
 Nodus is an organizational intelligence engine built on FalkorDB. It unifies fragmented company state—people, teams, systems, projects, tickets, documents, chats, and architectural decisions—into a single bi-temporal knowledge graph. Rather than relying on probabilistic RAG retrieval over flat text chunks, Nodus models facts as versioned graph assertions backed by exact source spans. It answers "who owns this?", "who knows about this?", and "why was this decided?" with deterministic provenance, and executes permission-guarded workflows directly inside FalkorDB.
 
-* **Demo video:** https://youtu.be/E35AO0AtxxY
+* **Demo video:** https://youtu.be/8PCFA0UFk5s
 
 * **Live deployment:** https://nodus.rishiklabs.tech/
 
